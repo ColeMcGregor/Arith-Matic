@@ -1,28 +1,28 @@
-# Arith-Matic 🧠📱
+# Arith-Matic 
 
 **Arith-Matic** is a Kotlin-based Android game designed to help children practice arithmetic, logic, and pattern recognition through an engaging, interactive experience. Built with a modular architecture and scalable design patterns, it aims to combine educational value with fun and adaptive gameplay.
 
 ---
 
-## 🚀 Features
+##  Features
 
-- 🎮 **Arithmetic Practice**: Addition, Subtraction, Multiplication, Division
-- 🧩 **Logic Challenges**: Includes propositional logic questions (AND, OR, NOT, IMPLIES)
-- 🧠 **Adaptive Difficulty**: Tracks player performance and streaks
-- 📊 **Stats Tracking**: High score, most recent score, accuracy by type
-- ⏱️ **Custom Game Settings**:
+-  **Arithmetic Practice**: Addition, Subtraction, Multiplication, Division
+-  **Logic Challenges**: Includes propositional logic questions (AND, OR, NOT, IMPLIES)
+-  **Adaptive Difficulty**: Tracks player performance and streaks
+-  **Stats Tracking**: High score, most recent score, accuracy by type
+-  **Custom Game Settings**:
   - Time per question
   - Total questions
   - Significant figures
   - Decimal inclusion
   - Use of parentheses
   - Selectable categories
-- 🧸 **Child-Friendly Interface** with animated buttons and clean visuals
-- 💾 **Offline Persistence** (No backend) using `SharedPreferences` or internal JSON
+-  **Child-Friendly Interface** with animated buttons and clean visuals
+-  **Offline Persistence** (No backend) using `SharedPreferences` or internal JSON
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 ```plaintext
 app/
