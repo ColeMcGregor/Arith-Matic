@@ -1,0 +1,328 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam packageStyle rectangle
+
+' ===================== SCREENS (WHAT THE PLAYER SEES) =====================
+package "Screens (what the player sees)" {
+
+  class MainActivity {
+    +hosts screens
+  }
+
+  class SplashScreen {
+    +shows logo briefly
+  }
+
+  class StartScreen {
+    +Quick Start
+    +Prepare
+  }
+
+  class OptionsScreen {
+    +pick question mix
+    +set totals
+    +Confirm
+  }
+
+  class GameScreen {
+    +show question
+    +pick answer
+    +Next
+  }
+
+  class ResultsScreen {
+    +show summary
+  }
+
+  class StatsScreen {
+    +show history
+  }
+}
+
+' ====== HOSTING & NAVIGATION ======
+MainActivity --> SplashScreen : "shows first"
+MainActivity --> StartScreen : "goes next"
+MainActivity --> OptionsScreen : "opens when Prepare is tapped"
+MainActivity --> GameScreen : "opens when game starts"
+MainActivity --> ResultsScreen : "opens after last question"
+MainActivity --> StatsScreen : "opens from menu"
+
+' ===================== APP BRAIN (KEEPS THINGS MOVING) =====================
+package "App Brain (keeps things moving)" {
+
+  class StartLogic {
+    +quickStart()
+    +goPrepare()
+  }
+
+  class OptionsLogic {
+    +loadSettings()
+    +saveSettings()
+  }
+
+  class GameLogic {
+    +start(settings)
+    +submit(answer)
+    +next()
+    +finish()
+  }
+
+  class ResultsLogic {
+    +loadSummary(sessionId)
+  }
+
+  class StatsLogic {
+    +loadHistory()
+  }
+}
+
+' ====== SCREENS TALK TO APP BRAIN ======
+StartScreen --> StartLogic : "asks to Quick Start / Prepare"
+OptionsScreen --> OptionsLogic : "loads & saves choices"
+GameScreen --> GameLogic : "sends taps and Next"
+ResultsScreen --> ResultsLogic : "asks for summary"
+StatsScreen --> StatsLogic : "asks for history"
+
+' ====== QUICK START / SETTINGS ======
+StartLogic --> "Score, History & Settings".SettingsStore : "gets last used settings"
+StartLogic --> MainActivity : "go to Game"
+
+OptionsLogic --> "Score, History & Settings".SettingsStore : "read current choices"
+OptionsLogic --> "Score, History & Settings".SettingsStore : "save new choices"
+OptionsLogic --> MainActivity : "go to Game after Confirm"
+
+' ===================== QUESTION MAKER (HOW QUESTIONS ARE BUILT) =====================
+package "Question Maker (how questions are built)" {
+
+  class PlanMaker {
+    +makePlan(settings)
+  }
+
+  interface MixRule {
+    +plan(settings)
+  }
+
+  class RandomMix {
+    +plan(settings)
+  }
+
+  class FixedMix {
+    +plan(settings)
+  }
+
+  class CardFactory {
+    +make(type, settings)
+  }
+
+  interface CardStyle {
+    +tweak(card, settings)
+  }
+
+  class UseParentheses {
+    +tweak(card, settings)
+  }
+
+  class UseSigFigs {
+    +tweak(card, settings)
+  }
+
+  class UseDecimals {
+    +tweak(card, settings)
+  }
+
+  interface Generator {
+    +create(settings, rng, styles)
+  }
+
+  abstract class BaseArithmetic {
+    +shared steps for math cards
+  }
+
+  class AddGen {
+    +create(settings, rng, styles)
+  }
+
+  class SubGen {
+    +create(settings, rng, styles)
+  }
+
+  class MulGen {
+    +create(settings, rng, styles)
+  }
+
+  class DivGen {
+    +create(settings, rng, styles)
+  }
+
+  class LogicGen {
+    +create(settings, rng, styles)
+  }
+
+  class AdvancedGen {
+    +create(settings, rng, styles)
+  }
+
+  class Rng {
+    +number(min, max)
+  }
+}
+
+' ====== MAKING THE PLAN AND CARDS ======
+GameLogic --> PlanMaker : "ask for question plan"
+PlanMaker --> MixRule : "use chosen mixing rule"
+RandomMix ..|> MixRule
+FixedMix ..|> MixRule
+
+GameLogic --> CardFactory : "make the next card"
+CardFactory --> Generator : "use the right maker"
+BaseArithmetic <|-- AddGen
+BaseArithmetic <|-- SubGen
+BaseArithmetic <|-- MulGen
+BaseArithmetic <|-- DivGen
+Generator --> Rng : "pick numbers"
+Generator --> CardStyle : "apply optional tweaks"
+UseParentheses ..|> CardStyle
+UseSigFigs ..|> CardStyle
+UseDecimals ..|> CardStyle
+
+' ===================== MODELS (THINGS WE STORE / PASS AROUND) =====================
+package "Models" {
+
+  enum QuestionType {
+    ADDITION
+    SUBTRACTION
+    MULTIPLICATION
+    DIVISION
+    LOGIC
+    ADVANCED
+  }
+
+  enum DistributionPolicy {
+    RANDOM
+    FIXED
+  }
+
+  class GameSettings {
+    +total questions
+    +time per question
+    +which types
+    +distribution policy
+    +fixed counts (if FIXED)
+  }
+
+  class QuestionCard {
+    +id
+    +type
+    +question text
+    +options (4)
+    +correct answer
+  }
+
+  class AnswerEvent {
+    +question id
+    +type
+    +chosen
+    +correct?
+    +response time (ms)
+  }
+
+  class SessionRecord {
+    +id
+    +timestamp
+    +settings used
+    +all answers
+    +score
+    +longest streak
+    +duration (sec)
+  }
+
+  class ResultsReport {
+    +total
+    +correct
+    +wrong
+    +fastest (ms) & which
+    +slowest (ms) & which
+    +accuracy by type
+  }
+}
+
+' ===================== SCORE, HISTORY & SETTINGS =====================
+package "Score, History & Settings" {
+
+  interface TimeKeeper {
+    +nowMs()
+  }
+
+  class Scorer {
+    +points(correct, ms, streak)
+    +final score(from answers)
+  }
+
+  class SummaryBuilder {
+    +buildReport(events, settings)
+  }
+
+  class SessionLog {
+    +holds one play session
+  }
+
+  class HistoryStore {
+    +save(session) : id
+    +get(id)
+    +all()
+  }
+
+  class SettingsStore {
+    +save(settings)
+    +load()
+    +loadLast()
+  }
+}
+
+' ====== ANSWERING & SCORING FLOW ======
+GameScreen --> GameLogic : "send chosen answer"
+GameLogic --> "Score, History & Settings".TimeKeeper : "stop timer for this question"
+GameLogic --> "Score, History & Settings".Scorer : "calculate points"
+
+' ====== FINISHING & SAVING ======
+GameLogic --> "Score, History & Settings".SummaryBuilder : "build final report"
+GameLogic --> "Score, History & Settings".HistoryStore : "save the session"
+GameLogic --> MainActivity : "open Results (pass id)"
+
+ResultsLogic --> "Score, History & Settings".HistoryStore : "load session by id"
+ResultsLogic --> "Score, History & Settings".SummaryBuilder : "make summary for screen"
+
+StatsLogic --> "Score, History & Settings".HistoryStore : "load all past sessions"
+
+' ===================== PHONE HELPERS (WRAPPED) =====================
+package "Phone Helpers (wrapped for easy testing)" {
+
+  interface SoundBox {
+    +play(name)
+    +music(name, loop)
+    +stop()
+  }
+
+  interface Vibes {
+    +buzz(kind)
+  }
+
+  class AndroidSoundBox {
+    +uses Android audio
+  }
+
+  class AndroidVibes {
+    +uses Android haptics
+  }
+
+  class AndroidClock {
+    +uses system time
+  }
+}
+
+AndroidSoundBox ..|> SoundBox : "wraps Android audio"
+AndroidVibes ..|> Vibes : "wraps haptics"
+AndroidClock ..|> "Score, History & Settings".TimeKeeper : "wraps system time"
+
+@enduml
