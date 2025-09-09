@@ -1,4 +1,4 @@
-package com.arithmatic.util
+package com.colemcg.arith_matic.utils
 
 import java.util.UUID
 

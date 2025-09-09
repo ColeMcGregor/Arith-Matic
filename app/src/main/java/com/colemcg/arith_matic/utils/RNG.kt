@@ -1,3 +1,5 @@
+package com.colemcg.arith_matic.utils
+
 import kotlin.random.Random
 
 /**
@@ -9,7 +11,7 @@ import kotlin.random.Random
  * @version 1.0
  * @date 2025-09-08
  */
-object Rng {
+object RNG {
     val default: Random = Random.Default // default random generator from kotlin.random.Random
 
     /**
