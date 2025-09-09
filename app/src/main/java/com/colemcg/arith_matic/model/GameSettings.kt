@@ -7,7 +7,7 @@ package com.colemcg.arith_matic.model
  * @param timePerQuestionSec  Per-question timer in seconds. Use 0 to disable timing.
  * @param totalQuestions      How many questions in a session.
  * @param allowDecimals       Whether generators may use decimal values.
- * @param sigFigs             Preferred significant figures (used by generators that support it).
+ * @param largestNumber       The largest number that can be used in the game.
  * @param useParentheses      Whether generators may include parentheses in expressions.
  * @param selectedTypes       Which categories are enabled. If empty, defaults to [QuestionType.basicSet].
  * 
@@ -19,7 +19,8 @@ data class GameSettings(
     val timePerQuestionSec: Int = DEFAULT_TIME_PER_QUESTION_SEC,
     val totalQuestions: Int = DEFAULT_TOTAL_QUESTIONS,
     val allowDecimals: Boolean = false,
-    val sigFigs: Int = DEFAULT_SIG_FIGS,
+    val allowNegative: Boolean = false,
+    val largestNumber: Int = DEFAULT_LARGEST_NUMBER,
     val useParentheses: Boolean = false,
     val selectedTypes: List<QuestionType> = QuestionType.defaultSelected()
 ) {
@@ -41,14 +42,12 @@ data class GameSettings(
             else -> timePerQuestionSec
         }
         val q = totalQuestions.coerceIn(MIN_TOTAL_QUESTIONS, MAX_TOTAL_QUESTIONS)
-        val s = sigFigs.coerceIn(MIN_SIG_FIGS, MAX_SIG_FIGS)
         val types = (if (selectedTypes.isEmpty()) QuestionType.defaultSelected() else selectedTypes)
             .distinct()
 
         return copy(
             timePerQuestionSec = t,
             totalQuestions = q,
-            sigFigs = s,
             selectedTypes = types
         )
     }
@@ -57,13 +56,10 @@ data class GameSettings(
         // Sensible defaults
         const val DEFAULT_TIME_PER_QUESTION_SEC = 10
         const val DEFAULT_TOTAL_QUESTIONS = 10
-        const val DEFAULT_SIG_FIGS = 1
-
+        const val DEFAULT_LARGEST_NUMBER = 10
         // Bounds to keep UI sane
         const val MAX_TIME_PER_QUESTION_SEC = 30
         const val MIN_TOTAL_QUESTIONS = 1
         const val MAX_TOTAL_QUESTIONS = 100
-        const val MIN_SIG_FIGS = 1
-        const val MAX_SIG_FIGS = 6
     }
 }
