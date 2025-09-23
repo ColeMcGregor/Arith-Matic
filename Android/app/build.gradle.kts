@@ -61,6 +61,6 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)  // if/when you add a ViewModel
     implementation(libs.androidx.navigation.compose)        // if using Compose navigation
-    implementation("androidx.compose.ui:ui-text-google-fonts:1.9.1") // Google Fonts in Compose
+    implementation("androidx.compose.ui:ui-text-google-fonts") // Google Fonts in Compose
 
 }
