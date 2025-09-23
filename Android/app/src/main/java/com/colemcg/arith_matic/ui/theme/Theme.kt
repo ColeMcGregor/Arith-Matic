@@ -67,8 +67,8 @@ fun ArithMaticTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = AppTypography, // need to make type file
-        shapes = AppShapes,        // need to make shapes file
+        typography = AppTypography, 
+        shapes = AppShapes,
         content = content
     )
 }
