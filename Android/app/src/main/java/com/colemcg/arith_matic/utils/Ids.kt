@@ -2,6 +2,7 @@ package com.colemcg.arith_matic.utils
 
 import java.util.UUID
 
+
 /**
  * Simple, centralized ID helpers.
  * made here to change easily the format of the id creation logic
@@ -19,7 +20,7 @@ object Ids { //an object is a singleton, and globally accessible
      * Short, URL-friendly ID (base36) ~10 chars.
      * Combines time + randomness to reduce collision risk without heavy crypto.
      */
-    fun shortId(random: kotlin.random.Random = Rng.default): String {
+    fun shortId(random: kotlin.random.Random = RNG.default): String {
         val time = System.currentTimeMillis()
         val rand = random.nextLong()
         val mixed = time xor rand
