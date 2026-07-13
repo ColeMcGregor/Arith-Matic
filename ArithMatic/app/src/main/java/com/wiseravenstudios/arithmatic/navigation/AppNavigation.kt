@@ -40,11 +40,6 @@ private fun ChalkFontTestBoard() {
             name = "Chalktastic",
             fontFamily = Chalktastic
         )
-//
-//        ChalkFontSample(
-//            name = "Neat Chalk",
-//            fontFamily = NeatChalk
-//        )
     }
 }
 
