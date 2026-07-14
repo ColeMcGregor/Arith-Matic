@@ -44,8 +44,8 @@ fun RoundSettingsBoard(
         modifier = modifier
             .fillMaxSize()
             .padding(
-                horizontal = 14.dp,
-                vertical = 8.dp
+                horizontal = 4.dp,
+                vertical = 6.dp
             ),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -208,7 +208,7 @@ private fun OperationSettings(
         )
 
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             ArithmeticOperation.entries.forEach { operation ->
@@ -218,10 +218,13 @@ private fun OperationSettings(
                     text = operation.symbol,
                     color = if (enabled) {
                         operation.color
+                        operation.color
                     } else {
                         ChalkColors.ChalkWhite
                     },
-                    fontSize = 27.sp,
+                    fontSize = 35.sp,
+                    paddingTop = 0.5.dp,
+                    paddingBottom = 0.5.dp,
                     onClick = {
                         onOperationChanged(
                             operation,
@@ -259,6 +262,8 @@ private fun BooleanSetting(
                 ChalkColors.PastelPink
             },
             fontSize = 21.sp,
+            paddingTop = 0.5.dp,
+            paddingBottom = 0.5.dp,
             onClick = onToggle
         )
     }
@@ -398,13 +403,14 @@ private fun OperandSizeSetting(
                 }
             )
 
-            Text(
-                text = "(${placeValueExample.toStringWithCommas()}'s)",
-                color = ChalkColors.PastelGreen,
-                fontFamily = Chalktastic,
-                fontSize = 22.sp
-            )
+
         }
+        Text(
+            text = "(${placeValueExample.toStringWithCommas()}'s)",
+            color = ChalkColors.PastelGreen,
+            fontFamily = Chalktastic,
+            fontSize = 22.sp
+        )
     }
 }
 
