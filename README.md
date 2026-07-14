@@ -37,3 +37,7 @@ app/
 │   │   │   └── util/         # UI animation utilities and helpers
 │   │   ├── res/              # Layouts, animations, drawables, etc.
 │   │   └── AndroidManifest.xml
+
+```
+<img width="395" height="835" alt="{D8DFC6E7-29DD-48C3-AE8D-34467D0E0327}" src="https://github.com/user-attachments/assets/3468639d-12b1-4b37-97a3-410ff58cbea3" />
+
