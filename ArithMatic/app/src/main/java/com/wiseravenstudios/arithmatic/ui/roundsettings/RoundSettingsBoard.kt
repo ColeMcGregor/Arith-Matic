@@ -14,6 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -22,7 +23,7 @@ import com.wiseravenstudios.arithmatic.domain.config.PracticeConfigValidationRes
 import com.wiseravenstudios.arithmatic.domain.config.PracticeConfigValidator
 import com.wiseravenstudios.arithmatic.domain.model.ArithmeticOperation
 import com.wiseravenstudios.arithmatic.domain.model.PracticeConfig
-import com.wiseravenstudios.arithmatic.ui.common.ChalkTextAction
+import com.wiseravenstudios.arithmatic.ui.components.ChalkTextAction
 import com.wiseravenstudios.arithmatic.ui.theme.ChalkColors
 import com.wiseravenstudios.arithmatic.ui.theme.Chalktastic
 
@@ -89,9 +90,9 @@ fun RoundSettingsBoard(
                 digitCount = config.wholeNumberDigits,
                 minimumDigits = 1,
                 maximumDigits = 6,
-                onDigitCountChanged = {
+                onDigitCountChanged = { digitCount ->
                     config = config.copy(
-                        wholeNumberDigits = it
+                        wholeNumberDigits = digitCount
                     )
                     validationMessage = null
                 }
@@ -103,9 +104,9 @@ fun RoundSettingsBoard(
                 minimum = 1,
                 maximum = 30,
                 step = 1,
-                onValueChanged = {
+                onValueChanged = { questionCount ->
                     config = config.copy(
-                        questionCount = it
+                        questionCount = questionCount
                     )
                     validationMessage = null
                 }
@@ -180,7 +181,9 @@ fun RoundSettingsBoard(
                         }
 
                         is PracticeConfigValidationResult.Invalid -> {
-                            validationMessage = result.errors.first()
+                            validationMessage =
+                                result.errors.firstOrNull()
+                                    ?: "The round settings are invalid."
                         }
                     }
                 }
@@ -217,8 +220,7 @@ private fun OperationSettings(
                 ChalkTextAction(
                     text = operation.symbol,
                     color = if (enabled) {
-                        operation.color
-                        operation.color
+                        operation.chalkColor
                     } else {
                         ChalkColors.ChalkWhite
                     },
@@ -327,22 +329,6 @@ private fun NumberSetting(
     }
 }
 
-private val ArithmeticOperation.symbol: String
-    get() = when (this) {
-        ArithmeticOperation.Addition -> "+"
-        ArithmeticOperation.Subtraction -> "−"
-        ArithmeticOperation.Multiplication -> "×"
-        ArithmeticOperation.Division -> "÷"
-    }
-
-private val ArithmeticOperation.color
-    get() = when (this) {
-        ArithmeticOperation.Addition -> ChalkColors.PastelYellow
-        ArithmeticOperation.Subtraction -> ChalkColors.PastelBlue
-        ArithmeticOperation.Multiplication -> ChalkColors.PastelGreen
-        ArithmeticOperation.Division -> ChalkColors.PastelPurple
-    }
-
 @Composable
 private fun OperandSizeSetting(
     digitCount: Int,
@@ -352,6 +338,7 @@ private fun OperandSizeSetting(
 ) {
     val placeValueExample = buildString {
         append("1")
+
         repeat(digitCount - 1) {
             append("0")
         }
@@ -378,7 +365,8 @@ private fun OperandSizeSetting(
                 fontSize = 26.sp,
                 onClick = {
                     onDigitCountChanged(
-                        (digitCount - 1).coerceAtLeast(minimumDigits)
+                        (digitCount - 1)
+                            .coerceAtLeast(minimumDigits)
                     )
                 }
             )
@@ -398,13 +386,13 @@ private fun OperandSizeSetting(
                 fontSize = 26.sp,
                 onClick = {
                     onDigitCountChanged(
-                        (digitCount + 1).coerceAtMost(maximumDigits)
+                        (digitCount + 1)
+                            .coerceAtMost(maximumDigits)
                     )
                 }
             )
-
-
         }
+
         Text(
             text = "(${placeValueExample.toStringWithCommas()}'s)",
             color = ChalkColors.PastelGreen,
@@ -413,6 +401,21 @@ private fun OperandSizeSetting(
         )
     }
 }
+
+private val ArithmeticOperation.chalkColor: Color
+    get() = when (this) {
+        ArithmeticOperation.Addition ->
+            ChalkColors.PastelYellow
+
+        ArithmeticOperation.Subtraction ->
+            ChalkColors.PastelBlue
+
+        ArithmeticOperation.Multiplication ->
+            ChalkColors.PastelGreen
+
+        ArithmeticOperation.Division ->
+            ChalkColors.PastelPurple
+    }
 
 private fun Long.toStringWithCommas(): String {
     return "%,d".format(this)

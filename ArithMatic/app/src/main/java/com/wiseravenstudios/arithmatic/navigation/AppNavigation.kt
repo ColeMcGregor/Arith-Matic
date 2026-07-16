@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -13,8 +14,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
-import com.wiseravenstudios.arithmatic.ui.common.ChalkTextAction
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.wiseravenstudios.arithmatic.ui.common.ClassroomScene
+import com.wiseravenstudios.arithmatic.ui.components.ChalkTextAction
+import com.wiseravenstudios.arithmatic.ui.game.GameBoard
+import com.wiseravenstudios.arithmatic.ui.game.GameViewModel
 import com.wiseravenstudios.arithmatic.ui.roundsettings.RoundSettingsBoard
 import com.wiseravenstudios.arithmatic.ui.splash.SplashScreen
 import com.wiseravenstudios.arithmatic.ui.start.StartBoard
@@ -23,7 +27,9 @@ import com.wiseravenstudios.arithmatic.ui.theme.Chalktastic
 import kotlinx.coroutines.delay
 
 @Composable
-fun ArithMaticApp() {
+fun ArithMaticApp(
+    gameViewModel: GameViewModel = viewModel()
+) {
     var showSplash by rememberSaveable {
         mutableStateOf(true)
     }
@@ -32,9 +38,17 @@ fun ArithMaticApp() {
         mutableStateOf(AppDestination.Start)
     }
 
+    val gameUiState by gameViewModel.uiState.collectAsState()
+
     LaunchedEffect(Unit) {
         delay(3_000L)
         showSplash = false
+    }
+
+    LaunchedEffect(gameUiState.isRoundCompleted) {
+        if (gameUiState.isRoundCompleted) {
+            currentDestination = AppDestination.Results
+        }
     }
 
     if (showSplash) {
@@ -47,16 +61,20 @@ fun ArithMaticApp() {
             AppDestination.Start -> {
                 StartBoard(
                     onStartPractice = {
-                        currentDestination = AppDestination.RoundSettings
+                        currentDestination =
+                            AppDestination.RoundSettings
                     },
                     onOpenSettings = {
-                        currentDestination = AppDestination.AppSettings
+                        currentDestination =
+                            AppDestination.AppSettings
                     },
                     onOpenAbout = {
-                        currentDestination = AppDestination.About
+                        currentDestination =
+                            AppDestination.About
                     },
                     onOpenParentArea = {
-                        currentDestination = AppDestination.ParentArea
+                        currentDestination =
+                            AppDestination.ParentArea
                     }
                 )
             }
@@ -64,25 +82,39 @@ fun ArithMaticApp() {
             AppDestination.RoundSettings -> {
                 RoundSettingsBoard(
                     onBack = {
-                        currentDestination = AppDestination.Start
+                        currentDestination =
+                            AppDestination.Start
                     },
                     onStartRound = { config ->
-                        println("Starting with config: $config")
-                        currentDestination = AppDestination.Practice
+                        /*
+                         * Clears any previous completed or abandoned round
+                         * before creating the new one.
+                         */
+                        gameViewModel.clearRound()
+                        gameViewModel.startRound(config)
+
+                        currentDestination =
+                            AppDestination.Practice
                     }
                 )
             }
 
             AppDestination.Practice -> {
-                PlaceholderBoard(
-                    title = "Practice",
-                    onBack = {
-                        currentDestination = AppDestination.RoundSettings
+                GameBoard(
+                    uiState = gameUiState,
+                    onExit = {
+                        gameViewModel.abandonRound()
+                        gameViewModel.clearRound()
+
+                        currentDestination =
+                            AppDestination.RoundSettings
                     },
-                    onContinue = {
-                        currentDestination = AppDestination.Results
+                    onAnswerSelected = { choiceIndex ->
+                        gameViewModel.selectAnswer(choiceIndex)
                     },
-                    continueText = "Finish Test Round"
+                    onNext = {
+                        gameViewModel.advance()
+                    }
                 )
             }
 
@@ -90,10 +122,16 @@ fun ArithMaticApp() {
                 PlaceholderBoard(
                     title = "Results",
                     onBack = {
-                        currentDestination = AppDestination.Start
+                        gameViewModel.clearRound()
+
+                        currentDestination =
+                            AppDestination.Start
                     },
                     onContinue = {
-                        currentDestination = AppDestination.RoundSettings
+                        gameViewModel.clearRound()
+
+                        currentDestination =
+                            AppDestination.RoundSettings
                     },
                     continueText = "Practice Again"
                 )
@@ -103,7 +141,8 @@ fun ArithMaticApp() {
                 PlaceholderBoard(
                     title = "Settings",
                     onBack = {
-                        currentDestination = AppDestination.Start
+                        currentDestination =
+                            AppDestination.Start
                     }
                 )
             }
@@ -112,7 +151,8 @@ fun ArithMaticApp() {
                 PlaceholderBoard(
                     title = "Parents / Guardians",
                     onBack = {
-                        currentDestination = AppDestination.Start
+                        currentDestination =
+                            AppDestination.Start
                     }
                 )
             }
@@ -121,7 +161,8 @@ fun ArithMaticApp() {
                 PlaceholderBoard(
                     title = "About",
                     onBack = {
-                        currentDestination = AppDestination.Start
+                        currentDestination =
+                            AppDestination.Start
                     }
                 )
             }
@@ -158,11 +199,11 @@ private fun PlaceholderBoard(
             fontSize = 34.sp
         )
 
-        onContinue?.let {
+        if (onContinue != null) {
             ChalkTextAction(
                 text = continueText,
                 color = ChalkColors.PastelGreen,
-                onClick = it
+                onClick = onContinue
             )
         }
 
