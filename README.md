@@ -1,43 +1,121 @@
-# Arith-Matic 
+# Arith-Matic
 
-**Arith-Matic** is a Kotlin-based Android game designed to help children practice arithmetic, logic, and pattern recognition through an engaging, interactive experience. Built with a modular architecture and scalable design patterns, it aims to combine educational value with fun and adaptive gameplay.
-
----
-
-##  Features
-
--  **Arithmetic Practice**: Addition, Subtraction, Multiplication, Division
--  **Logic Challenges**: Includes propositional logic questions (AND, OR, NOT, IMPLIES)
--  **Adaptive Difficulty**: Tracks player performance and streaks
--  **Stats Tracking**: High score, most recent score, accuracy by type
--  **Custom Game Settings**:
-  - Time per question
-  - Total questions
-  - Significant figures
-  - Decimal inclusion
-  - Use of parentheses
-  - Selectable categories
--  **Child-Friendly Interface** with animated buttons and clean visuals
--  **Offline Persistence** (No backend) using `SharedPreferences` or internal JSON
+**Arith-Matic** is a native Android application written in Kotlin that helps children build arithmetic fluency through an engaging, classroom-inspired experience. Rather than feeling like a traditional worksheet, Arith-Matic presents customizable practice sessions with a clean chalkboard aesthetic, immediate feedback, and a distraction-free interface designed specifically for young learners.
 
 ---
 
-##  Project Structure
+## Features
+
+### Arithmetic Practice
+
+- Addition
+- Subtraction
+- Multiplication
+- Division
+- Configurable operation selection
+
+### Customizable Practice
+
+- Select one or more operations
+- Adjustable whole-number size
+- Optional negative numbers
+- Optional decimal numbers
+- Configurable question count
+
+### Child-Friendly Design
+
+- Classroom/chalkboard themed interface
+- Large touch targets
+- Colored chalk UI elements
+- Minimal distractions
+- Gentle feedback options (planned)
+
+### Progress & Results
+
+- Round summaries
+- Accuracy tracking
+- Completion time
+- Practice again workflow
+
+### Offline
+
+- Fully offline
+- Local settings persistence using Android DataStore
+- No account required
+- No backend services
+
+---
+
+## Project Structure
 
 ```plaintext
 app/
-├── src/
-│   ├── main/
-│   │   ├── java/com/colemcg/arithmatic/
-│   │   │   ├── ui/           # All Fragments (Start, Options, Game, Stats, Results, About)
-│   │   │   ├── viewmodel/    # GameViewModel for shared game state
-│   │   │   ├── model/        # Data classes: GameSettings, QuestionCard, GameStats, etc.
-│   │   │   ├── generator/    # Strategy pattern for question generation
-│   │   │   ├── storage/      # StatsManager and local data handling
-│   │   │   └── util/         # UI animation utilities and helpers
-│   │   ├── res/              # Layouts, animations, drawables, etc.
-│   │   └── AndroidManifest.xml
+└── src/
+    └── main/
+        ├── java/com/wiseravenstudios/arithmatic/
+        │   ├── domain/
+        │   │   ├── config/
+        │   │   ├── generator/
+        │   │   ├── model/
+        │   │   └── session/
+        │   │
+        │   ├── navigation/
+        │   │
+        │   ├── platform/
+        │   │   ├── audio/
+        │   │   ├── lifecycle/
+        │   │   └── persistence/
+        │   │
+        │   ├── ui/
+        │   │   ├── about/
+        │   │   ├── appsettings/
+        │   │   ├── common/
+        │   │   ├── parent/
+        │   │   ├── practice/
+        │   │   ├── results/
+        │   │   ├── roundsettings/
+        │   │   ├── splash/
+        │   │   ├── start/
+        │   │   └── theme/
+        │   │
+        │   └── MainActivity.kt
+        │
+        ├── res/
+        └── AndroidManifest.xml
+```
 
+---
+
+## Current Status
+
+Current implementation includes:
+
+- Splash screen
+- Classroom scene
+- Start screen
+- Navigation system
+- Chalk-themed typography
+- Reusable ChalkTextAction component
+- Practice configuration model
+- Practice configuration validation
+- Round Settings screen (in progress)
+
+---
+
+## Planned Features
+
+- Practice rounds
+- Results screen
+- App settings
+- Parent area
+- Audio feedback packs
+- Chalk-style buttons
+- Statistics and progress tracking
+- Accessibility improvements
+- Additional arithmetic modes
 ```
 <img width="395" height="835" alt="{D8DFC6E7-29DD-48C3-AE8D-34467D0E0327}" src="https://github.com/user-attachments/assets/3468639d-12b1-4b37-97a3-410ff58cbea3" />
+
+<img width="392" height="826" alt="{212DE687-5431-4846-9A5A-F2852C5A5CE4}" src="https://github.com/user-attachments/assets/05c215c3-8524-47cf-91af-29cefd80b525" />
+
 
