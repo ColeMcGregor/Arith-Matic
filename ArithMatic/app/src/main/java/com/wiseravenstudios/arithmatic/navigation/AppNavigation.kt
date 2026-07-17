@@ -2,23 +2,33 @@ package com.wiseravenstudios.arithmatic.navigation
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.wiseravenstudios.arithmatic.domain.model.PracticeConfig
+import com.wiseravenstudios.arithmatic.domain.results.BasicRoundResults
 import com.wiseravenstudios.arithmatic.ui.common.ClassroomScene
 import com.wiseravenstudios.arithmatic.ui.components.ChalkTextAction
 import com.wiseravenstudios.arithmatic.ui.game.GameBoard
 import com.wiseravenstudios.arithmatic.ui.game.GameViewModel
+import com.wiseravenstudios.arithmatic.ui.results.ResultsBoard
 import com.wiseravenstudios.arithmatic.ui.roundsettings.RoundSettingsBoard
 import com.wiseravenstudios.arithmatic.ui.splash.SplashScreen
 import com.wiseravenstudios.arithmatic.ui.start.StartBoard
@@ -38,6 +48,21 @@ fun ArithMaticApp(
         mutableStateOf(AppDestination.Start)
     }
 
+    /*
+     * These are retained outside the GameViewModel so the completed gameplay
+     * state can be cleared without removing the data used by ResultsBoard.
+     *
+     * They are intentionally not rememberSaveable because the domain models
+     * are not currently Parcelable or backed by custom Savers.
+     */
+    var completedResults by remember {
+        mutableStateOf<BasicRoundResults?>(null)
+    }
+
+    var completedConfig by remember {
+        mutableStateOf<PracticeConfig?>(null)
+    }
+
     val gameUiState by gameViewModel.uiState.collectAsState()
 
     LaunchedEffect(Unit) {
@@ -45,9 +70,36 @@ fun ArithMaticApp(
         showSplash = false
     }
 
-    LaunchedEffect(gameUiState.isRoundCompleted) {
-        if (gameUiState.isRoundCompleted) {
-            currentDestination = AppDestination.Results
+    /*
+     * The ViewModel completes the round after the final feedback delay.
+     *
+     * Capture the immutable results and configuration before clearing the
+     * gameplay state or navigating away from the practice board.
+     */
+    LaunchedEffect(
+        gameUiState.isRoundCompleted,
+        currentDestination
+    ) {
+        if (
+            gameUiState.isRoundCompleted &&
+            currentDestination == AppDestination.Practice
+        ) {
+            val roundResults =
+                gameViewModel.getCompletedResults()
+
+            val roundSnapshot =
+                gameViewModel.getCompletedRound()
+
+            if (
+                roundResults != null &&
+                roundSnapshot != null
+            ) {
+                completedResults = roundResults
+                completedConfig = roundSnapshot.config
+
+                currentDestination =
+                    AppDestination.Results
+            }
         }
     }
 
@@ -68,13 +120,17 @@ fun ArithMaticApp(
                         currentDestination =
                             AppDestination.AppSettings
                     },
+                    onOpenStats = {
+                        currentDestination =
+                            AppDestination.MyStats
+                    },
                     onOpenAbout = {
                         currentDestination =
                             AppDestination.About
                     },
-                    onOpenParentArea = {
+                    onOpenAdultArea = {
                         currentDestination =
-                            AppDestination.ParentArea
+                            AppDestination.AdultArea
                     }
                 )
             }
@@ -86,11 +142,11 @@ fun ArithMaticApp(
                             AppDestination.Start
                     },
                     onStartRound = { config ->
-                        /*
-                         * Clears any previous completed or abandoned round
-                         * before creating the new one.
-                         */
                         gameViewModel.clearRound()
+
+                        completedResults = null
+                        completedConfig = null
+
                         gameViewModel.startRound(config)
 
                         currentDestination =
@@ -106,35 +162,73 @@ fun ArithMaticApp(
                         gameViewModel.abandonRound()
                         gameViewModel.clearRound()
 
+                        completedResults = null
+                        completedConfig = null
+
                         currentDestination =
                             AppDestination.RoundSettings
                     },
                     onAnswerSelected = { choiceIndex ->
                         gameViewModel.selectAnswer(choiceIndex)
-                    },
-                    onNext = {
-                        gameViewModel.advance()
                     }
                 )
             }
 
             AppDestination.Results -> {
-                PlaceholderBoard(
-                    title = "Results",
-                    onBack = {
-                        gameViewModel.clearRound()
+                val results = completedResults
+                val config = completedConfig
 
-                        currentDestination =
-                            AppDestination.Start
-                    },
-                    onContinue = {
-                        gameViewModel.clearRound()
+                if (
+                    results != null &&
+                    config != null
+                ) {
+                    ResultsBoard(
+                        results = results,
+                        onPracticeAgain = {
+                            /*
+                             * Practice Again creates a fresh round using the
+                             * same immutable configuration snapshot.
+                             */
+                            gameViewModel.clearRound()
+                            gameViewModel.startRound(config)
 
-                        currentDestination =
-                            AppDestination.RoundSettings
-                    },
-                    continueText = "Practice Again"
-                )
+                            completedResults = null
+
+                            currentDestination =
+                                AppDestination.Practice
+                        },
+                        onChangeSettings = {
+                            gameViewModel.clearRound()
+
+                            completedResults = null
+                            completedConfig = null
+
+                            currentDestination =
+                                AppDestination.RoundSettings
+                        },
+                        onReturnHome = {
+                            gameViewModel.clearRound()
+
+                            completedResults = null
+                            completedConfig = null
+
+                            currentDestination =
+                                AppDestination.Start
+                        }
+                    )
+                } else {
+                    MissingResultsBoard(
+                        onReturnHome = {
+                            gameViewModel.clearRound()
+
+                            completedResults = null
+                            completedConfig = null
+
+                            currentDestination =
+                                AppDestination.Start
+                        }
+                    )
+                }
             }
 
             AppDestination.AppSettings -> {
@@ -147,9 +241,19 @@ fun ArithMaticApp(
                 )
             }
 
-            AppDestination.ParentArea -> {
+            AppDestination.MyStats -> {
                 PlaceholderBoard(
-                    title = "Parents / Guardians",
+                    title = "My Stats",
+                    onBack = {
+                        currentDestination =
+                            AppDestination.Start
+                    }
+                )
+            }
+
+            AppDestination.AdultArea -> {
+                PlaceholderBoard(
+                    title = "Adults",
                     onBack = {
                         currentDestination =
                             AppDestination.Start
@@ -158,8 +262,7 @@ fun ArithMaticApp(
             }
 
             AppDestination.About -> {
-                PlaceholderBoard(
-                    title = "About",
+                AboutBoard(
                     onBack = {
                         currentDestination =
                             AppDestination.Start
@@ -176,8 +279,107 @@ enum class AppDestination {
     Practice,
     Results,
     AppSettings,
-    ParentArea,
+    MyStats,
+    AdultArea,
     About
+}
+
+@Composable
+private fun AboutBoard(
+    onBack: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(
+                horizontal = 28.dp,
+                vertical = 32.dp
+            ),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "About Arith-Matic",
+            color = ChalkColors.PastelOrange,
+            fontFamily = Chalktastic,
+            fontSize = 34.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(
+            modifier = Modifier.height(32.dp)
+        )
+
+        Text(
+            text =
+                "Arith-Matic is an arithmetic practice game " +
+                        "designed to help children build confidence, " +
+                        "speed, and accuracy with mathematics.",
+            color = ChalkColors.ChalkWhite,
+            fontFamily = Chalktastic,
+            fontSize = 22.sp,
+            textAlign = TextAlign.Center,
+            lineHeight = 30.sp
+        )
+
+        Spacer(
+            modifier = Modifier.height(28.dp)
+        )
+
+        Text(
+            text = "Created by Wise Raven Studios",
+            color = ChalkColors.PastelBlue,
+            fontFamily = Chalktastic,
+            fontSize = 21.sp,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(
+            modifier = Modifier.height(12.dp)
+        )
+
+        Text(
+            text = "Version 1.0",
+            color = ChalkColors.PastelPurple,
+            fontFamily = Chalktastic,
+            fontSize = 18.sp,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(
+            modifier = Modifier.weight(1f)
+        )
+
+        ChalkTextAction(
+            text = "Back",
+            color = ChalkColors.PastelYellow,
+            onClick = onBack
+        )
+    }
+}
+
+@Composable
+private fun MissingResultsBoard(
+    onReturnHome: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Unable to load round results.",
+            color = ChalkColors.PastelPink,
+            fontFamily = Chalktastic,
+            fontSize = 25.sp
+        )
+
+        ChalkTextAction(
+            text = "Return Home",
+            color = ChalkColors.PastelYellow,
+            onClick = onReturnHome
+        )
+    }
 }
 
 @Composable

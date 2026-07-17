@@ -69,20 +69,27 @@ fun RoundSettingsBoard(
             OperationSettings(
                 enabledOperations = config.enabledOperations,
                 onOperationChanged = { operation, enabled ->
-                    config = config.copy(
-                        enabledOperations = config.enabledOperations
-                            .toMutableSet()
-                            .apply {
-                                if (enabled) {
-                                    add(operation)
-                                } else {
-                                    remove(operation)
-                                }
+                    val updatedOperations = config.enabledOperations
+                        .toMutableSet()
+                        .apply {
+                            if (enabled) {
+                                add(operation)
+                            } else {
+                                remove(operation)
                             }
-                            .toSet()
-                    )
+                        }
+                        .toSet()
 
-                    validationMessage = null
+                    if (updatedOperations.isEmpty()) {
+                        validationMessage =
+                            "Choose at least one operation."
+                    } else {
+                        config = config.copy(
+                            enabledOperations = updatedOperations
+                        )
+
+                        validationMessage = null
+                    }
                 }
             )
 
@@ -173,7 +180,8 @@ fun RoundSettingsBoard(
                 fontSize = 20.sp,
                 onClick = {
                     when (
-                        val result = PracticeConfigValidator.validate(config)
+                        val result =
+                            PracticeConfigValidator.validate(config)
                     ) {
                         PracticeConfigValidationResult.Valid -> {
                             validationMessage = null
