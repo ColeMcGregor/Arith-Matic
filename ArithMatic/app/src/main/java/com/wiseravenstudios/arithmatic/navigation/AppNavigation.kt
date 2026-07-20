@@ -32,6 +32,8 @@ import com.wiseravenstudios.arithmatic.ui.results.ResultsBoard
 import com.wiseravenstudios.arithmatic.ui.roundsettings.RoundSettingsBoard
 import com.wiseravenstudios.arithmatic.ui.splash.SplashScreen
 import com.wiseravenstudios.arithmatic.ui.start.StartBoard
+import com.wiseravenstudios.arithmatic.ui.about.AboutBoard
+import com.wiseravenstudios.arithmatic.ui.adults.AdultsBoard
 import com.wiseravenstudios.arithmatic.ui.theme.ChalkColors
 import com.wiseravenstudios.arithmatic.ui.theme.Chalktastic
 import kotlinx.coroutines.delay
@@ -252,8 +254,7 @@ fun ArithMaticApp(
             }
 
             AppDestination.AdultArea -> {
-                PlaceholderBoard(
-                    title = "Adults",
+                AdultsBoard(
                     onBack = {
                         currentDestination =
                             AppDestination.Start
@@ -282,80 +283,6 @@ enum class AppDestination {
     MyStats,
     AdultArea,
     About
-}
-
-@Composable
-private fun AboutBoard(
-    onBack: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(
-                horizontal = 28.dp,
-                vertical = 32.dp
-            ),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "About Arith-Matic",
-            color = ChalkColors.PastelOrange,
-            fontFamily = Chalktastic,
-            fontSize = 34.sp,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(
-            modifier = Modifier.height(32.dp)
-        )
-
-        Text(
-            text =
-                "Arith-Matic is an arithmetic practice game " +
-                        "designed to help children build confidence, " +
-                        "speed, and accuracy with mathematics.",
-            color = ChalkColors.ChalkWhite,
-            fontFamily = Chalktastic,
-            fontSize = 22.sp,
-            textAlign = TextAlign.Center,
-            lineHeight = 30.sp
-        )
-
-        Spacer(
-            modifier = Modifier.height(28.dp)
-        )
-
-        Text(
-            text = "Created by Wise Raven Studios",
-            color = ChalkColors.PastelBlue,
-            fontFamily = Chalktastic,
-            fontSize = 21.sp,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(
-            modifier = Modifier.height(12.dp)
-        )
-
-        Text(
-            text = "Version 1.0",
-            color = ChalkColors.PastelPurple,
-            fontFamily = Chalktastic,
-            fontSize = 18.sp,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(
-            modifier = Modifier.weight(1f)
-        )
-
-        ChalkTextAction(
-            text = "Back",
-            color = ChalkColors.PastelYellow,
-            onClick = onBack
-        )
-    }
 }
 
 @Composable

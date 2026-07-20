@@ -58,6 +58,7 @@ fun StartBoard(
                 ChalkTextAction(
                     text = "Start",
                     color = ChalkColors.PastelGreen,
+                    fontSize = 36.sp,
                     onClick = onStartPractice
                 )
 
