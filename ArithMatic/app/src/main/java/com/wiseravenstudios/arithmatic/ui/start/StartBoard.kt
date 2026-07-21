@@ -39,11 +39,12 @@ fun StartBoard(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+
             Text(
                 text = "Arith-Matic",
                 color = ChalkColors.PastelOrange,
                 fontFamily = Chalktastic,
-                fontSize = 37.sp,
+                fontSize = 35.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )

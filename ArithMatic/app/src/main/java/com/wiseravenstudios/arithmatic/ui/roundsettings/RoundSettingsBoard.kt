@@ -96,7 +96,7 @@ fun RoundSettingsBoard(
             OperandSizeSetting(
                 digitCount = config.wholeNumberDigits,
                 minimumDigits = 1,
-                maximumDigits = 6,
+                maximumDigits = 5,
                 onDigitCountChanged = { digitCount ->
                     config = config.copy(
                         wholeNumberDigits = digitCount

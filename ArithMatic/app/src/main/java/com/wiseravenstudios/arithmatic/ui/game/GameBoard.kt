@@ -11,11 +11,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -33,10 +35,13 @@ import com.wiseravenstudios.arithmatic.ui.theme.ChalkColors
 import com.wiseravenstudios.arithmatic.ui.theme.Chalktastic
 import java.math.BigDecimal
 
-private val AnswerButtonHeight = 76.dp
-private val AnswerGridMaximumWidth = 420.dp
-private val AnswerGridHorizontalSpacing = 12.dp
-private val AnswerGridVerticalSpacing = 12.dp
+private val QuestionAreaHeight = 86.dp
+private val FeedbackAreaHeight = 182.dp
+
+private val AnswerButtonHeight = 48.dp
+private val AnswerGridMaximumWidth = 500.dp
+private val AnswerGridHorizontalSpacing = 4.dp
+private val AnswerGridVerticalSpacing = 8.dp
 
 @Composable
 fun GameBoard(
@@ -50,7 +55,10 @@ fun GameBoard(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(top = 8.dp),
+            .padding(
+                vertical = 8.dp,
+                horizontal = 8.dp
+            ),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         GameBoardHeader(
@@ -67,17 +75,19 @@ fun GameBoard(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .padding(top = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+                .padding(
+                    top = 12.dp,
+                    start = 6.dp,
+                    end = 8.dp
+                ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = question.displayText,
-                color = ChalkColors.PastelYellow,
-                fontFamily = Chalktastic,
-                fontSize = 38.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
+            FittedQuestionText(
+                text = question.displayText.formatNumbersForDisplay(),
+                modifier = Modifier
+                    .fillMaxWidth(0.9f)
+                    .height(QuestionAreaHeight)
+
             )
 
             AnswerChoiceGrid(
@@ -88,14 +98,22 @@ fun GameBoard(
                     .fillMaxWidth()
                     .widthIn(max = AnswerGridMaximumWidth)
                     .padding(
-                        start = 8.dp,
-                        top = 10.dp,
-                        end = 8.dp
+                        start = 6.dp,
+                        top = 8.dp,
+                        end = 6.dp
                     )
             )
 
             GameFeedbackDisplay(
-                uiState = uiState
+                uiState = uiState,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(FeedbackAreaHeight)
+                    .padding(
+                        top = 8.dp,
+                        start = 8.dp,
+                        end = 8.dp
+                    )
             )
         }
     }
@@ -156,45 +174,77 @@ private fun MissingQuestionDisplay() {
 }
 
 @Composable
+private fun FittedQuestionText(
+    text: String,
+    modifier: Modifier = Modifier
+) {
+    FittedSingleLineText(
+        text = text,
+        modifier = modifier,
+        color = ChalkColors.PastelYellow,
+        maximumFontSize = 36.sp,
+        minimumFontSize = 20.sp
+    )
+}
+
+@Composable
 private fun AnswerChoiceGrid(
     choices: List<BigDecimal>,
     uiState: GameUiState,
     onAnswerSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val useSingleColumn = choices.any { choice ->
+        choice.toDisplayString().length > 10
+    }
+
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(
             AnswerGridVerticalSpacing
         )
     ) {
-        repeat(2) { rowIndex ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(
-                    AnswerGridHorizontalSpacing
+        if (useSingleColumn) {
+            choices.forEachIndexed { choiceIndex, choice ->
+                AnswerChoiceButton(
+                    choice = choice,
+                    choiceIndex = choiceIndex,
+                    uiState = uiState,
+                    onAnswerSelected = onAnswerSelected,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(AnswerButtonHeight)
                 )
-            ) {
-                repeat(2) { columnIndex ->
-                    val choiceIndex = rowIndex * 2 + columnIndex
-                    val choice = choices.getOrNull(choiceIndex)
+            }
+        } else {
+            repeat(2) { rowIndex ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(
+                        AnswerGridHorizontalSpacing
+                    )
+                ) {
+                    repeat(2) { columnIndex ->
+                        val choiceIndex = rowIndex * 2 + columnIndex
+                        val choice = choices.getOrNull(choiceIndex)
 
-                    if (choice != null) {
-                        AnswerChoiceButton(
-                            choice = choice,
-                            choiceIndex = choiceIndex,
-                            uiState = uiState,
-                            onAnswerSelected = onAnswerSelected,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(AnswerButtonHeight)
-                        )
-                    } else {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(AnswerButtonHeight)
-                        )
+                        if (choice != null) {
+                            AnswerChoiceButton(
+                                choice = choice,
+                                choiceIndex = choiceIndex,
+                                uiState = uiState,
+                                onAnswerSelected = onAnswerSelected,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(AnswerButtonHeight)
+                            )
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(AnswerButtonHeight)
+                            )
+                        }
                     }
                 }
             }
@@ -221,7 +271,7 @@ private fun AnswerChoiceButton(
         ),
         contentPadding = PaddingValues(
             horizontal = 10.dp,
-            vertical = 8.dp
+            vertical = 2.dp
         ),
         modifier = modifier
     ) {
@@ -235,9 +285,24 @@ private fun AnswerChoiceButton(
 @Composable
 private fun FittedAnswerText(
     text: String,
+    modifier: Modifier = Modifier
+) {
+    FittedSingleLineText(
+        text = text,
+        modifier = modifier,
+        color = LocalContentColor.current,
+        maximumFontSize = 20.sp,
+        minimumFontSize = 14.sp
+    )
+}
+
+@Composable
+private fun FittedSingleLineText(
+    text: String,
     modifier: Modifier = Modifier,
-    maximumFontSize: TextUnit = 28.sp,
-    minimumFontSize: TextUnit = 16.sp
+    color: Color,
+    maximumFontSize: TextUnit,
+    minimumFontSize: TextUnit
 ) {
     BoxWithConstraints(
         modifier = modifier,
@@ -245,7 +310,22 @@ private fun FittedAnswerText(
     ) {
         val textMeasurer = rememberTextMeasurer()
 
-        val maximumWidth = constraints.maxWidth
+        /*
+         * Chalktastic has irregular glyph edges that can extend slightly
+         * beyond Compose's reported text bounds. This safety margin prevents
+         * the first and last glyphs from being clipped.
+         */
+        val horizontalSafetyMargin = 2.dp
+        val horizontalSafetyMarginPx = with(
+            androidx.compose.ui.platform.LocalDensity.current
+        ) {
+            horizontalSafetyMargin.roundToPx() * 2
+        }
+
+        val safeMaximumWidth = (
+                constraints.maxWidth - horizontalSafetyMarginPx
+                ).coerceAtLeast(1)
+
         val maximumHeight = constraints.maxHeight
 
         val baseStyle = TextStyle(
@@ -256,7 +336,7 @@ private fun FittedAnswerText(
 
         val resolvedFontSize = remember(
             text,
-            maximumWidth,
+            safeMaximumWidth,
             maximumHeight,
             maximumFontSize,
             minimumFontSize
@@ -266,7 +346,7 @@ private fun FittedAnswerText(
                 style = baseStyle,
                 maximumFontSize = maximumFontSize,
                 minimumFontSize = minimumFontSize,
-                maximumWidth = maximumWidth,
+                maximumWidth = safeMaximumWidth,
                 maximumHeight = maximumHeight,
                 measureText = { annotatedText, style, constraints ->
                     textMeasurer.measure(
@@ -282,14 +362,17 @@ private fun FittedAnswerText(
 
         Text(
             text = text,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = horizontalSafetyMargin),
+            color = color,
             fontFamily = Chalktastic,
             fontSize = resolvedFontSize,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
             maxLines = 1,
             softWrap = false,
-            overflow = TextOverflow.Clip
+            overflow = TextOverflow.Visible
         )
     }
 }
@@ -324,7 +407,7 @@ private fun findLargestFittingFontSize(
             !result.didOverflowWidth &&
             !result.didOverflowHeight
         ) {
-            return candidateSize.sp
+            return (candidateSize-2).sp
         }
 
         candidateSize--
@@ -358,48 +441,49 @@ private fun answerButtonState(
 
 @Composable
 private fun GameFeedbackDisplay(
-    uiState: GameUiState
+    uiState: GameUiState,
+    modifier: Modifier = Modifier
 ) {
-    when (uiState.selectedAnswerIsCorrect) {
-        null -> {
-            Text(
-                text = "",
-                fontSize = 22.sp
-            )
-        }
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.TopCenter
+    ) {
+        when (uiState.selectedAnswerIsCorrect) {
+            null -> Unit
 
-        true -> {
-            Text(
-                text = "Correct!",
-                color = ChalkColors.PastelGreen,
-                fontFamily = Chalktastic,
-                fontSize = 26.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
-
-        false -> {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+            true -> {
                 Text(
-                    text = "Not quite.",
-                    color = ChalkColors.PastelPink,
+                    text = "Correct!",
+                    color = ChalkColors.PastelGreen,
                     fontFamily = Chalktastic,
-                    fontSize = 20.sp
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
                 )
+            }
 
-                uiState.currentQuestion?.let { question ->
+            false -> {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Text(
-                        text = "The answer is " +
-                                question.expectedAnswer
-                                    .toDisplayString() +
-                                ".",
-                        color = ChalkColors.ChalkWhite,
+                        text = "Not quite.",
+                        color = ChalkColors.PastelPink,
                         fontFamily = Chalktastic,
-                        fontSize = 20.sp,
-                        textAlign = TextAlign.Center
+                        fontSize = 20.sp
                     )
+
+                    uiState.currentQuestion?.let { question ->
+                        Text(
+                            text = "The answer is " +
+                                    question.expectedAnswer.toDisplayString() +
+                                    ".",
+                            color = ChalkColors.ChalkWhite,
+                            fontFamily = Chalktastic,
+                            fontSize = 20.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }
@@ -407,9 +491,48 @@ private fun GameFeedbackDisplay(
 }
 
 private fun BigDecimal.toDisplayString(): String {
-    return if (compareTo(BigDecimal.ZERO) == 0) {
+    val normalizedValue = if (compareTo(BigDecimal.ZERO) == 0) {
         "0"
     } else {
         stripTrailingZeros().toPlainString()
+    }
+
+    return normalizedValue.addGroupingSeparators()
+}
+
+private fun String.formatNumbersForDisplay(): String {
+    val numberPattern = Regex("""-?\d+(?:\.\d+)?""")
+
+    return numberPattern.replace(this) { match ->
+        match.value.addGroupingSeparators()
+    }
+}
+
+private fun String.addGroupingSeparators(): String {
+    val isNegative = startsWith("-")
+    val unsignedValue = removePrefix("-")
+
+    val parts = unsignedValue.split(".", limit = 2)
+
+    val integerPart = parts[0]
+    val decimalPart = parts.getOrNull(1)
+
+    val groupedIntegerPart = integerPart
+        .reversed()
+        .chunked(3)
+        .joinToString(",")
+        .reversed()
+
+    return buildString {
+        if (isNegative) {
+            append("-")
+        }
+
+        append(groupedIntegerPart)
+
+        if (!decimalPart.isNullOrEmpty()) {
+            append(".")
+            append(decimalPart)
+        }
     }
 }

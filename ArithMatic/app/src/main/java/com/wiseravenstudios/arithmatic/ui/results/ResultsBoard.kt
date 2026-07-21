@@ -121,7 +121,7 @@ fun ResultsBoard(
                         ChalkTextAction(
                             text = "Practice\nAgain",
                             color = ChalkColors.PastelGreen,
-                            fontSize = 14.sp,
+                            fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
                             paddingStart = 1.dp,
                             paddingTop = 2.dp,
@@ -137,7 +137,7 @@ fun ResultsBoard(
                         ChalkTextAction(
                             text = "Change\nSettings",
                             color = ChalkColors.PastelYellow,
-                            fontSize = 14.sp,
+                            fontSize = 13.sp,
                             paddingStart = 1.dp,
                             paddingTop = 2.dp,
                             paddingEnd = 1.dp,
@@ -152,7 +152,7 @@ fun ResultsBoard(
                         ChalkTextAction(
                             text = "Return\nHome",
                             color = ChalkColors.PastelPurple,
-                            fontSize = 15.sp,
+                            fontSize = 14.sp,
                             paddingStart = 1.dp,
                             paddingTop = 2.dp,
                             paddingEnd = 1.dp,

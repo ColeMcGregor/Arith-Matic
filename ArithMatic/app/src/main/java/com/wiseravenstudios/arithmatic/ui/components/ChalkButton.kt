@@ -58,8 +58,8 @@ fun ChalkButton(
     enabled: Boolean = true,
     borderColor: Color = ChalkColors.ChalkWhite,
     contentPadding: PaddingValues = PaddingValues(
-        horizontal = 24.dp,
-        vertical = 12.dp
+        horizontal = 20.dp,
+        vertical = 4.dp
     ),
     @DrawableRes backgroundRes: Int = R.drawable.chalk_button,
     content: @Composable () -> Unit
@@ -151,8 +151,8 @@ fun ChalkButton(
     Box(
         modifier = modifier
             .defaultMinSize(
-                minWidth = 120.dp,
-                minHeight = 56.dp
+                minWidth = 110.dp,
+                minHeight = 30.dp
             )
             .graphicsLayer {
                 scaleX = pressedScale
