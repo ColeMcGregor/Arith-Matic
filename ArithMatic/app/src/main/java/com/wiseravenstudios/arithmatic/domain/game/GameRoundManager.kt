@@ -1,5 +1,7 @@
 package com.wiseravenstudios.arithmatic.domain.game
 
+import com.wiseravenstudios.arithmatic.domain.config.PracticeConfigValidationResult
+import com.wiseravenstudios.arithmatic.domain.config.PracticeConfigValidator
 import com.wiseravenstudios.arithmatic.domain.generator.QuestionSetGenerator
 import com.wiseravenstudios.arithmatic.domain.model.GameRound
 import com.wiseravenstudios.arithmatic.domain.model.GameRoundStatus
@@ -14,7 +16,22 @@ class GameRoundManager(
     fun createAndStartRound(
         config: PracticeConfig
     ): GameRound {
-        val questions = questionSetGenerator.generate(config)
+        val validationResult =
+            PracticeConfigValidator.validate(config)
+
+        if (
+            validationResult
+                    is PracticeConfigValidationResult.Invalid
+        ) {
+            throw IllegalArgumentException(
+                validationResult.errors.joinToString(
+                    separator = " "
+                )
+            )
+        }
+
+        val questions =
+            questionSetGenerator.generate(config)
 
         return GameRound(
             config = config,
@@ -29,7 +46,10 @@ class GameRoundManager(
         selectedChoiceIndex: Int,
         activeDurationMillis: Long
     ): QuestionAttempt {
-        check(round.status == GameRoundStatus.InProgress) {
+        check(
+            round.status ==
+                    GameRoundStatus.InProgress
+        ) {
             "Attempts may only be recorded during an active round."
         }
 
@@ -44,12 +64,17 @@ class GameRoundManager(
             "Selected choice index does not exist for the current question."
         }
 
-        val attempt = QuestionAttempt.create(
-            questionIndex = round.currentQuestionIndex,
-            question = round.currentQuestion,
-            selectedChoiceIndex = selectedChoiceIndex,
-            activeDurationMillis = activeDurationMillis
-        )
+        val attempt =
+            QuestionAttempt.create(
+                questionIndex =
+                    round.currentQuestionIndex,
+                question =
+                    round.currentQuestion,
+                selectedChoiceIndex =
+                    selectedChoiceIndex,
+                activeDurationMillis =
+                    activeDurationMillis
+            )
 
         round.recordAttempt(attempt)
 
@@ -59,7 +84,10 @@ class GameRoundManager(
     fun advanceOrComplete(
         round: GameRound
     ) {
-        check(round.status == GameRoundStatus.InProgress) {
+        check(
+            round.status ==
+                    GameRoundStatus.InProgress
+        ) {
             "Only an active round may advance or complete."
         }
 
@@ -82,3 +110,4 @@ class GameRoundManager(
         }
     }
 }
+

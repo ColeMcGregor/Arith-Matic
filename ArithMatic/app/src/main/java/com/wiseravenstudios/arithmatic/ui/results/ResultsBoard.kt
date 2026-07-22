@@ -26,6 +26,8 @@ import java.util.Locale
 import kotlin.math.roundToInt
 
 private val ResultsMaximumWidth = 420.dp
+private val ResultsActionsBottomPadding = 12.dp
+private val ResultsActionsReservedHeight = 72.dp
 
 @Composable
 fun ResultsBoard(
@@ -38,18 +40,18 @@ fun ResultsBoard(
     val scrollState = rememberScrollState()
 
     Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.TopCenter
+        modifier = modifier.fillMaxSize()
     ) {
         Column(
             modifier = Modifier
+                .align(Alignment.TopCenter)
                 .fillMaxSize()
                 .verticalScroll(scrollState)
                 .padding(
                     start = 20.dp,
                     top = 16.dp,
                     end = 20.dp,
-                    bottom = 72.dp
+                    bottom = ResultsActionsReservedHeight
                 ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -107,61 +109,82 @@ fun ResultsBoard(
                         results.averageQuestionDurationMillis
                     )
                 )
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    verticalAlignment = Alignment.Bottom
-                ) {
-                    ResultsActionSlot(
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        ChalkTextAction(
-                            text = "Practice\nAgain",
-                            color = ChalkColors.PastelGreen,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold,
-                            paddingStart = 1.dp,
-                            paddingTop = 2.dp,
-                            paddingEnd = 1.dp,
-                            paddingBottom = 2.dp,
-                            onClick = onPracticeAgain
-                        )
-                    }
-
-                    ResultsActionSlot(
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        ChalkTextAction(
-                            text = "Change\nSettings",
-                            color = ChalkColors.PastelYellow,
-                            fontSize = 13.sp,
-                            paddingStart = 1.dp,
-                            paddingTop = 2.dp,
-                            paddingEnd = 1.dp,
-                            paddingBottom = 2.dp,
-                            onClick = onChangeSettings
-                        )
-                    }
-
-                    ResultsActionSlot(
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        ChalkTextAction(
-                            text = "Return\nHome",
-                            color = ChalkColors.PastelPurple,
-                            fontSize = 14.sp,
-                            paddingStart = 1.dp,
-                            paddingTop = 2.dp,
-                            paddingEnd = 1.dp,
-                            paddingBottom = 2.dp,
-                            onClick = onReturnHome
-                        )
-                    }
-                }
             }
+        }
+
+        ResultsActions(
+            onPracticeAgain = onPracticeAgain,
+            onChangeSettings = onChangeSettings,
+            onReturnHome = onReturnHome,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .widthIn(max = ResultsMaximumWidth)
+                .padding(
+                    start = 20.dp,
+                    end = 20.dp,
+                    bottom = ResultsActionsBottomPadding
+                )
+        )
+    }
+}
+
+@Composable
+private fun ResultsActions(
+    onPracticeAgain: () -> Unit,
+    onChangeSettings: () -> Unit,
+    onReturnHome: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.Bottom
+    ) {
+        ResultsActionSlot(
+            modifier = Modifier.weight(1f)
+        ) {
+            ChalkTextAction(
+                text = "Practice\nAgain",
+                color = ChalkColors.PastelGreen,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                paddingStart = 1.dp,
+                paddingTop = 2.dp,
+                paddingEnd = 1.dp,
+                paddingBottom = 2.dp,
+                onClick = onPracticeAgain
+            )
+        }
+
+        ResultsActionSlot(
+            modifier = Modifier.weight(1f)
+        ) {
+            ChalkTextAction(
+                text = "Change\nSettings",
+                color = ChalkColors.PastelYellow,
+                fontSize = 13.sp,
+                paddingStart = 1.dp,
+                paddingTop = 2.dp,
+                paddingEnd = 1.dp,
+                paddingBottom = 2.dp,
+                onClick = onChangeSettings
+            )
+        }
+
+        ResultsActionSlot(
+            modifier = Modifier.weight(1f)
+        ) {
+            ChalkTextAction(
+                text = "Return\nHome",
+                color = ChalkColors.PastelPurple,
+                fontSize = 14.sp,
+                paddingStart = 1.dp,
+                paddingTop = 2.dp,
+                paddingEnd = 1.dp,
+                paddingBottom = 2.dp,
+                onClick = onReturnHome
+            )
         }
     }
 }

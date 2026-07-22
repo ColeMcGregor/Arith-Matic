@@ -2,6 +2,7 @@ package com.wiseravenstudios.arithmatic.ui.game
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.wiseravenstudios.arithmatic.data.repository.CompletedRoundRepository
 import com.wiseravenstudios.arithmatic.data.time.AndroidAppClock
 import com.wiseravenstudios.arithmatic.domain.game.GameRoundManager
 import com.wiseravenstudios.arithmatic.domain.model.ArithmeticQuestion
@@ -25,6 +26,7 @@ import kotlinx.coroutines.launch
 private const val FEEDBACK_DELAY_MILLIS = 1_750L
 
 class GameViewModel(
+    private val completedRoundRepository: CompletedRoundRepository,
     private val gameRoundManager: GameRoundManager = GameRoundManager(),
     clock: AppClock = AndroidAppClock()
 ) : ViewModel() {
@@ -63,7 +65,8 @@ class GameViewModel(
         completedRound = null
         completedResults = null
 
-        val round = gameRoundManager.createAndStartRound(config)
+        val round =
+            gameRoundManager.createAndStartRound(config)
 
         activeRound = round
         areTimersLifecyclePaused = false
@@ -80,7 +83,10 @@ class GameViewModel(
         val round = requireActiveRound()
         val currentState = _uiState.value
 
-        check(round.status == GameRoundStatus.InProgress) {
+        check(
+            round.status ==
+                    GameRoundStatus.InProgress
+        ) {
             "Answers may only be selected during an active round."
         }
 
@@ -89,7 +95,8 @@ class GameViewModel(
         }
 
         check(
-            choiceIndex in round.currentQuestion.answerChoices.indices
+            choiceIndex in
+                    round.currentQuestion.answerChoices.indices
         ) {
             "Selected choice index does not exist for the current question."
         }
@@ -100,14 +107,18 @@ class GameViewModel(
          * This ensures neither question time nor round time includes the
          * feedback delay.
          */
-        val questionDurationMillis = questionTimer.stop()
+        val questionDurationMillis =
+            questionTimer.stop()
+
         roundTimer.pause()
 
-        val attempt = gameRoundManager.recordAttempt(
-            round = round,
-            selectedChoiceIndex = choiceIndex,
-            activeDurationMillis = questionDurationMillis
-        )
+        val attempt =
+            gameRoundManager.recordAttempt(
+                round = round,
+                selectedChoiceIndex = choiceIndex,
+                activeDurationMillis =
+                    questionDurationMillis
+            )
 
         /*
          * Lock the board and expose answer feedback immediately.
@@ -115,7 +126,8 @@ class GameViewModel(
         _uiState.update { state ->
             state.copy(
                 selectedChoiceIndex = choiceIndex,
-                selectedAnswerIsCorrect = attempt.isCorrect,
+                selectedAnswerIsCorrect =
+                    attempt.isCorrect,
                 correctChoiceIndex =
                     round.currentQuestion.correctChoiceIndex,
                 isAnswerLocked = true
@@ -124,10 +136,11 @@ class GameViewModel(
 
         feedbackJob?.cancel()
 
-        feedbackJob = viewModelScope.launch {
-            delay(FEEDBACK_DELAY_MILLIS)
-            advanceAfterFeedback()
-        }
+        feedbackJob =
+            viewModelScope.launch {
+                delay(FEEDBACK_DELAY_MILLIS)
+                advanceAfterFeedback()
+            }
     }
 
     private fun advanceAfterFeedback() {
@@ -137,7 +150,10 @@ class GameViewModel(
          * The round may have been abandoned or cleared during the feedback
          * delay.
          */
-        if (round.status != GameRoundStatus.InProgress) {
+        if (
+            round.status !=
+            GameRoundStatus.InProgress
+        ) {
             return
         }
 
@@ -145,7 +161,8 @@ class GameViewModel(
             return
         }
 
-        val hadMoreQuestions = round.hasMoreQuestions
+        val hadMoreQuestions =
+            round.hasMoreQuestions
 
         gameRoundManager.advanceOrComplete(round)
 
@@ -197,14 +214,31 @@ class GameViewModel(
             CompletedGameRoundMapper.map(
                 round = round,
                 activeRoundDurationMillis =
-                    activeRoundDurationMillis
+                    activeRoundDurationMillis,
+                completedAtEpochMillis =
+                    System.currentTimeMillis()
             )
 
-        completedRound = completedRoundSnapshot
+        completedRound =
+            completedRoundSnapshot
+
         completedResults =
             BasicResultsCalculator.calculate(
                 completedRoundSnapshot
             )
+
+        /*
+         * Persist the immutable completed-round snapshot.
+         *
+         * This happens here rather than inside the Results screen so
+         * recomposition or reopening that screen cannot save duplicates.
+         */
+        viewModelScope.launch {
+            completedRoundRepository.saveCompletedRound(
+                completedRound =
+                    completedRoundSnapshot
+            )
+        }
 
         _uiState.update { state ->
             state.copy(
@@ -235,7 +269,8 @@ class GameViewModel(
 
         _uiState.update { state ->
             state.copy(
-                status = GameRoundStatus.Abandoned,
+                status =
+                    GameRoundStatus.Abandoned,
                 isRoundAbandoned = true,
                 isAnswerLocked = true
             )
@@ -245,7 +280,10 @@ class GameViewModel(
     fun pauseTimers() {
         areTimersLifecyclePaused = true
 
-        if (activeRound?.status != GameRoundStatus.InProgress) {
+        if (
+            activeRound?.status !=
+            GameRoundStatus.InProgress
+        ) {
             return
         }
 
@@ -256,7 +294,10 @@ class GameViewModel(
     fun resumeTimers() {
         areTimersLifecyclePaused = false
 
-        if (activeRound?.status != GameRoundStatus.InProgress) {
+        if (
+            activeRound?.status !=
+            GameRoundStatus.InProgress
+        ) {
             return
         }
 
@@ -287,35 +328,44 @@ class GameViewModel(
         _uiState.value = GameUiState()
     }
 
-    fun getCompletedRound(): CompletedGameRoundDto? {
+    fun getCompletedRound():
+            CompletedGameRoundDto? {
         return completedRound
     }
 
-    fun getCompletedResults(): BasicRoundResults? {
+    fun getCompletedResults():
+            BasicRoundResults? {
         return completedResults
     }
 
     private fun publishRoundState(
         round: GameRound
     ) {
-        _uiState.value = GameUiState(
-            status = round.status,
-            currentQuestion = round.currentQuestion,
-            currentQuestionIndex = round.currentQuestionIndex,
-            currentQuestionNumber = round.currentQuestionNumber,
-            totalQuestions = round.totalQuestions,
-            selectedChoiceIndex = null,
-            selectedAnswerIsCorrect = null,
-            correctChoiceIndex =
-                round.currentQuestion.correctChoiceIndex,
-            isAnswerLocked = false,
-            isRoundCompleted = false,
-            isRoundAbandoned = false,
-            activeRoundDurationMillis = roundTimer.elapsedMillis
-        )
+        _uiState.value =
+            GameUiState(
+                status = round.status,
+                currentQuestion =
+                    round.currentQuestion,
+                currentQuestionIndex =
+                    round.currentQuestionIndex,
+                currentQuestionNumber =
+                    round.currentQuestionNumber,
+                totalQuestions =
+                    round.totalQuestions,
+                selectedChoiceIndex = null,
+                selectedAnswerIsCorrect = null,
+                correctChoiceIndex =
+                    round.currentQuestion.correctChoiceIndex,
+                isAnswerLocked = false,
+                isRoundCompleted = false,
+                isRoundAbandoned = false,
+                activeRoundDurationMillis =
+                    roundTimer.elapsedMillis
+            )
     }
 
-    private fun requireActiveRound(): GameRound {
+    private fun requireActiveRound():
+            GameRound {
         return checkNotNull(activeRound) {
             "No active game round exists."
         }
@@ -323,7 +373,8 @@ class GameViewModel(
 }
 
 data class GameUiState(
-    val status: GameRoundStatus = GameRoundStatus.NotStarted,
+    val status: GameRoundStatus =
+        GameRoundStatus.NotStarted,
     val currentQuestion: ArithmeticQuestion? = null,
     val currentQuestionIndex: Int = 0,
     val currentQuestionNumber: Int = 0,
@@ -336,16 +387,20 @@ data class GameUiState(
     val isRoundAbandoned: Boolean = false,
     val activeRoundDurationMillis: Long = 0L
 ) {
+
     val hasActiveQuestion: Boolean
         get() =
             currentQuestion != null &&
-                    status == GameRoundStatus.InProgress
+                    status ==
+                    GameRoundStatus.InProgress
 
     val isShowingFeedback: Boolean
-        get() = selectedChoiceIndex != null
+        get() =
+            selectedChoiceIndex != null
 
     val isFinalQuestion: Boolean
         get() =
             totalQuestions > 0 &&
-                    currentQuestionNumber == totalQuestions
+                    currentQuestionNumber ==
+                    totalQuestions
 }

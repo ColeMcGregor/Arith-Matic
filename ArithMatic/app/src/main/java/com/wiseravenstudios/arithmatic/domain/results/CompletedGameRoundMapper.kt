@@ -7,7 +7,8 @@ object CompletedGameRoundMapper {
 
     fun map(
         round: GameRound,
-        activeRoundDurationMillis: Long
+        activeRoundDurationMillis: Long,
+        completedAtEpochMillis: Long
     ): CompletedGameRoundDto {
         require(round.status == GameRoundStatus.Completed) {
             "Only a completed game round may be mapped to completed results."
@@ -17,11 +18,16 @@ object CompletedGameRoundMapper {
             "Active round duration cannot be negative."
         }
 
+        require(completedAtEpochMillis >= 0L) {
+            "Completion timestamp cannot be negative."
+        }
+
         return CompletedGameRoundDto(
             config = round.config,
             questions = round.questions.toList(),
             attempts = round.attempts.toList(),
-            activeRoundDurationMillis = activeRoundDurationMillis
+            activeRoundDurationMillis = activeRoundDurationMillis,
+            completedAtEpochMillis = completedAtEpochMillis
         )
     }
 }

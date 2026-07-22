@@ -8,7 +8,8 @@ data class CompletedGameRoundDto(
     val config: PracticeConfig,
     val questions: List<ArithmeticQuestion>,
     val attempts: List<QuestionAttempt>,
-    val activeRoundDurationMillis: Long
+    val activeRoundDurationMillis: Long,
+    val completedAtEpochMillis: Long
 ) {
     init {
         require(questions.isNotEmpty()) {
@@ -25,6 +26,10 @@ data class CompletedGameRoundDto(
 
         require(activeRoundDurationMillis >= 0L) {
             "Active round duration cannot be negative."
+        }
+
+        require(completedAtEpochMillis >= 0L) {
+            "Completion timestamp cannot be negative."
         }
 
         require(

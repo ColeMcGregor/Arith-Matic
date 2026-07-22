@@ -2,10 +2,7 @@ package com.wiseravenstudios.arithmatic.navigation
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -17,31 +14,64 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.wiseravenstudios.arithmatic.data.local.database.ArithMaticDatabase
+import com.wiseravenstudios.arithmatic.data.repository.CompletedRoundRepository
 import com.wiseravenstudios.arithmatic.domain.model.PracticeConfig
 import com.wiseravenstudios.arithmatic.domain.results.BasicRoundResults
+import com.wiseravenstudios.arithmatic.ui.about.AboutBoard
+import com.wiseravenstudios.arithmatic.ui.adults.AdultsBoard
 import com.wiseravenstudios.arithmatic.ui.common.ClassroomScene
 import com.wiseravenstudios.arithmatic.ui.components.ChalkTextAction
 import com.wiseravenstudios.arithmatic.ui.game.GameBoard
 import com.wiseravenstudios.arithmatic.ui.game.GameViewModel
+import com.wiseravenstudios.arithmatic.ui.game.GameViewModelFactory
 import com.wiseravenstudios.arithmatic.ui.results.ResultsBoard
 import com.wiseravenstudios.arithmatic.ui.roundsettings.RoundSettingsBoard
 import com.wiseravenstudios.arithmatic.ui.splash.SplashScreen
 import com.wiseravenstudios.arithmatic.ui.start.StartBoard
-import com.wiseravenstudios.arithmatic.ui.about.AboutBoard
-import com.wiseravenstudios.arithmatic.ui.adults.AdultsBoard
 import com.wiseravenstudios.arithmatic.ui.theme.ChalkColors
 import com.wiseravenstudios.arithmatic.ui.theme.Chalktastic
 import kotlinx.coroutines.delay
 
 @Composable
-fun ArithMaticApp(
-    gameViewModel: GameViewModel = viewModel()
-) {
+fun ArithMaticApp() {
+    val context = LocalContext.current
+
+    /*
+     * Create the persistence dependencies once for this composition.
+     *
+     * The database itself is also protected by its singleton implementation,
+     * so configuration changes will not create separate database instances.
+     */
+    val database = remember(context.applicationContext) {
+        ArithMaticDatabase.getInstance(
+            context.applicationContext
+        )
+    }
+
+    val completedRoundRepository = remember(database) {
+        CompletedRoundRepository(
+            completedRoundDao =
+                database.completedRoundDao()
+        )
+    }
+
+    val gameViewModelFactory =
+        remember(completedRoundRepository) {
+            GameViewModelFactory(
+                completedRoundRepository =
+                    completedRoundRepository
+            )
+        }
+
+    val gameViewModel: GameViewModel =
+        viewModel(
+            factory = gameViewModelFactory
+        )
+
     var showSplash by rememberSaveable {
         mutableStateOf(true)
     }
@@ -65,7 +95,8 @@ fun ArithMaticApp(
         mutableStateOf<PracticeConfig?>(null)
     }
 
-    val gameUiState by gameViewModel.uiState.collectAsState()
+    val gameUiState by
+    gameViewModel.uiState.collectAsState()
 
     LaunchedEffect(Unit) {
         delay(3_000L)
@@ -73,7 +104,8 @@ fun ArithMaticApp(
     }
 
     /*
-     * The ViewModel completes the round after the final feedback delay.
+     * The ViewModel completes and persists the round after the final feedback
+     * delay.
      *
      * Capture the immutable results and configuration before clearing the
      * gameplay state or navigating away from the practice board.
@@ -84,7 +116,8 @@ fun ArithMaticApp(
     ) {
         if (
             gameUiState.isRoundCompleted &&
-            currentDestination == AppDestination.Practice
+            currentDestination ==
+            AppDestination.Practice
         ) {
             val roundResults =
                 gameViewModel.getCompletedResults()
@@ -97,7 +130,8 @@ fun ArithMaticApp(
                 roundSnapshot != null
             ) {
                 completedResults = roundResults
-                completedConfig = roundSnapshot.config
+                completedConfig =
+                    roundSnapshot.config
 
                 currentDestination =
                     AppDestination.Results
@@ -171,7 +205,9 @@ fun ArithMaticApp(
                             AppDestination.RoundSettings
                     },
                     onAnswerSelected = { choiceIndex ->
-                        gameViewModel.selectAnswer(choiceIndex)
+                        gameViewModel.selectAnswer(
+                            choiceIndex
+                        )
                     }
                 )
             }
@@ -291,11 +327,14 @@ private fun MissingResultsBoard(
 ) {
     Column(
         modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        verticalArrangement =
+            Arrangement.Center,
+        horizontalAlignment =
+            Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Unable to load round results.",
+            text =
+                "Unable to load round results.",
             color = ChalkColors.PastelPink,
             fontFamily = Chalktastic,
             fontSize = 25.sp
@@ -318,8 +357,10 @@ private fun PlaceholderBoard(
 ) {
     Column(
         modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        verticalArrangement =
+            Arrangement.Center,
+        horizontalAlignment =
+            Alignment.CenterHorizontally
     ) {
         Text(
             text = title,

@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -42,6 +43,8 @@ private val AnswerButtonHeight = 48.dp
 private val AnswerGridMaximumWidth = 500.dp
 private val AnswerGridHorizontalSpacing = 4.dp
 private val AnswerGridVerticalSpacing = 8.dp
+
+private const val SingleColumnAnswerLengthThreshold = 10
 
 @Composable
 fun GameBoard(
@@ -85,9 +88,8 @@ fun GameBoard(
             FittedQuestionText(
                 text = question.displayText.formatNumbersForDisplay(),
                 modifier = Modifier
-                    .fillMaxWidth(0.9f)
+                    .fillMaxWidth()
                     .height(QuestionAreaHeight)
-
             )
 
             AnswerChoiceGrid(
@@ -183,7 +185,7 @@ private fun FittedQuestionText(
         modifier = modifier,
         color = ChalkColors.PastelYellow,
         maximumFontSize = 36.sp,
-        minimumFontSize = 20.sp
+        minimumFontSize = 16.sp
     )
 }
 
@@ -194,9 +196,23 @@ private fun AnswerChoiceGrid(
     onAnswerSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val useSingleColumn = choices.any { choice ->
-        choice.toDisplayString().length > 10
+    val formattedChoices = remember(choices) {
+        choices.map { choice ->
+            choice.toDisplayString()
+        }
     }
+
+    val longestAnswerLength = formattedChoices
+        .maxOfOrNull { answer -> answer.length }
+        ?: 0
+
+    val useSingleColumn =
+        longestAnswerLength > SingleColumnAnswerLengthThreshold
+
+    val sharedAnswerFontSize = answerFontSizeForLength(
+        answerLength = longestAnswerLength,
+        useSingleColumn = useSingleColumn
+    )
 
     Column(
         modifier = modifier,
@@ -205,9 +221,10 @@ private fun AnswerChoiceGrid(
         )
     ) {
         if (useSingleColumn) {
-            choices.forEachIndexed { choiceIndex, choice ->
+            formattedChoices.forEachIndexed { choiceIndex, answerText ->
                 AnswerChoiceButton(
-                    choice = choice,
+                    answerText = answerText,
+                    answerFontSize = sharedAnswerFontSize,
                     choiceIndex = choiceIndex,
                     uiState = uiState,
                     onAnswerSelected = onAnswerSelected,
@@ -225,12 +242,16 @@ private fun AnswerChoiceGrid(
                     )
                 ) {
                     repeat(2) { columnIndex ->
-                        val choiceIndex = rowIndex * 2 + columnIndex
-                        val choice = choices.getOrNull(choiceIndex)
+                        val choiceIndex =
+                            rowIndex * 2 + columnIndex
 
-                        if (choice != null) {
+                        val answerText =
+                            formattedChoices.getOrNull(choiceIndex)
+
+                        if (answerText != null) {
                             AnswerChoiceButton(
-                                choice = choice,
+                                answerText = answerText,
+                                answerFontSize = sharedAnswerFontSize,
                                 choiceIndex = choiceIndex,
                                 uiState = uiState,
                                 onAnswerSelected = onAnswerSelected,
@@ -254,7 +275,8 @@ private fun AnswerChoiceGrid(
 
 @Composable
 private fun AnswerChoiceButton(
-    choice: BigDecimal,
+    answerText: String,
+    answerFontSize: TextUnit,
     choiceIndex: Int,
     uiState: GameUiState,
     onAnswerSelected: (Int) -> Unit,
@@ -270,30 +292,74 @@ private fun AnswerChoiceButton(
             uiState = uiState
         ),
         contentPadding = PaddingValues(
-            horizontal = 10.dp,
+            horizontal = 2.dp,
             vertical = 2.dp
         ),
         modifier = modifier
     ) {
-        FittedAnswerText(
-            text = choice.toDisplayString(),
+        AnswerText(
+            text = answerText,
+            fontSize = answerFontSize,
             modifier = Modifier.fillMaxSize()
         )
     }
 }
 
 @Composable
-private fun FittedAnswerText(
+private fun AnswerText(
     text: String,
+    fontSize: TextUnit,
     modifier: Modifier = Modifier
 ) {
-    FittedSingleLineText(
-        text = text,
-        modifier = modifier,
-        color = LocalContentColor.current,
-        maximumFontSize = 20.sp,
-        minimumFontSize = 14.sp
-    )
+    Box(
+        modifier = modifier
+            .padding(horizontal = 2.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier.fillMaxWidth(),
+            color = LocalContentColor.current,
+            fontFamily = Chalktastic,
+            fontSize = fontSize,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            softWrap = false,
+            overflow = TextOverflow.Clip
+        )
+    }
+}
+
+/**
+ * Chooses one deterministic font size for every answer in the current
+ * question. The longest formatted answer controls the size used by all
+ * four answer buttons.
+ */
+private fun answerFontSizeForLength(
+    answerLength: Int,
+    useSingleColumn: Boolean
+): TextUnit {
+    if (useSingleColumn) {
+        return when (answerLength) {
+            in 0..12 -> 20.sp
+            13 -> 19.sp
+            14 -> 18.sp
+            15 -> 17.sp
+            16 -> 16.sp
+            else -> 15.sp
+        }
+    }
+
+    return when (answerLength) {
+        in 0..5 -> 20.sp
+        6 -> 19.sp
+        7 -> 18.sp
+        8 -> 16.sp
+        9 -> 14.sp
+        10 -> 13.sp
+        else -> 12.sp
+    }
 }
 
 @Composable
@@ -309,16 +375,16 @@ private fun FittedSingleLineText(
         contentAlignment = Alignment.Center
     ) {
         val textMeasurer = rememberTextMeasurer()
+        val density = LocalDensity.current
 
         /*
-         * Chalktastic has irregular glyph edges that can extend slightly
-         * beyond Compose's reported text bounds. This safety margin prevents
-         * the first and last glyphs from being clipped.
+         * Chalktastic's painted glyph edges can extend slightly beyond the
+         * text bounds reported by Compose. The fitter therefore measures
+         * against a slightly narrower area.
          */
-        val horizontalSafetyMargin = 2.dp
-        val horizontalSafetyMarginPx = with(
-            androidx.compose.ui.platform.LocalDensity.current
-        ) {
+        val horizontalSafetyMargin = 8.dp
+
+        val horizontalSafetyMarginPx = with(density) {
             horizontalSafetyMargin.roundToPx() * 2
         }
 
@@ -407,7 +473,7 @@ private fun findLargestFittingFontSize(
             !result.didOverflowWidth &&
             !result.didOverflowHeight
         ) {
-            return (candidateSize-2).sp
+            return candidateSize.sp
         }
 
         candidateSize--
@@ -525,7 +591,7 @@ private fun String.addGroupingSeparators(): String {
 
     return buildString {
         if (isNegative) {
-            append("-")
+            append("- ")
         }
 
         append(groupedIntegerPart)
