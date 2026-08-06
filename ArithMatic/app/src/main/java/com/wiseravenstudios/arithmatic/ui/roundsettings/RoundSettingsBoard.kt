@@ -29,15 +29,20 @@ import com.wiseravenstudios.arithmatic.ui.theme.Chalktastic
 
 @Composable
 fun RoundSettingsBoard(
+    initialConfig: PracticeConfig,
     onBack: () -> Unit,
     onStartRound: (PracticeConfig) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var config by remember {
-        mutableStateOf(PracticeConfig.Default)
+    /*
+     * Recreate the editable draft if a newly loaded persisted configuration
+     * replaces the previous initial value.
+     */
+    var config by remember(initialConfig) {
+        mutableStateOf(initialConfig)
     }
 
-    var validationMessage by remember {
+    var validationMessage by remember(initialConfig) {
         mutableStateOf<String?>(null)
     }
 
@@ -48,7 +53,8 @@ fun RoundSettingsBoard(
                 horizontal = 4.dp,
                 vertical = 6.dp
             ),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment =
+            Alignment.CenterHorizontally
     ) {
         Text(
             text = "Round Settings",
@@ -63,29 +69,37 @@ fun RoundSettingsBoard(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            verticalArrangement =
+                Arrangement.spacedBy(8.dp),
+            horizontalAlignment =
+                Alignment.CenterHorizontally
         ) {
             OperationSettings(
-                enabledOperations = config.enabledOperations,
-                onOperationChanged = { operation, enabled ->
-                    val updatedOperations = config.enabledOperations
-                        .toMutableSet()
-                        .apply {
-                            if (enabled) {
-                                add(operation)
-                            } else {
-                                remove(operation)
+                enabledOperations =
+                    config.enabledOperations,
+                onOperationChanged = {
+                        operation,
+                        enabled ->
+
+                    val updatedOperations =
+                        config.enabledOperations
+                            .toMutableSet()
+                            .apply {
+                                if (enabled) {
+                                    add(operation)
+                                } else {
+                                    remove(operation)
+                                }
                             }
-                        }
-                        .toSet()
+                            .toSet()
 
                     if (updatedOperations.isEmpty()) {
                         validationMessage =
                             "Choose at least one operation."
                     } else {
                         config = config.copy(
-                            enabledOperations = updatedOperations
+                            enabledOperations =
+                                updatedOperations
                         )
 
                         validationMessage = null
@@ -94,13 +108,17 @@ fun RoundSettingsBoard(
             )
 
             OperandSizeSetting(
-                digitCount = config.wholeNumberDigits,
-                minimumDigits = 1,
+                digitCount =
+                    config.wholeNumberDigits,
+                minimumDigits =
+                    PracticeConfig.MIN_WHOLE_NUMBER_DIGITS,
                 maximumDigits = 5,
                 onDigitCountChanged = { digitCount ->
                     config = config.copy(
-                        wholeNumberDigits = digitCount
+                        wholeNumberDigits =
+                            digitCount
                     )
+
                     validationMessage = null
                 }
             )
@@ -108,13 +126,16 @@ fun RoundSettingsBoard(
             NumberSetting(
                 label = "Questions",
                 value = config.questionCount,
-                minimum = 1,
+                minimum =
+                    PracticeConfig.MIN_QUESTION_COUNT,
                 maximum = 30,
                 step = 1,
                 onValueChanged = { questionCount ->
                     config = config.copy(
-                        questionCount = questionCount
+                        questionCount =
+                            questionCount
                     )
+
                     validationMessage = null
                 }
             )
@@ -124,8 +145,10 @@ fun RoundSettingsBoard(
                 enabled = config.allowNegatives,
                 onToggle = {
                     config = config.copy(
-                        allowNegatives = !config.allowNegatives
+                        allowNegatives =
+                            !config.allowNegatives
                     )
+
                     validationMessage = null
                 }
             )
@@ -135,8 +158,10 @@ fun RoundSettingsBoard(
                 enabled = config.allowDecimals,
                 onToggle = {
                     config = config.copy(
-                        allowDecimals = !config.allowDecimals
+                        allowDecimals =
+                            !config.allowDecimals
                     )
+
                     validationMessage = null
                 }
             )
@@ -154,8 +179,10 @@ fun RoundSettingsBoard(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
+            horizontalArrangement =
+                Arrangement.SpaceEvenly,
+            verticalAlignment =
+                Alignment.CenterVertically
         ) {
             ChalkTextAction(
                 text = "Back",
@@ -169,7 +196,9 @@ fun RoundSettingsBoard(
                 color = ChalkColors.PastelOrange,
                 fontSize = 20.sp,
                 onClick = {
-                    config = PracticeConfig.Default
+                    config =
+                        PracticeConfig.Default
+
                     validationMessage = null
                 }
             )
@@ -181,16 +210,19 @@ fun RoundSettingsBoard(
                 onClick = {
                     when (
                         val result =
-                            PracticeConfigValidator.validate(config)
+                            PracticeConfigValidator
+                                .validate(config)
                     ) {
                         PracticeConfigValidationResult.Valid -> {
                             validationMessage = null
+
                             onStartRound(config)
                         }
 
                         is PracticeConfigValidationResult.Invalid -> {
                             validationMessage =
-                                result.errors.firstOrNull()
+                                result.errors
+                                    .firstOrNull()
                                     ?: "The round settings are invalid."
                         }
                     }
@@ -209,7 +241,8 @@ private fun OperationSettings(
     ) -> Unit
 ) {
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment =
+            Alignment.CenterHorizontally
     ) {
         Text(
             text = "Operations",
@@ -219,30 +252,35 @@ private fun OperationSettings(
         )
 
         Row(
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalAlignment = Alignment.CenterVertically
+            horizontalArrangement =
+                Arrangement.spacedBy(10.dp),
+            verticalAlignment =
+                Alignment.CenterVertically
         ) {
-            ArithmeticOperation.entries.forEach { operation ->
-                val enabled = operation in enabledOperations
+            ArithmeticOperation.entries
+                .forEach { operation ->
+                    val enabled =
+                        operation in
+                                enabledOperations
 
-                ChalkTextAction(
-                    text = operation.symbol,
-                    color = if (enabled) {
-                        operation.chalkColor
-                    } else {
-                        ChalkColors.ChalkWhite
-                    },
-                    fontSize = 35.sp,
-                    paddingTop = 0.5.dp,
-                    paddingBottom = 0.5.dp,
-                    onClick = {
-                        onOperationChanged(
-                            operation,
-                            !enabled
-                        )
-                    }
-                )
-            }
+                    ChalkTextAction(
+                        text = operation.symbol,
+                        color = if (enabled) {
+                            operation.chalkColor
+                        } else {
+                            ChalkColors.ChalkWhite
+                        },
+                        fontSize = 35.sp,
+                        paddingTop = 0.5.dp,
+                        paddingBottom = 0.5.dp,
+                        onClick = {
+                            onOperationChanged(
+                                operation,
+                                !enabled
+                            )
+                        }
+                    )
+                }
         }
     }
 }
@@ -254,8 +292,10 @@ private fun BooleanSetting(
     onToggle: () -> Unit
 ) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically
+        horizontalArrangement =
+            Arrangement.spacedBy(12.dp),
+        verticalAlignment =
+            Alignment.CenterVertically
     ) {
         Text(
             text = label,
@@ -265,7 +305,11 @@ private fun BooleanSetting(
         )
 
         ChalkTextAction(
-            text = if (enabled) "On" else "Off",
+            text = if (enabled) {
+                "On"
+            } else {
+                "Off"
+            },
             color = if (enabled) {
                 ChalkColors.PastelGreen
             } else {
@@ -289,7 +333,8 @@ private fun NumberSetting(
     step: Int = 1
 ) {
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment =
+            Alignment.CenterHorizontally
     ) {
         Text(
             text = label,
@@ -299,8 +344,10 @@ private fun NumberSetting(
         )
 
         Row(
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalAlignment = Alignment.CenterVertically
+            horizontalArrangement =
+                Arrangement.spacedBy(14.dp),
+            verticalAlignment =
+                Alignment.CenterVertically
         ) {
             ChalkTextAction(
                 text = "−",
@@ -309,7 +356,8 @@ private fun NumberSetting(
                 fontSize = 26.sp,
                 onClick = {
                     onValueChanged(
-                        (value - step).coerceAtLeast(minimum)
+                        (value - step)
+                            .coerceAtLeast(minimum)
                     )
                 }
             )
@@ -329,7 +377,8 @@ private fun NumberSetting(
                 fontSize = 26.sp,
                 onClick = {
                     onValueChanged(
-                        (value + step).coerceAtMost(maximum)
+                        (value + step)
+                            .coerceAtMost(maximum)
                     )
                 }
             )
@@ -344,16 +393,19 @@ private fun OperandSizeSetting(
     maximumDigits: Int,
     onDigitCountChanged: (Int) -> Unit
 ) {
-    val placeValueExample = buildString {
-        append("1")
+    val placeValueExample =
+        buildString {
+            append("1")
 
-        repeat(digitCount - 1) {
-            append("0")
+            repeat(digitCount - 1) {
+                append("0")
+            }
         }
-    }.toLong()
+            .toLong()
 
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment =
+            Alignment.CenterHorizontally
     ) {
         Text(
             text = "How big?",
@@ -363,18 +415,23 @@ private fun OperandSizeSetting(
         )
 
         Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+            horizontalArrangement =
+                Arrangement.spacedBy(12.dp),
+            verticalAlignment =
+                Alignment.CenterVertically
         ) {
             ChalkTextAction(
                 text = "−",
-                enabled = digitCount > minimumDigits,
+                enabled =
+                    digitCount > minimumDigits,
                 color = ChalkColors.PastelYellow,
                 fontSize = 26.sp,
                 onClick = {
                     onDigitCountChanged(
                         (digitCount - 1)
-                            .coerceAtLeast(minimumDigits)
+                            .coerceAtLeast(
+                                minimumDigits
+                            )
                     )
                 }
             )
@@ -389,20 +446,24 @@ private fun OperandSizeSetting(
 
             ChalkTextAction(
                 text = "+",
-                enabled = digitCount < maximumDigits,
+                enabled =
+                    digitCount < maximumDigits,
                 color = ChalkColors.PastelYellow,
                 fontSize = 26.sp,
                 onClick = {
                     onDigitCountChanged(
                         (digitCount + 1)
-                            .coerceAtMost(maximumDigits)
+                            .coerceAtMost(
+                                maximumDigits
+                            )
                     )
                 }
             )
         }
 
         Text(
-            text = "(${placeValueExample.toStringWithCommas()}'s)",
+            text =
+                "(${placeValueExample.toStringWithCommas()}'s)",
             color = ChalkColors.PastelGreen,
             fontFamily = Chalktastic,
             fontSize = 22.sp
@@ -411,18 +472,20 @@ private fun OperandSizeSetting(
 }
 
 private val ArithmeticOperation.chalkColor: Color
-    get() = when (this) {
-        ArithmeticOperation.Addition ->
-            ChalkColors.PastelYellow
+    get() {
+        return when (this) {
+            ArithmeticOperation.Addition ->
+                ChalkColors.PastelYellow
 
-        ArithmeticOperation.Subtraction ->
-            ChalkColors.PastelBlue
+            ArithmeticOperation.Subtraction ->
+                ChalkColors.PastelBlue
 
-        ArithmeticOperation.Multiplication ->
-            ChalkColors.PastelGreen
+            ArithmeticOperation.Multiplication ->
+                ChalkColors.PastelGreen
 
-        ArithmeticOperation.Division ->
-            ChalkColors.PastelPurple
+            ArithmeticOperation.Division ->
+                ChalkColors.PastelPurple
+        }
     }
 
 private fun Long.toStringWithCommas(): String {
