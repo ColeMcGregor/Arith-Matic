@@ -35,7 +35,9 @@ abstract class CompletedRoundDao {
             "A completed round must contain at least one question attempt."
         }
 
-        val roundId = insertRound(round)
+        val roundId = insertRound(
+            round = round
+        )
 
         val attemptsWithRoundId =
             attempts.map { attempt ->
@@ -45,7 +47,9 @@ abstract class CompletedRoundDao {
                 )
             }
 
-        insertAttempts(attemptsWithRoundId)
+        insertAttempts(
+            attempts = attemptsWithRoundId
+        )
 
         return roundId
     }
@@ -60,6 +64,17 @@ abstract class CompletedRoundDao {
     )
     abstract fun observeAllCompletedRounds():
             Flow<List<CompletedRoundWithAttempts>>
+
+    @Transaction
+    @Query(
+        """
+        SELECT *
+        FROM completed_rounds
+        ORDER BY completedAtEpochMillis DESC, id DESC
+        """
+    )
+    abstract suspend fun getAllCompletedRounds():
+            List<CompletedRoundWithAttempts>
 
     @Transaction
     @Query(

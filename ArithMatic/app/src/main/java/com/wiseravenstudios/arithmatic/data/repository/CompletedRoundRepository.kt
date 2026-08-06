@@ -1,10 +1,13 @@
+
 package com.wiseravenstudios.arithmatic.data.repository
 
 import com.wiseravenstudios.arithmatic.data.local.dao.CompletedRoundDao
+import com.wiseravenstudios.arithmatic.data.local.mapper.CompletedRoundHistoryMapper
 import com.wiseravenstudios.arithmatic.data.local.mapper.CompletedRoundPersistenceMapper
-import com.wiseravenstudios.arithmatic.data.local.relation.CompletedRoundWithAttempts
 import com.wiseravenstudios.arithmatic.domain.results.CompletedGameRoundDto
+import com.wiseravenstudios.arithmatic.domain.statistics.model.CompletedRoundHistory
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 class CompletedRoundRepository(
     private val completedRoundDao: CompletedRoundDao
@@ -30,25 +33,41 @@ class CompletedRoundRepository(
         )
     }
 
-    fun observeAllCompletedRounds():
-            Flow<List<CompletedRoundWithAttempts>> {
-        return completedRoundDao.observeAllCompletedRounds()
+    /**
+     * Observes all completed rounds as persistence-independent domain history.
+     *
+     * Room entities and relation models remain contained inside the data layer.
+     */
+    fun observeCompletedRoundHistory():
+            Flow<List<CompletedRoundHistory>> {
+        return completedRoundDao
+            .observeAllCompletedRounds()
+            .map(
+                CompletedRoundHistoryMapper::toHistoryList
+            )
     }
 
     fun observeCompletedRoundCount(): Flow<Int> {
         return completedRoundDao.observeCompletedRoundCount()
     }
 
+    /**
+     * Retrieves one completed round as a persistence-independent domain model.
+     */
     suspend fun getCompletedRoundById(
         roundId: Long
-    ): CompletedRoundWithAttempts? {
+    ): CompletedRoundHistory? {
         require(roundId > 0L) {
             "Round ID must be greater than zero."
         }
 
-        return completedRoundDao.getCompletedRoundById(
-            roundId = roundId
-        )
+        return completedRoundDao
+            .getCompletedRoundById(
+                roundId = roundId
+            )
+            ?.let(
+                CompletedRoundHistoryMapper::toHistory
+            )
     }
 
     suspend fun deleteCompletedRoundById(
@@ -67,3 +86,4 @@ class CompletedRoundRepository(
         return completedRoundDao.deleteAllCompletedRounds()
     }
 }
+

@@ -32,6 +32,9 @@ import com.wiseravenstudios.arithmatic.ui.results.ResultsBoard
 import com.wiseravenstudios.arithmatic.ui.roundsettings.RoundSettingsBoard
 import com.wiseravenstudios.arithmatic.ui.splash.SplashScreen
 import com.wiseravenstudios.arithmatic.ui.start.StartBoard
+import com.wiseravenstudios.arithmatic.ui.statistics.MyStatsBoard
+import com.wiseravenstudios.arithmatic.ui.statistics.MyStatsViewModel
+import com.wiseravenstudios.arithmatic.ui.statistics.MyStatsViewModelFactory
 import com.wiseravenstudios.arithmatic.ui.theme.ChalkColors
 import com.wiseravenstudios.arithmatic.ui.theme.Chalktastic
 import kotlinx.coroutines.delay
@@ -46,18 +49,20 @@ fun ArithMaticApp() {
      * The database itself is also protected by its singleton implementation,
      * so configuration changes will not create separate database instances.
      */
-    val database = remember(context.applicationContext) {
-        ArithMaticDatabase.getInstance(
-            context.applicationContext
-        )
-    }
+    val database =
+        remember(context.applicationContext) {
+            ArithMaticDatabase.getInstance(
+                context.applicationContext
+            )
+        }
 
-    val completedRoundRepository = remember(database) {
-        CompletedRoundRepository(
-            completedRoundDao =
-                database.completedRoundDao()
-        )
-    }
+    val completedRoundRepository =
+        remember(database) {
+            CompletedRoundRepository(
+                completedRoundDao =
+                    database.completedRoundDao()
+            )
+        }
 
     val gameViewModelFactory =
         remember(completedRoundRepository) {
@@ -70,6 +75,19 @@ fun ArithMaticApp() {
     val gameViewModel: GameViewModel =
         viewModel(
             factory = gameViewModelFactory
+        )
+
+    val myStatsViewModelFactory =
+        remember(completedRoundRepository) {
+            MyStatsViewModelFactory(
+                completedRoundRepository =
+                    completedRoundRepository
+            )
+        }
+
+    val myStatsViewModel: MyStatsViewModel =
+        viewModel(
+            factory = myStatsViewModelFactory
         )
 
     var showSplash by rememberSaveable {
@@ -97,6 +115,9 @@ fun ArithMaticApp() {
 
     val gameUiState by
     gameViewModel.uiState.collectAsState()
+
+    val myStatsUiState by
+    myStatsViewModel.uiState.collectAsState()
 
     LaunchedEffect(Unit) {
         delay(3_000L)
@@ -129,7 +150,9 @@ fun ArithMaticApp() {
                 roundResults != null &&
                 roundSnapshot != null
             ) {
-                completedResults = roundResults
+                completedResults =
+                    roundResults
+
                 completedConfig =
                     roundSnapshot.config
 
@@ -183,7 +206,9 @@ fun ArithMaticApp() {
                         completedResults = null
                         completedConfig = null
 
-                        gameViewModel.startRound(config)
+                        gameViewModel.startRound(
+                            config
+                        )
 
                         currentDestination =
                             AppDestination.Practice
@@ -213,8 +238,11 @@ fun ArithMaticApp() {
             }
 
             AppDestination.Results -> {
-                val results = completedResults
-                val config = completedConfig
+                val results =
+                    completedResults
+
+                val config =
+                    completedConfig
 
                 if (
                     results != null &&
@@ -228,7 +256,10 @@ fun ArithMaticApp() {
                              * same immutable configuration snapshot.
                              */
                             gameViewModel.clearRound()
-                            gameViewModel.startRound(config)
+
+                            gameViewModel.startRound(
+                                config
+                            )
 
                             completedResults = null
 
@@ -280,8 +311,13 @@ fun ArithMaticApp() {
             }
 
             AppDestination.MyStats -> {
-                PlaceholderBoard(
-                    title = "My Stats",
+                MyStatsBoard(
+                    uiState = myStatsUiState,
+                    onPeriodSelected = { period ->
+                        myStatsViewModel.selectPeriod(
+                            period
+                        )
+                    },
                     onBack = {
                         currentDestination =
                             AppDestination.Start
@@ -335,9 +371,12 @@ private fun MissingResultsBoard(
         Text(
             text =
                 "Unable to load round results.",
-            color = ChalkColors.PastelPink,
-            fontFamily = Chalktastic,
-            fontSize = 25.sp
+            color =
+                ChalkColors.PastelPink,
+            fontFamily =
+                Chalktastic,
+            fontSize =
+                25.sp
         )
 
         ChalkTextAction(
@@ -364,22 +403,27 @@ private fun PlaceholderBoard(
     ) {
         Text(
             text = title,
-            color = ChalkColors.ChalkWhite,
-            fontFamily = Chalktastic,
-            fontSize = 34.sp
+            color =
+                ChalkColors.ChalkWhite,
+            fontFamily =
+                Chalktastic,
+            fontSize =
+                34.sp
         )
 
         if (onContinue != null) {
             ChalkTextAction(
                 text = continueText,
-                color = ChalkColors.PastelGreen,
+                color =
+                    ChalkColors.PastelGreen,
                 onClick = onContinue
             )
         }
 
         ChalkTextAction(
             text = "Back",
-            color = ChalkColors.PastelYellow,
+            color =
+                ChalkColors.PastelYellow,
             onClick = onBack
         )
     }
