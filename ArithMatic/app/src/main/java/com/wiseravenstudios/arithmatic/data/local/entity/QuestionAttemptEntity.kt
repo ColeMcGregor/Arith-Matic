@@ -36,6 +36,17 @@ data class QuestionAttemptEntity(
 
     val operation: String?,
 
+    /**
+     * Pipe-delimited operand values in expression order.
+     *
+     * Examples:
+     *
+     * "12|7"
+     *
+     * "-3.5|8"
+     */
+    val operands: String,
+
     val questionText: String,
 
     val expectedAnswer: String,

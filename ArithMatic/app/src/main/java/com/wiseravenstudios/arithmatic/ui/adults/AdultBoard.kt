@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,6 +28,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.wiseravenstudios.arithmatic.domain.adults.report.AdultReport
+import com.wiseravenstudios.arithmatic.domain.adults.report.AdultReportBuilder
+import com.wiseravenstudios.arithmatic.domain.adults.report.AdultReportOptions
+import com.wiseravenstudios.arithmatic.domain.adults.statistics.AdultStatsCalculator
 import com.wiseravenstudios.arithmatic.ui.components.ChalkTextAction
 import com.wiseravenstudios.arithmatic.ui.theme.ChalkColors
 import com.wiseravenstudios.arithmatic.ui.theme.Chalktastic
@@ -56,13 +61,32 @@ private enum class AdultTab(
     )
 }
 
+/**
+ * Main board for the Adult area.
+ *
+ * Statistics and Reports share the same history selection and filtered
+ * history through [AdultAreaViewModel].
+ */
 @Composable
-fun AdultsBoard(
+fun AdultBoard(
+    viewModel: AdultAreaViewModel,
+    onExportReport: (AdultReport) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val uiState by
+    viewModel.uiState.collectAsState()
+
     var currentTab by remember {
-        mutableStateOf(AdultTab.Statistics)
+        mutableStateOf(
+            AdultTab.Statistics
+        )
+    }
+
+    var reportOptions by remember {
+        mutableStateOf(
+            AdultReportOptions()
+        )
     }
 
     Column(
@@ -72,30 +96,38 @@ fun AdultsBoard(
                 horizontal = 8.dp,
                 vertical = 8.dp
             ),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment =
+            Alignment.CenterHorizontally
     ) {
         Text(
             text = "Adults",
-            color = ChalkColors.PastelOrange,
-            fontFamily = Chalktastic,
+            color =
+                ChalkColors.PastelOrange,
+            fontFamily =
+                Chalktastic,
             fontSize = 32.sp,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
+            fontWeight =
+                FontWeight.Bold,
+            textAlign =
+                TextAlign.Center
         )
 
         Spacer(
-            modifier = Modifier.height(18.dp)
+            modifier =
+                Modifier.height(18.dp)
         )
 
         AdultTabBar(
             currentTab = currentTab,
             onTabSelected = { selectedTab ->
-                currentTab = selectedTab
+                currentTab =
+                    selectedTab
             }
         )
 
         Spacer(
-            modifier = Modifier.height(12.dp)
+            modifier =
+                Modifier.height(12.dp)
         )
 
         Box(
@@ -105,11 +137,27 @@ fun AdultsBoard(
         ) {
             when (currentTab) {
                 AdultTab.Statistics -> {
-                    StatisticsTab()
+                    StatisticsTab(
+                        uiState = uiState,
+                        viewModel = viewModel
+                    )
                 }
 
                 AdultTab.Report -> {
-                    ReportTab()
+                    ReportTab(
+                        uiState = uiState,
+                        viewModel = viewModel,
+                        options =
+                            reportOptions,
+                        onOptionsChanged = {
+                                newOptions ->
+
+                            reportOptions =
+                                newOptions
+                        },
+                        onExportReport =
+                            onExportReport
+                    )
                 }
 
                 AdultTab.Privacy -> {
@@ -124,9 +172,146 @@ fun AdultsBoard(
 
         ChalkTextAction(
             text = "Back",
-            color = ChalkColors.PastelYellow,
+            color =
+                ChalkColors.PastelYellow,
             onClick = onBack
         )
+    }
+}
+
+@Composable
+private fun StatisticsTab(
+    uiState: AdultAreaUiState,
+    viewModel: AdultAreaViewModel
+) {
+    when (uiState) {
+        AdultAreaUiState.Loading -> {
+            AdultLoadingContent()
+        }
+
+        is AdultAreaUiState.Error -> {
+            AdultErrorContent(
+                message =
+                    uiState.message
+            )
+        }
+
+        is AdultAreaUiState.Success -> {
+            val successState =
+                uiState
+
+            val summary =
+                remember(
+                    successState.filteredHistory,
+                    successState.selection
+                ) {
+                    AdultStatsCalculator.calculate(
+                        filteredHistory =
+                            successState.filteredHistory,
+                        period =
+                            successState
+                                .selection
+                                .period
+                    )
+                }
+
+            AdultStatsContent(
+                selection =
+                    successState.selection,
+                summary =
+                    summary,
+                onSelectionChanged = {
+                        selection ->
+
+                    viewModel.setSelection(
+                        selection
+                    )
+                },
+                onClearFilters = {
+                    viewModel.clearSelection()
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun ReportTab(
+    uiState: AdultAreaUiState,
+    viewModel: AdultAreaViewModel,
+    options: AdultReportOptions,
+    onOptionsChanged: (AdultReportOptions) -> Unit,
+    onExportReport: (AdultReport) -> Unit
+) {
+    when (uiState) {
+        AdultAreaUiState.Loading -> {
+            AdultLoadingContent()
+        }
+
+        is AdultAreaUiState.Error -> {
+            AdultErrorContent(
+                message =
+                    uiState.message
+            )
+        }
+
+        is AdultAreaUiState.Success -> {
+            val successState =
+                uiState
+
+            val summary =
+                remember(
+                    successState.filteredHistory,
+                    successState.selection
+                ) {
+                    AdultStatsCalculator.calculate(
+                        filteredHistory =
+                            successState.filteredHistory,
+                        period =
+                            successState
+                                .selection
+                                .period
+                    )
+                }
+
+            AdultReportContent(
+                selection =
+                    successState.selection,
+                summary =
+                    summary,
+                options =
+                    options,
+                onSelectionChanged = {
+                        selection ->
+
+                    viewModel.setSelection(
+                        selection
+                    )
+                },
+                onClearFilters = {
+                    viewModel.clearSelection()
+                },
+                onOptionsChanged =
+                    onOptionsChanged,
+                onExport = {
+                    val report =
+                        AdultReportBuilder.build(
+                            filteredHistory =
+                                successState
+                                    .filteredHistory,
+                            selection =
+                                successState
+                                    .selection,
+                            options =
+                                options
+                        )
+
+                    onExportReport(
+                        report
+                    )
+                }
+            )
+        }
     }
 }
 
@@ -136,14 +321,18 @@ private fun AdultTabBar(
     onTabSelected: (AdultTab) -> Unit
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(
-            space = 4.dp,
-            alignment = Alignment.CenterHorizontally
-        )
+        modifier =
+            Modifier.fillMaxWidth(),
+        horizontalArrangement =
+            Arrangement.spacedBy(
+                space = 4.dp,
+                alignment =
+                    Alignment.CenterHorizontally
+            )
     ) {
         AdultTab.entries.forEach { tab ->
-            val isSelected = tab == currentTab
+            val isSelected =
+                tab == currentTab
 
             Box(
                 modifier = Modifier
@@ -157,40 +346,55 @@ private fun AdultTabBar(
                         )
                     )
                     .background(
-                        color = if (isSelected) {
-                            tab.color.copy(alpha = 0.9f)
-                        } else {
-                            tab.color.copy(alpha = 0.35f)
-                        }
+                        color =
+                            if (isSelected) {
+                                tab.color.copy(
+                                    alpha = 0.9f
+                                )
+                            } else {
+                                tab.color.copy(
+                                    alpha = 0.35f
+                                )
+                            }
                     )
                     .clickable {
-                        onTabSelected(tab)
+                        onTabSelected(
+                            tab
+                        )
                     }
                     .padding(
                         horizontal = 4.dp,
-                        vertical = if (isSelected) {
-                            5.dp
-                        } else {
-                            3.dp
-                        }
+                        vertical =
+                            if (isSelected) {
+                                5.dp
+                            } else {
+                                3.dp
+                            }
                     ),
-                contentAlignment = Alignment.Center
+                contentAlignment =
+                    Alignment.Center
             ) {
                 Text(
                     text = tab.title,
-                    color = if (isSelected) {
-                        Color(0xFF24313F)
-                    } else {
-                        ChalkColors.ChalkWhite
-                    },
-                    fontFamily = Chalktastic,
+                    color =
+                        if (isSelected) {
+                            Color(
+                                0xFF24313F
+                            )
+                        } else {
+                            ChalkColors.ChalkWhite
+                        },
+                    fontFamily =
+                        Chalktastic,
                     fontSize = 11.sp,
-                    fontWeight = if (isSelected) {
-                        FontWeight.Bold
-                    } else {
-                        FontWeight.Normal
-                    },
-                    textAlign = TextAlign.Center,
+                    fontWeight =
+                        if (isSelected) {
+                            FontWeight.Bold
+                        } else {
+                            FontWeight.Normal
+                        },
+                    textAlign =
+                        TextAlign.Center,
                     maxLines = 1
                 )
             }
@@ -198,238 +402,222 @@ private fun AdultTabBar(
     }
 }
 
-/*
- * Statistics tab
- *
- * This will eventually contain detailed practice history,
- * accuracy information, response times, and operation breakdowns.
+/**
+ * Loading state for history-backed Adult tabs.
  */
 @Composable
-private fun StatisticsTab() {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
+private fun AdultLoadingContent() {
+    Box(
+        modifier =
+            Modifier.fillMaxSize(),
+        contentAlignment =
+            Alignment.Center
     ) {
         Text(
-            text = "Statistics",
-            color = ChalkColors.PastelBlue,
-            fontFamily = Chalktastic,
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(
-            modifier = Modifier.height(12.dp)
-        )
-
-        Text(
-            text = "Detailed practice statistics will appear here.",
-            color = ChalkColors.ChalkWhite,
-            fontFamily = Chalktastic,
-            fontSize = 20.sp,
-            lineHeight = 28.sp,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(
-            modifier = Modifier.height(18.dp)
-        )
-
-        Text(
             text =
-                "Future statistics may include accuracy, questions answered, " +
-                        "practice time, and average response speed.",
-            color = ChalkColors.PastelYellow,
-            fontFamily = Chalktastic,
-            fontSize = 16.sp,
-            lineHeight = 20.sp,
-            textAlign = TextAlign.Center
+                "Loading practice history...",
+            color =
+                ChalkColors.ChalkWhite,
+            fontFamily =
+                Chalktastic,
+            fontSize = 19.sp,
+            textAlign =
+                TextAlign.Center
         )
     }
 }
 
-/*
- * Report tab
- *
- * This will eventually contain report generation,
- * date filtering, previews, and sharing controls.
+/**
+ * Error state for history-backed Adult tabs.
  */
 @Composable
-private fun ReportTab() {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
+private fun AdultErrorContent(
+    message: String
+) {
+    Box(
+        modifier =
+            Modifier.fillMaxSize(),
+        contentAlignment =
+            Alignment.Center
     ) {
         Text(
-            text = "Get Report",
-            color = ChalkColors.PastelGreen,
-            fontFamily = Chalktastic,
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(
-            modifier = Modifier.height(18.dp)
-        )
-
-        Text(
-            text =
-                "Create a report of the student's arithmetic practice " +
-                        "and share it with a parent, guardian, or teacher.",
-            color = ChalkColors.ChalkWhite,
-            fontFamily = Chalktastic,
-            fontSize = 18.sp,
-            lineHeight = 20.sp,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(
-            modifier = Modifier.height(18.dp)
-        )
-
-        Text(
-            text = "Report creation is coming in a future update.",
-            color = ChalkColors.PastelYellow,
-            fontFamily = Chalktastic,
-            fontSize = 18.sp,
-            lineHeight = 25.sp,
-            textAlign = TextAlign.Center
+            text = message,
+            color =
+                ChalkColors.PastelPink,
+            fontFamily =
+                Chalktastic,
+            fontSize = 19.sp,
+            textAlign =
+                TextAlign.Center
         )
     }
 }
 
-/*
- * Privacy tab
- *
- * This section explains the app's local-first data model.
+/**
+ * Explains Arith-Matic's local practice-history behavior.
  */
 @Composable
 private fun PrivacyTab() {
     Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier =
+            Modifier.fillMaxWidth(),
+        horizontalAlignment =
+            Alignment.CenterHorizontally
     ) {
         Text(
             text = "Privacy",
-            color = ChalkColors.PastelPurple,
-            fontFamily = Chalktastic,
+            color =
+                ChalkColors.PastelPurple,
+            fontFamily =
+                Chalktastic,
             fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
+            fontWeight =
+                FontWeight.Bold,
+            textAlign =
+                TextAlign.Center
         )
 
         Spacer(
-            modifier = Modifier.height(8.dp)
+            modifier =
+                Modifier.height(8.dp)
         )
 
         Text(
-            text = "Your practice records stay on this device.",
-            color = ChalkColors.ChalkWhite,
-            fontFamily = Chalktastic,
+            text =
+                "Your practice records stay on this device.",
+            color =
+                ChalkColors.ChalkWhite,
+            fontFamily =
+                Chalktastic,
             fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
+            fontWeight =
+                FontWeight.Bold,
             lineHeight = 20.sp,
-            textAlign = TextAlign.Center
+            textAlign =
+                TextAlign.Center
         )
 
         Spacer(
-            modifier = Modifier.height(10.dp)
+            modifier =
+                Modifier.height(10.dp)
         )
 
         Text(
             text =
                 "Arith-Matic does not upload student records or share " +
                         "practice information automatically.",
-            color = ChalkColors.ChalkWhite,
-            fontFamily = Chalktastic,
+            color =
+                ChalkColors.ChalkWhite,
+            fontFamily =
+                Chalktastic,
             fontSize = 18.sp,
             lineHeight = 20.sp,
-            textAlign = TextAlign.Center
+            textAlign =
+                TextAlign.Center
         )
 
         Spacer(
-            modifier = Modifier.height(10.dp)
+            modifier =
+                Modifier.height(10.dp)
         )
 
         Text(
             text =
                 "A report only leaves the device when you choose to export " +
                         "and share it.",
-            color = ChalkColors.PastelGreen,
-            fontFamily = Chalktastic,
+            color =
+                ChalkColors.PastelGreen,
+            fontFamily =
+                Chalktastic,
             fontSize = 18.sp,
             lineHeight = 20.sp,
-            textAlign = TextAlign.Center
+            textAlign =
+                TextAlign.Center
         )
     }
 }
 
-/*
- * Donate tab
- *
- * This section can later link directly to a dedicated donation service.
- * For now, it directs users to the Arith-Matic project page.
+/**
+ * Provides the project support link.
  */
 @Composable
 private fun DonateTab() {
-    val uriHandler = LocalUriHandler.current
+    val uriHandler =
+        LocalUriHandler.current
 
     Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier =
+            Modifier.fillMaxWidth(),
+        horizontalAlignment =
+            Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Support Arith-Matic",
-            color = ChalkColors.PastelPink,
-            fontFamily = Chalktastic,
+            text =
+                "Support Arith-Matic",
+            color =
+                ChalkColors.PastelPink,
+            fontFamily =
+                Chalktastic,
             fontSize = 26.sp,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
+            fontWeight =
+                FontWeight.Bold,
+            textAlign =
+                TextAlign.Center
         )
 
         Spacer(
-            modifier = Modifier.height(10.dp)
+            modifier =
+                Modifier.height(10.dp)
         )
 
         Text(
             text =
                 "Arith-Matic is developed independently by " +
                         "Wise Raven Studios.",
-            color = ChalkColors.ChalkWhite,
-            fontFamily = Chalktastic,
+            color =
+                ChalkColors.ChalkWhite,
+            fontFamily =
+                Chalktastic,
             fontSize = 18.sp,
             lineHeight = 20.sp,
-            textAlign = TextAlign.Center
+            textAlign =
+                TextAlign.Center
         )
 
         Spacer(
-            modifier = Modifier.height(18.dp)
+            modifier =
+                Modifier.height(18.dp)
         )
 
         Text(
             text =
                 "Support helps fund continued development, testing, " +
                         "and future educational features.",
-            color = ChalkColors.ChalkWhite,
-            fontFamily = Chalktastic,
+            color =
+                ChalkColors.ChalkWhite,
+            fontFamily =
+                Chalktastic,
             fontSize = 16.sp,
             lineHeight = 18.sp,
-            textAlign = TextAlign.Center
+            textAlign =
+                TextAlign.Center
         )
 
         Spacer(
-            modifier = Modifier.height(10.dp)
+            modifier =
+                Modifier.height(10.dp)
         )
 
         ChalkTextAction(
             text = "Visit Website",
-            color = ChalkColors.PastelOrange,
+            color =
+                ChalkColors.PastelOrange,
             paddingTop = 6.dp,
             fontSize = 18.sp,
             onClick = {
-                uriHandler.openUri(ARITH_MATIC_WEBSITE)
+                uriHandler.openUri(
+                    ARITH_MATIC_WEBSITE
+                )
             }
         )
     }

@@ -25,7 +25,10 @@ import com.wiseravenstudios.arithmatic.data.repository.SettingsRepository
 import com.wiseravenstudios.arithmatic.domain.model.PracticeConfig
 import com.wiseravenstudios.arithmatic.domain.results.BasicRoundResults
 import com.wiseravenstudios.arithmatic.ui.about.AboutBoard
-import com.wiseravenstudios.arithmatic.ui.adults.AdultsBoard
+import com.wiseravenstudios.arithmatic.ui.adults.AdultAreaViewModel
+import com.wiseravenstudios.arithmatic.ui.adults.AdultAreaViewModelFactory
+import com.wiseravenstudios.arithmatic.ui.adults.AdultBoard
+import com.wiseravenstudios.arithmatic.ui.adults.rememberAdultReportExporter
 import com.wiseravenstudios.arithmatic.ui.common.ClassroomScene
 import com.wiseravenstudios.arithmatic.ui.components.ChalkTextAction
 import com.wiseravenstudios.arithmatic.ui.game.GameBoard
@@ -50,19 +53,12 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun ArithMaticApp() {
-    val context = LocalContext.current
+    val context =
+        LocalContext.current
 
     val applicationContext =
         context.applicationContext
 
-    /*
-     * Create persistence dependencies once for this composition.
-     *
-     * Room stores completed-round history.
-     *
-     * DataStore stores small application preferences such as audio settings
-     * and the most recently used practice configuration.
-     */
     val database =
         remember(applicationContext) {
             ArithMaticDatabase.getInstance(
@@ -105,7 +101,8 @@ fun ArithMaticApp() {
 
     val gameViewModel: GameViewModel =
         viewModel(
-            factory = gameViewModelFactory
+            factory =
+                gameViewModelFactory
         )
 
     /*
@@ -121,7 +118,26 @@ fun ArithMaticApp() {
 
     val myStatsViewModel: MyStatsViewModel =
         viewModel(
-            factory = myStatsViewModelFactory
+            factory =
+                myStatsViewModelFactory
+        )
+
+    /*
+     * Adult Area ViewModel.
+     */
+    val adultAreaViewModelFactory =
+        remember(completedRoundRepository) {
+            AdultAreaViewModelFactory(
+                completedRoundRepository =
+                    completedRoundRepository
+            )
+        }
+
+    val adultAreaViewModel:
+            AdultAreaViewModel =
+        viewModel(
+            factory =
+                adultAreaViewModelFactory
         )
 
     /*
@@ -135,16 +151,15 @@ fun ArithMaticApp() {
             )
         }
 
-    val settingsViewModel: SettingsViewModel =
+    val settingsViewModel:
+            SettingsViewModel =
         viewModel(
-            factory = settingsViewModelFactory
+            factory =
+                settingsViewModelFactory
         )
 
     /*
      * Round Settings ViewModel.
-     *
-     * This ViewModel loads and saves the most recently confirmed
-     * PracticeConfig through SettingsRepository.
      */
     val roundSettingsViewModelFactory =
         remember(settingsRepository) {
@@ -161,37 +176,45 @@ fun ArithMaticApp() {
                 roundSettingsViewModelFactory
         )
 
+    val exportAdultReport =
+        rememberAdultReportExporter()
+
     var showSplash by rememberSaveable {
         mutableStateOf(true)
     }
 
     var currentDestination by rememberSaveable {
-        mutableStateOf(AppDestination.Start)
+        mutableStateOf(
+            AppDestination.Start
+        )
     }
 
-    /*
-     * These are retained outside the GameViewModel so the completed gameplay
-     * state can be cleared without removing the data used by ResultsBoard.
-     *
-     * They are intentionally not rememberSaveable because the domain models
-     * are not currently Parcelable or backed by custom Savers.
-     */
     var completedResults by remember {
-        mutableStateOf<BasicRoundResults?>(null)
+        mutableStateOf<BasicRoundResults?>(
+            null
+        )
     }
 
     var completedConfig by remember {
-        mutableStateOf<PracticeConfig?>(null)
+        mutableStateOf<PracticeConfig?>(
+            null
+        )
     }
 
     val gameUiState by
-    gameViewModel.uiState.collectAsState()
+    gameViewModel
+        .uiState
+        .collectAsState()
 
     val myStatsUiState by
-    myStatsViewModel.uiState.collectAsState()
+    myStatsViewModel
+        .uiState
+        .collectAsState()
 
     val settingsUiState by
-    settingsViewModel.uiState.collectAsState()
+    settingsViewModel
+        .uiState
+        .collectAsState()
 
     val roundSettingsUiState by
     roundSettingsViewModel
@@ -200,16 +223,11 @@ fun ArithMaticApp() {
 
     LaunchedEffect(Unit) {
         delay(3_000L)
-        showSplash = false
+
+        showSplash =
+            false
     }
 
-    /*
-     * The ViewModel completes and persists the round after the final feedback
-     * delay.
-     *
-     * Capture the immutable results and configuration before clearing the
-     * gameplay state or navigating away from the practice board.
-     */
     LaunchedEffect(
         gameUiState.isRoundCompleted,
         currentDestination
@@ -220,10 +238,12 @@ fun ArithMaticApp() {
             AppDestination.Practice
         ) {
             val roundResults =
-                gameViewModel.getCompletedResults()
+                gameViewModel
+                    .getCompletedResults()
 
             val roundSnapshot =
-                gameViewModel.getCompletedRound()
+                gameViewModel
+                    .getCompletedRound()
 
             if (
                 roundResults != null &&
@@ -252,23 +272,28 @@ fun ArithMaticApp() {
                 StartBoard(
                     onStartPractice = {
                         currentDestination =
-                            AppDestination.RoundSettings
+                            AppDestination
+                                .RoundSettings
                     },
                     onOpenSettings = {
                         currentDestination =
-                            AppDestination.AppSettings
+                            AppDestination
+                                .AppSettings
                     },
                     onOpenStats = {
                         currentDestination =
-                            AppDestination.MyStats
+                            AppDestination
+                                .MyStats
                     },
                     onOpenAbout = {
                         currentDestination =
-                            AppDestination.About
+                            AppDestination
+                                .About
                     },
                     onOpenAdultArea = {
                         currentDestination =
-                            AppDestination.AdultArea
+                            AppDestination
+                                .AdultArea
                     }
                 )
             }
@@ -283,10 +308,12 @@ fun ArithMaticApp() {
                             message =
                                 "Loading round settings...",
                             messageColor =
-                                ChalkColors.ChalkWhite,
+                                ChalkColors
+                                    .ChalkWhite,
                             onBack = {
                                 currentDestination =
-                                    AppDestination.Start
+                                    AppDestination
+                                        .Start
                             }
                         )
                     }
@@ -296,10 +323,12 @@ fun ArithMaticApp() {
                             message =
                                 state.message,
                             messageColor =
-                                ChalkColors.PastelPink,
+                                ChalkColors
+                                    .PastelPink,
                             onBack = {
                                 currentDestination =
-                                    AppDestination.Start
+                                    AppDestination
+                                        .Start
                             }
                         )
                     }
@@ -310,19 +339,16 @@ fun ArithMaticApp() {
                                 state.initialConfig,
                             onBack = {
                                 currentDestination =
-                                    AppDestination.Start
+                                    AppDestination
+                                        .Start
                             },
-                            onStartRound = { config ->
-                                /*
-                                 * Persist the complete validated configuration
-                                 * before starting gameplay.
-                                 *
-                                 * The exact same immutable config is then
-                                 * supplied to GameViewModel.
-                                 */
+                            onStartRound = {
+                                    config ->
+
                                 roundSettingsViewModel
                                     .saveConfig(
-                                        config = config,
+                                        config =
+                                            config,
                                         onSaved = {
                                             gameViewModel
                                                 .clearRound()
@@ -351,21 +377,32 @@ fun ArithMaticApp() {
 
             AppDestination.Practice -> {
                 GameBoard(
-                    uiState = gameUiState,
+                    uiState =
+                        gameUiState,
                     onExit = {
-                        gameViewModel.abandonRound()
-                        gameViewModel.clearRound()
+                        gameViewModel
+                            .abandonRound()
 
-                        completedResults = null
-                        completedConfig = null
+                        gameViewModel
+                            .clearRound()
+
+                        completedResults =
+                            null
+
+                        completedConfig =
+                            null
 
                         currentDestination =
-                            AppDestination.RoundSettings
+                            AppDestination
+                                .RoundSettings
                     },
-                    onAnswerSelected = { choiceIndex ->
-                        gameViewModel.selectAnswer(
-                            choiceIndex
-                        )
+                    onAnswerSelected = {
+                            choiceIndex ->
+
+                        gameViewModel
+                            .selectAnswer(
+                                choiceIndex
+                            )
                     }
                 )
             }
@@ -382,52 +419,68 @@ fun ArithMaticApp() {
                     config != null
                 ) {
                     ResultsBoard(
-                        results = results,
+                        results =
+                            results,
                         onPracticeAgain = {
-                            /*
-                             * Practice Again creates a fresh round using the
-                             * same immutable configuration snapshot.
-                             */
-                            gameViewModel.clearRound()
+                            gameViewModel
+                                .clearRound()
 
-                            gameViewModel.startRound(
-                                config
-                            )
+                            gameViewModel
+                                .startRound(
+                                    config
+                                )
 
-                            completedResults = null
+                            completedResults =
+                                null
 
                             currentDestination =
-                                AppDestination.Practice
+                                AppDestination
+                                    .Practice
                         },
                         onChangeSettings = {
-                            gameViewModel.clearRound()
+                            gameViewModel
+                                .clearRound()
 
-                            completedResults = null
-                            completedConfig = null
+                            completedResults =
+                                null
+
+                            completedConfig =
+                                null
 
                             currentDestination =
-                                AppDestination.RoundSettings
+                                AppDestination
+                                    .RoundSettings
                         },
                         onReturnHome = {
-                            gameViewModel.clearRound()
+                            gameViewModel
+                                .clearRound()
 
-                            completedResults = null
-                            completedConfig = null
+                            completedResults =
+                                null
+
+                            completedConfig =
+                                null
 
                             currentDestination =
-                                AppDestination.Start
+                                AppDestination
+                                    .Start
                         }
                     )
                 } else {
                     MissingResultsBoard(
                         onReturnHome = {
-                            gameViewModel.clearRound()
+                            gameViewModel
+                                .clearRound()
 
-                            completedResults = null
-                            completedConfig = null
+                            completedResults =
+                                null
+
+                            completedConfig =
+                                null
 
                             currentDestination =
-                                AppDestination.Start
+                                AppDestination
+                                    .Start
                         }
                     )
                 }
@@ -435,7 +488,8 @@ fun ArithMaticApp() {
 
             AppDestination.AppSettings -> {
                 SettingsBoard(
-                    uiState = settingsUiState,
+                    uiState =
+                        settingsUiState,
                     onToggleMusic = {
                         settingsViewModel
                             .toggleMusic()
@@ -469,11 +523,15 @@ fun ArithMaticApp() {
 
             AppDestination.MyStats -> {
                 MyStatsBoard(
-                    uiState = myStatsUiState,
-                    onPeriodSelected = { period ->
-                        myStatsViewModel.selectPeriod(
-                            period
-                        )
+                    uiState =
+                        myStatsUiState,
+                    onPeriodSelected = {
+                            period ->
+
+                        myStatsViewModel
+                            .selectPeriod(
+                                period
+                            )
                     },
                     onBack = {
                         currentDestination =
@@ -483,7 +541,11 @@ fun ArithMaticApp() {
             }
 
             AppDestination.AdultArea -> {
-                AdultsBoard(
+                AdultBoard(
+                    viewModel =
+                        adultAreaViewModel,
+                    onExportReport =
+                        exportAdultReport,
                     onBack = {
                         currentDestination =
                             AppDestination.Start
@@ -517,29 +579,37 @@ enum class AppDestination {
 @Composable
 private fun RoundSettingsStatusBoard(
     message: String,
-    messageColor: androidx.compose.ui.graphics.Color,
+    messageColor:
+    androidx.compose.ui.graphics.Color,
     onBack: () -> Unit
 ) {
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier =
+            Modifier.fillMaxSize(),
         verticalArrangement =
             Arrangement.Center,
         horizontalAlignment =
             Alignment.CenterHorizontally
     ) {
         Text(
-            text = message,
-            color = messageColor,
-            fontFamily = Chalktastic,
+            text =
+                message,
+            color =
+                messageColor,
+            fontFamily =
+                Chalktastic,
             fontSize = 22.sp,
             lineHeight = 28.sp,
-            textAlign = TextAlign.Center
+            textAlign =
+                TextAlign.Center
         )
 
         ChalkTextAction(
             text = "Back",
-            color = ChalkColors.PastelYellow,
-            onClick = onBack
+            color =
+                ChalkColors.PastelYellow,
+            onClick =
+                onBack
         )
     }
 }
@@ -549,7 +619,8 @@ private fun MissingResultsBoard(
     onReturnHome: () -> Unit
 ) {
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier =
+            Modifier.fillMaxSize(),
         verticalArrangement =
             Arrangement.Center,
         horizontalAlignment =
@@ -562,15 +633,16 @@ private fun MissingResultsBoard(
                 ChalkColors.PastelPink,
             fontFamily =
                 Chalktastic,
-            fontSize =
-                25.sp
+            fontSize = 25.sp
         )
 
         ChalkTextAction(
-            text = "Return Home",
+            text =
+                "Return Home",
             color =
                 ChalkColors.PastelYellow,
-            onClick = onReturnHome
+            onClick =
+                onReturnHome
         )
     }
 }

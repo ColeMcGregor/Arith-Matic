@@ -4,6 +4,7 @@ import com.wiseravenstudios.arithmatic.data.local.entity.QuestionAttemptEntity
 import com.wiseravenstudios.arithmatic.data.local.relation.CompletedRoundWithAttempts
 import com.wiseravenstudios.arithmatic.domain.model.ArithmeticOperation
 import com.wiseravenstudios.arithmatic.domain.statistics.model.CompletedRoundHistory
+import java.math.BigDecimal
 
 /**
  * Maps Room persistence models into persistence-independent domain history
@@ -21,18 +22,28 @@ object CompletedRoundHistoryMapper {
 
         return CompletedRoundHistory(
             id = round.id,
-            completedAtEpochMillis = round.completedAtEpochMillis,
-            activeRoundDurationMillis = round.activeRoundDurationMillis,
-            enabledOperations = parseEnabledOperations(
-                round.enabledOperations
-            ),
-            allowNegatives = round.allowNegatives,
-            allowDecimals = round.allowDecimals,
-            wholeNumberDigits = round.wholeNumberDigits,
-            questionCount = round.questionCount,
-            attempts = completedRound.attempts
-                .sortedBy { it.questionIndex }
-                .map(::toAttempt)
+            completedAtEpochMillis =
+                round.completedAtEpochMillis,
+            activeRoundDurationMillis =
+                round.activeRoundDurationMillis,
+            enabledOperations =
+                parseEnabledOperations(
+                    round.enabledOperations
+                ),
+            allowNegatives =
+                round.allowNegatives,
+            allowDecimals =
+                round.allowDecimals,
+            wholeNumberDigits =
+                round.wholeNumberDigits,
+            questionCount =
+                round.questionCount,
+            attempts =
+                completedRound.attempts
+                    .sortedBy { attempt ->
+                        attempt.questionIndex
+                    }
+                    .map(::toAttempt)
         )
     }
 
@@ -42,7 +53,9 @@ object CompletedRoundHistoryMapper {
     fun toHistoryList(
         completedRounds: List<CompletedRoundWithAttempts>
     ): List<CompletedRoundHistory> {
-        return completedRounds.map(::toHistory)
+        return completedRounds.map(
+            ::toHistory
+        )
     }
 
     /**
@@ -51,25 +64,39 @@ object CompletedRoundHistoryMapper {
     private fun toAttempt(
         attempt: QuestionAttemptEntity
     ): CompletedRoundHistory.Attempt {
-
         return CompletedRoundHistory.Attempt(
-            questionIndex = attempt.questionIndex,
-            operation = attempt.operation?.let {
-                ArithmeticOperation.valueOf(it)
-            },
-            questionText = attempt.questionText,
-            expectedAnswer = attempt.expectedAnswer,
-            selectedAnswer = attempt.selectedAnswer,
-            answerChoices = listOf(
-                attempt.answerChoice0,
-                attempt.answerChoice1,
-                attempt.answerChoice2,
-                attempt.answerChoice3
-            ),
-            selectedChoiceIndex = attempt.selectedChoiceIndex,
-            correctChoiceIndex = attempt.correctChoiceIndex,
-            isCorrect = attempt.isCorrect,
-            activeDurationMillis = attempt.activeDurationMillis
+            questionIndex =
+                attempt.questionIndex,
+            operation =
+                attempt.operation?.let {
+                    ArithmeticOperation.valueOf(it)
+                },
+            operands =
+                parseOperands(
+                    storedOperands =
+                        attempt.operands
+                ),
+            questionText =
+                attempt.questionText,
+            expectedAnswer =
+                attempt.expectedAnswer,
+            selectedAnswer =
+                attempt.selectedAnswer,
+            answerChoices =
+                listOf(
+                    attempt.answerChoice0,
+                    attempt.answerChoice1,
+                    attempt.answerChoice2,
+                    attempt.answerChoice3
+                ),
+            selectedChoiceIndex =
+                attempt.selectedChoiceIndex,
+            correctChoiceIndex =
+                attempt.correctChoiceIndex,
+            isCorrect =
+                attempt.isCorrect,
+            activeDurationMillis =
+                attempt.activeDurationMillis
         )
     }
 
@@ -83,7 +110,6 @@ object CompletedRoundHistoryMapper {
     private fun parseEnabledOperations(
         storedOperations: String
     ): Set<ArithmeticOperation> {
-
         return storedOperations
             .split(",")
             .map(String::trim)
@@ -91,4 +117,33 @@ object CompletedRoundHistoryMapper {
             .map(ArithmeticOperation::valueOf)
             .toSet()
     }
+
+    /**
+     * Parses the pipe-delimited operand values stored with an attempt.
+     *
+     * Examples:
+     *
+     * "12|7"
+     *
+     * "-3.5|8"
+     *
+     * An empty stored value represents historical data created before
+     * structured operands were persisted.
+     */
+    private fun parseOperands(
+        storedOperands: String
+    ): List<BigDecimal> {
+        if (storedOperands.isBlank()) {
+            return emptyList()
+        }
+
+        return storedOperands
+            .split(OPERAND_SEPARATOR)
+            .map(String::trim)
+            .filter(String::isNotBlank)
+            .map(::BigDecimal)
+    }
+
+    private const val OPERAND_SEPARATOR =
+        "|"
 }

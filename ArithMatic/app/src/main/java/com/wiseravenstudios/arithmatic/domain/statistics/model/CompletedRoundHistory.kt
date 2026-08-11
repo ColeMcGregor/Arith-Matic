@@ -1,6 +1,7 @@
 package com.wiseravenstudios.arithmatic.domain.statistics.model
 
 import com.wiseravenstudios.arithmatic.domain.model.ArithmeticOperation
+import java.math.BigDecimal
 
 data class CompletedRoundHistory(
     val id: Long,
@@ -47,6 +48,7 @@ data class CompletedRoundHistory(
     data class Attempt(
         val questionIndex: Int,
         val operation: ArithmeticOperation?,
+        val operands: List<BigDecimal>,
         val questionText: String,
         val expectedAnswer: String,
         val selectedAnswer: String,
@@ -78,11 +80,15 @@ data class CompletedRoundHistory(
                 "Answer choices cannot be empty."
             }
 
-            require(selectedChoiceIndex in answerChoices.indices) {
+            require(
+                selectedChoiceIndex in answerChoices.indices
+            ) {
                 "Selected choice index must reference an available answer choice."
             }
 
-            require(correctChoiceIndex in answerChoices.indices) {
+            require(
+                correctChoiceIndex in answerChoices.indices
+            ) {
                 "Correct choice index must reference an available answer choice."
             }
 
@@ -90,5 +96,22 @@ data class CompletedRoundHistory(
                 "Active question duration cannot be negative."
             }
         }
+
+        val containsNegativeOperand: Boolean
+            get() = operands.any { operand ->
+                operand < BigDecimal.ZERO
+            }
+
+        val containsDecimalOperand: Boolean
+            get() = operands.any { operand ->
+                operand.stripTrailingZeros().scale() > 0
+            }
+
+        val largestAbsoluteOperand: BigDecimal?
+            get() = operands
+                .maxByOrNull { operand ->
+                    operand.abs()
+                }
+                ?.abs()
     }
 }

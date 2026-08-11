@@ -2,6 +2,7 @@ package com.wiseravenstudios.arithmatic.data.local.mapper
 
 import com.wiseravenstudios.arithmatic.data.local.entity.CompletedRoundEntity
 import com.wiseravenstudios.arithmatic.data.local.entity.QuestionAttemptEntity
+import com.wiseravenstudios.arithmatic.domain.model.ArithmeticExpression
 import com.wiseravenstudios.arithmatic.domain.results.CompletedGameRoundDto
 import java.math.BigDecimal
 
@@ -19,7 +20,9 @@ object CompletedRoundPersistenceMapper {
 
             enabledOperations =
                 completedRound.config.enabledOperations
-                    .joinToString(",") { it.name },
+                    .joinToString(",") { operation ->
+                        operation.name
+                    },
 
             allowNegatives =
                 completedRound.config.allowNegatives,
@@ -39,7 +42,6 @@ object CompletedRoundPersistenceMapper {
         completedRound: CompletedGameRoundDto,
         roundId: Long
     ): List<QuestionAttemptEntity> {
-
         return completedRound.questions.zip(
             completedRound.attempts
         ).map { (question, attempt) ->
@@ -52,6 +54,16 @@ object CompletedRoundPersistenceMapper {
 
                 operation =
                     question.rootOperation?.name,
+
+                operands =
+                    extractOperands(
+                        expression = question.expression
+                    )
+                        .joinToString(
+                            separator = OPERAND_SEPARATOR
+                        ) { operand ->
+                            operand.toDatabaseString()
+                        },
 
                 questionText =
                     question.displayText,
@@ -95,8 +107,37 @@ object CompletedRoundPersistenceMapper {
             )
         }
     }
+
+    /**
+     * Extracts expression values from left to right so persisted operand order
+     * matches the displayed arithmetic expression.
+     */
+    private fun extractOperands(
+        expression: ArithmeticExpression
+    ): List<BigDecimal> {
+        return when (expression) {
+            is ArithmeticExpression.Value -> {
+                listOf(
+                    expression.value
+                )
+            }
+
+            is ArithmeticExpression.BinaryOperation -> {
+                extractOperands(
+                    expression = expression.left
+                ) +
+                        extractOperands(
+                            expression = expression.right
+                        )
+            }
+        }
+    }
+
+    private const val OPERAND_SEPARATOR =
+        "|"
 }
 
 private fun BigDecimal.toDatabaseString(): String {
-    return stripTrailingZeros().toPlainString()
+    return stripTrailingZeros()
+        .toPlainString()
 }
