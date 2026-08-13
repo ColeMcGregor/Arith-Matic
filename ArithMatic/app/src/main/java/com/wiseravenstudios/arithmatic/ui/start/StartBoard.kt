@@ -25,68 +25,116 @@ fun StartBoard(
     onOpenStats: () -> Unit,
     onOpenAbout: () -> Unit,
     onOpenAdultArea: () -> Unit,
+    onExit: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(
         modifier = modifier
             .fillMaxSize()
             .padding(
-                horizontal = 1.dp,
-                vertical = 25.dp
+                start = 1.dp,
+                end = 1.dp,
+                bottom = 18.dp
             )
     ) {
         Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(
+                    top = 50.dp
+                ),
+            horizontalAlignment =
+                Alignment.CenterHorizontally
         ) {
-
             Text(
                 text = "Arith-Matic",
-                color = ChalkColors.PastelOrange,
-                fontFamily = Chalktastic,
+                color =
+                    ChalkColors.PastelOrange,
+                fontFamily =
+                    Chalktastic,
                 fontSize = 35.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
+                fontWeight =
+                    FontWeight.Bold,
+                textAlign =
+                    TextAlign.Center
             )
 
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(top = 60.dp),
-                verticalArrangement = Arrangement.spacedBy(18.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(
+                        top = 60.dp
+                    ),
+                verticalArrangement =
+                    Arrangement.spacedBy(
+                        18.dp
+                    ),
+                horizontalAlignment =
+                    Alignment.CenterHorizontally
             ) {
                 ChalkTextAction(
                     text = "Start",
-                    color = ChalkColors.PastelGreen,
+                    color =
+                        ChalkColors.PastelGreen,
                     fontSize = 36.sp,
-                    onClick = onStartPractice
+                    onClick =
+                        onStartPractice
                 )
 
                 ChalkTextAction(
                     text = "Settings",
-                    color = ChalkColors.PastelPink,
-                    onClick = onOpenSettings
+                    color =
+                        ChalkColors.PastelPink,
+                    onClick =
+                        onOpenSettings
                 )
 
                 ChalkTextAction(
                     text = "My Stats",
-                    color = ChalkColors.PastelBlue,
-                    onClick = onOpenStats
+                    color =
+                        ChalkColors.PastelBlue,
+                    onClick =
+                        onOpenStats
                 )
 
                 ChalkTextAction(
                     text = "Adults",
-                    color = ChalkColors.PastelPurple,
-                    onClick = onOpenAdultArea
+                    color =
+                        ChalkColors.PastelPurple,
+                    onClick =
+                        onOpenAdultArea
                 )
             }
         }
 
         Box(
             modifier = Modifier
-                .align(Alignment.BottomStart)
-                .offset(x = 8.dp, y = 30.dp)
+                .align(
+                    Alignment.TopEnd
+                )
+                .padding(
+                    end = 8.dp
+                )
+        ) {
+            ChalkTextAction(
+                text = "Exit",
+                color =
+                    ChalkColors.PastelPink,
+                fontSize = 16.sp,
+                onClick =
+                    onExit
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .align(
+                    Alignment.BottomStart
+                )
+                .offset(
+                    x = 8.dp,
+//                    y = 30.dp
+                )
                 .padding(
                     end = 12.dp,
                     bottom = 10.dp
@@ -94,9 +142,11 @@ fun StartBoard(
         ) {
             ChalkTextAction(
                 text = "?",
-                color = ChalkColors.PastelYellow,
+                color =
+                    ChalkColors.PastelYellow,
                 fontSize = 26.sp,
-                onClick = onOpenAbout
+                onClick =
+                    onOpenAbout
             )
         }
     }

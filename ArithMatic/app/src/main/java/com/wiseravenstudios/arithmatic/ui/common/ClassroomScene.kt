@@ -42,7 +42,7 @@ private const val BOARD_HEIGHT_FRACTION = 0.64f
 private const val BOARD_CONTENT_LEFT_INSET = 0.06f
 private const val BOARD_CONTENT_TOP_INSET = 0.05f
 private const val BOARD_CONTENT_RIGHT_INSET = 0.105f
-private const val BOARD_CONTENT_BOTTOM_INSET = 0.05f
+private const val BOARD_CONTENT_BOTTOM_INSET = 0.03f
 
 /* Window */
 private const val WINDOW_TOP_FRACTION = 0.18f

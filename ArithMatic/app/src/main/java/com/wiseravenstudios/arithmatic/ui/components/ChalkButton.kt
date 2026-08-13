@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -24,10 +26,13 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import com.wiseravenstudios.arithmatic.R
+import com.wiseravenstudios.arithmatic.ui.common.BoardResponsiveMetrics
+import com.wiseravenstudios.arithmatic.ui.common.BoardTextRole
 import com.wiseravenstudios.arithmatic.ui.theme.ChalkColors
 import kotlin.math.roundToInt
 
@@ -50,152 +55,320 @@ enum class ChalkButtonState {
     Disabled
 }
 
+/**
+ * Chalk-framed interactive control.
+ *
+ * When responsive metrics are supplied, button text, padding, and minimum
+ * dimensions are derived from the current writable board area.
+ */
 @Composable
 fun ChalkButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    state: ChalkButtonState = ChalkButtonState.Normal,
+    state: ChalkButtonState =
+        ChalkButtonState.Normal,
     enabled: Boolean = true,
-    borderColor: Color = ChalkColors.ChalkWhite,
-    contentPadding: PaddingValues = PaddingValues(
-        horizontal = 20.dp,
-        vertical = 4.dp
-    ),
-    @DrawableRes backgroundRes: Int = R.drawable.chalk_button,
+    borderColor: Color =
+        ChalkColors.ChalkWhite,
+
+    metrics: BoardResponsiveMetrics? = null,
+    textRole: BoardTextRole =
+        BoardTextRole.Body,
+
+    /*
+     * Explicit values override responsive sizing when supplied.
+     */
+    contentPadding: PaddingValues? = null,
+    minimumWidth: Dp? = null,
+    minimumHeight: Dp? = null,
+
+    @DrawableRes
+    backgroundRes: Int =
+        R.drawable.chalk_button,
+
     content: @Composable () -> Unit
 ) {
-    val context = LocalContext.current
-    val interactionSource = remember { MutableInteractionSource() }
-    val pressed by interactionSource.collectIsPressedAsState()
+    val context =
+        LocalContext.current
+
+    val interactionSource =
+        remember {
+            MutableInteractionSource()
+        }
+
+    val pressed by
+    interactionSource
+        .collectIsPressedAsState()
 
     /*
      * Create an independent mutable copy of the Android drawable.
      *
-     * Keeping this as a Drawable preserves NinePatch behavior. It is not
-     * converted into an ImageBitmap or stretched as a plain bitmap.
+     * Keeping this as a Drawable preserves NinePatch behavior.
      */
-    val background: Drawable = remember(context, backgroundRes) {
-        val original = requireNotNull(
-            ContextCompat.getDrawable(context, backgroundRes)
+    val background: Drawable =
+        remember(
+            context,
+            backgroundRes
         ) {
-            "Unable to load chalk button drawable: $backgroundRes"
+            val original =
+                requireNotNull(
+                    ContextCompat.getDrawable(
+                        context,
+                        backgroundRes
+                    )
+                ) {
+                    "Unable to load chalk button drawable: $backgroundRes"
+                }
+
+            original.constantState
+                ?.newDrawable(
+                    context.resources
+                )
+                ?.mutate()
+                ?: original.mutate()
         }
 
-        original.constantState
-            ?.newDrawable(context.resources)
-            ?.mutate()
-            ?: original.mutate()
-    }
-
     val isLocked =
-        state == ChalkButtonState.Correct ||
-                state == ChalkButtonState.Incorrect ||
-                state == ChalkButtonState.Locked ||
-                state == ChalkButtonState.Disabled
+        state ==
+                ChalkButtonState.Correct ||
+                state ==
+                ChalkButtonState.Incorrect ||
+                state ==
+                ChalkButtonState.Locked ||
+                state ==
+                ChalkButtonState.Disabled
 
-    val isInteractive = enabled && !isLocked
+    val isInteractive =
+        enabled &&
+                !isLocked
 
-    /*
-     * Tint determines the border's color.
-     *
-     * Alpha is calculated separately below so changing transparency does not
-     * replace or recalculate the chosen tint.
-     */
-    val resolvedBorderColor = when (state) {
-        ChalkButtonState.Normal -> borderColor
-        ChalkButtonState.Selected -> ChalkColors.PastelBlue
-        ChalkButtonState.Correct -> ChalkColors.PastelGreen
-        ChalkButtonState.Incorrect -> ChalkColors.PastelPink
-        ChalkButtonState.Locked -> borderColor
-        ChalkButtonState.Disabled -> borderColor
-    }
+    val resolvedBorderColor =
+        when (state) {
+            ChalkButtonState.Normal ->
+                borderColor
 
-    val borderAlpha = when {
-        !enabled -> 0.34f
-        state == ChalkButtonState.Disabled -> 0.34f
-        state == ChalkButtonState.Locked -> 0.28f
-        pressed && isInteractive -> 0.72f
-        state == ChalkButtonState.Selected -> 0.92f
-        else -> 1f
-    }
+            ChalkButtonState.Selected ->
+                ChalkColors.PastelBlue
 
-    /*
-     * Content alpha is independent from the drawable alpha.
-     *
-     * A pressed button keeps its text readable while the frame dims and the
-     * entire control contracts slightly.
-     */
-    val contentAlpha = when {
-        !enabled -> 0.42f
-        state == ChalkButtonState.Disabled -> 0.42f
-        state == ChalkButtonState.Locked -> 0.42f
-        else -> 1f
-    }
+            ChalkButtonState.Correct ->
+                ChalkColors.PastelGreen
 
-    val contentColor = when (state) {
-        ChalkButtonState.Normal -> borderColor
-        ChalkButtonState.Selected -> ChalkColors.PastelBlue
-        ChalkButtonState.Correct -> ChalkColors.PastelGreen
-        ChalkButtonState.Incorrect -> ChalkColors.PastelPink
-        ChalkButtonState.Locked -> borderColor
-        ChalkButtonState.Disabled -> borderColor
-    }
+            ChalkButtonState.Incorrect ->
+                ChalkColors.PastelPink
+
+            ChalkButtonState.Locked ->
+                borderColor
+
+            ChalkButtonState.Disabled ->
+                borderColor
+        }
+
+    val borderAlpha =
+        when {
+            !enabled ->
+                0.34f
+
+            state ==
+                    ChalkButtonState.Disabled ->
+                0.34f
+
+            state ==
+                    ChalkButtonState.Locked ->
+                0.28f
+
+            pressed &&
+                    isInteractive ->
+                0.72f
+
+            state ==
+                    ChalkButtonState.Selected ->
+                0.92f
+
+            else ->
+                1f
+        }
+
+    val contentAlpha =
+        when {
+            !enabled ->
+                0.42f
+
+            state ==
+                    ChalkButtonState.Disabled ->
+                0.42f
+
+            state ==
+                    ChalkButtonState.Locked ->
+                0.42f
+
+            else ->
+                1f
+        }
+
+    val contentColor =
+        when (state) {
+            ChalkButtonState.Normal ->
+                borderColor
+
+            ChalkButtonState.Selected ->
+                ChalkColors.PastelBlue
+
+            ChalkButtonState.Correct ->
+                ChalkColors.PastelGreen
+
+            ChalkButtonState.Incorrect ->
+                ChalkColors.PastelPink
+
+            ChalkButtonState.Locked ->
+                borderColor
+
+            ChalkButtonState.Disabled ->
+                borderColor
+        }
 
     val pressedScale =
-        if (pressed && isInteractive) {
+        if (
+            pressed &&
+            isInteractive
+        ) {
             0.975f
         } else {
             1f
         }
 
+    val resolvedPadding =
+        contentPadding
+            ?: if (metrics != null) {
+                PaddingValues(
+                    horizontal =
+                        metrics
+                            .actionHorizontalPadding,
+                    vertical =
+                        metrics
+                            .actionVerticalPadding
+                )
+            } else {
+                DEFAULT_CONTENT_PADDING
+            }
+
+    val resolvedMinimumWidth =
+        minimumWidth
+            ?: metrics
+                ?.minimumTouchTarget
+            ?: DEFAULT_MINIMUM_WIDTH
+
+    val resolvedMinimumHeight =
+        minimumHeight
+            ?: metrics
+                ?.minimumTouchTarget
+            ?: DEFAULT_MINIMUM_HEIGHT
+
+    val responsiveTextSize =
+        metrics?.textSize(
+            textRole
+        )
+
     Box(
         modifier = modifier
             .defaultMinSize(
-                minWidth = 110.dp,
-                minHeight = 30.dp
+                minWidth =
+                    resolvedMinimumWidth,
+                minHeight =
+                    resolvedMinimumHeight
             )
             .graphicsLayer {
-                scaleX = pressedScale
-                scaleY = pressedScale
+                scaleX =
+                    pressedScale
+
+                scaleY =
+                    pressedScale
             }
             .drawBehind {
                 DrawableCompat.setTint(
                     background,
-                    resolvedBorderColor.toArgb()
+                    resolvedBorderColor
+                        .toArgb()
                 )
 
                 background.alpha =
-                    (borderAlpha * 255f)
+                    (
+                            borderAlpha *
+                                    255f
+                            )
                         .roundToInt()
-                        .coerceIn(0, 255)
+                        .coerceIn(
+                            0,
+                            255
+                        )
 
                 background.setBounds(
                     0,
                     0,
-                    size.width.roundToInt(),
-                    size.height.roundToInt()
+                    size.width
+                        .roundToInt(),
+                    size.height
+                        .roundToInt()
                 )
 
                 drawIntoCanvas { canvas ->
-                    background.draw(canvas.nativeCanvas)
+                    background.draw(
+                        canvas.nativeCanvas
+                    )
                 }
             }
             .clickable(
-                enabled = isInteractive,
-                interactionSource = interactionSource,
-                indication = null,
-                role = Role.Button,
-                onClick = onClick
+                enabled =
+                    isInteractive,
+                interactionSource =
+                    interactionSource,
+                indication =
+                    null,
+                role =
+                    Role.Button,
+                onClick =
+                    onClick
             )
-            .padding(contentPadding),
-        contentAlignment = Alignment.Center
+            .padding(
+                resolvedPadding
+            ),
+        contentAlignment =
+            Alignment.Center
     ) {
         CompositionLocalProvider(
-            LocalContentColor provides contentColor.copy(
-                alpha = contentAlpha
-            )
+            LocalContentColor provides
+                    contentColor.copy(
+                        alpha =
+                            contentAlpha
+                    )
         ) {
-            content()
+            if (
+                responsiveTextSize != null
+            ) {
+                ProvideTextStyle(
+                    value =
+                        LocalTextStyle.current
+                            .copy(
+                                fontSize =
+                                    responsiveTextSize
+                            )
+                ) {
+                    content()
+                }
+            } else {
+                content()
+            }
         }
     }
 }
+
+private val DEFAULT_CONTENT_PADDING =
+    PaddingValues(
+        horizontal = 20.dp,
+        vertical = 4.dp
+    )
+
+private val DEFAULT_MINIMUM_WIDTH =
+    110.dp
+
+private val DEFAULT_MINIMUM_HEIGHT =
+    30.dp

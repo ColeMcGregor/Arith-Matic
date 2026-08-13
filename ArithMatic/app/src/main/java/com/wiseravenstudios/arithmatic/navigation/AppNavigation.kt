@@ -52,7 +52,9 @@ import com.wiseravenstudios.arithmatic.ui.theme.Chalktastic
 import kotlinx.coroutines.delay
 
 @Composable
-fun ArithMaticApp() {
+fun ArithMaticApp(
+    onExitApp: () -> Unit
+) {
     val context =
         LocalContext.current
 
@@ -88,9 +90,6 @@ fun ArithMaticApp() {
             )
         }
 
-    /*
-     * Gameplay ViewModel.
-     */
     val gameViewModelFactory =
         remember(completedRoundRepository) {
             GameViewModelFactory(
@@ -105,9 +104,6 @@ fun ArithMaticApp() {
                 gameViewModelFactory
         )
 
-    /*
-     * My Stats ViewModel.
-     */
     val myStatsViewModelFactory =
         remember(completedRoundRepository) {
             MyStatsViewModelFactory(
@@ -122,9 +118,6 @@ fun ArithMaticApp() {
                 myStatsViewModelFactory
         )
 
-    /*
-     * Adult Area ViewModel.
-     */
     val adultAreaViewModelFactory =
         remember(completedRoundRepository) {
             AdultAreaViewModelFactory(
@@ -140,9 +133,6 @@ fun ArithMaticApp() {
                 adultAreaViewModelFactory
         )
 
-    /*
-     * Settings ViewModel.
-     */
     val settingsViewModelFactory =
         remember(settingsRepository) {
             SettingsViewModelFactory(
@@ -158,9 +148,6 @@ fun ArithMaticApp() {
                 settingsViewModelFactory
         )
 
-    /*
-     * Round Settings ViewModel.
-     */
     val roundSettingsViewModelFactory =
         remember(settingsRepository) {
             RoundSettingsViewModelFactory(
@@ -222,7 +209,9 @@ fun ArithMaticApp() {
         .collectAsState()
 
     LaunchedEffect(Unit) {
-        delay(3_000L)
+        delay(
+            3_000L
+        )
 
         showSplash =
             false
@@ -263,6 +252,7 @@ fun ArithMaticApp() {
 
     if (showSplash) {
         SplashScreen()
+
         return
     }
 
@@ -294,7 +284,9 @@ fun ArithMaticApp() {
                         currentDestination =
                             AppDestination
                                 .AdultArea
-                    }
+                    },
+                    onExit =
+                        onExitApp
                 )
             }
 
@@ -516,7 +508,8 @@ fun ArithMaticApp() {
                     },
                     onBack = {
                         currentDestination =
-                            AppDestination.Start
+                            AppDestination
+                                .Start
                     }
                 )
             }
@@ -535,7 +528,8 @@ fun ArithMaticApp() {
                     },
                     onBack = {
                         currentDestination =
-                            AppDestination.Start
+                            AppDestination
+                                .Start
                     }
                 )
             }
@@ -548,7 +542,8 @@ fun ArithMaticApp() {
                         exportAdultReport,
                     onBack = {
                         currentDestination =
-                            AppDestination.Start
+                            AppDestination
+                                .Start
                     }
                 )
             }
@@ -557,7 +552,8 @@ fun ArithMaticApp() {
                 AboutBoard(
                     onBack = {
                         currentDestination =
-                            AppDestination.Start
+                            AppDestination
+                                .Start
                     }
                 )
             }
