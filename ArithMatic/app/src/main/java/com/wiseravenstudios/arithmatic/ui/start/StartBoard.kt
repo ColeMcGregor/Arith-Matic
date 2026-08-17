@@ -2,22 +2,33 @@ package com.wiseravenstudios.arithmatic.ui.start
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.TextUnit
+import com.wiseravenstudios.arithmatic.ui.common.BoardResponsiveMetrics
+import com.wiseravenstudios.arithmatic.ui.common.BoardTextRole
+import com.wiseravenstudios.arithmatic.ui.common.calculateBoardResponsiveMetrics
 import com.wiseravenstudios.arithmatic.ui.components.ChalkTextAction
 import com.wiseravenstudios.arithmatic.ui.theme.ChalkColors
 import com.wiseravenstudios.arithmatic.ui.theme.Chalktastic
 
+/**
+ * Main menu displayed on the classroom blackboard.
+ *
+ * Content sizing and structural layout are derived from the current
+ * writable board dimensions.
+ */
 @Composable
 fun StartBoard(
     onStartPractice: () -> Unit,
@@ -28,126 +39,389 @@ fun StartBoard(
     onExit: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(
-                start = 1.dp,
-                end = 1.dp,
-                bottom = 18.dp
-            )
+    BoxWithConstraints(
+        modifier =
+            modifier.fillMaxSize()
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(
-                    top = 50.dp
-                ),
-            horizontalAlignment =
-                Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "Arith-Matic",
-                color =
-                    ChalkColors.PastelOrange,
-                fontFamily =
-                    Chalktastic,
-                fontSize = 35.sp,
-                fontWeight =
-                    FontWeight.Bold,
-                textAlign =
-                    TextAlign.Center
+        val metrics =
+            calculateBoardResponsiveMetrics(
+                width = maxWidth,
+                height = maxHeight
             )
-
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(
-                        top = 60.dp
-                    ),
-                verticalArrangement =
-                    Arrangement.spacedBy(
-                        18.dp
-                    ),
-                horizontalAlignment =
-                    Alignment.CenterHorizontally
-            ) {
-                ChalkTextAction(
-                    text = "Start",
-                    color =
-                        ChalkColors.PastelGreen,
-                    fontSize = 36.sp,
-                    onClick =
-                        onStartPractice
-                )
-
-                ChalkTextAction(
-                    text = "Settings",
-                    color =
-                        ChalkColors.PastelPink,
-                    onClick =
-                        onOpenSettings
-                )
-
-                ChalkTextAction(
-                    text = "My Stats",
-                    color =
-                        ChalkColors.PastelBlue,
-                    onClick =
-                        onOpenStats
-                )
-
-                ChalkTextAction(
-                    text = "Adults",
-                    color =
-                        ChalkColors.PastelPurple,
-                    onClick =
-                        onOpenAdultArea
-                )
-            }
-        }
 
         Box(
+            modifier =
+                Modifier.fillMaxSize()
+        ) {
+            StartBoardMainContent(
+                metrics =
+                    metrics,
+                onStartPractice =
+                    onStartPractice,
+                onOpenSettings =
+                    onOpenSettings,
+                onOpenStats =
+                    onOpenStats,
+                onOpenAdultArea =
+                    onOpenAdultArea
+            )
+
+            StartBoardUtilityActions(
+                metrics =
+                    metrics,
+                onOpenAbout =
+                    onOpenAbout,
+                onExit =
+                    onExit
+            )
+        }
+    }
+}
+
+/**
+ * Displays the title and main navigation actions.
+ */
+@Composable
+private fun StartBoardMainContent(
+    metrics: BoardResponsiveMetrics,
+    onStartPractice: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onOpenStats: () -> Unit,
+    onOpenAdultArea: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(
+                start =
+                    metrics.contentHorizontalPadding,
+                top =
+                    metrics.contentVerticalPadding +
+                            metrics.titleTopSpacing,
+                end =
+                    metrics.contentHorizontalPadding,
+            ),
+        horizontalAlignment =
+            Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Arith-Matic",
+            color =
+                ChalkColors.PastelOrange,
+            fontFamily =
+                Chalktastic,
+            fontSize =
+                metrics.textSize(
+                    BoardTextRole.Display
+                ),
+            fontWeight =
+                FontWeight.Bold,
+            textAlign =
+                TextAlign.Center,
+            maxLines = 1
+        )
+
+        if (metrics.isWide) {
+            WideStartActions(
+                onStartPractice =
+                    onStartPractice,
+                onOpenSettings =
+                    onOpenSettings,
+                onOpenStats =
+                    onOpenStats,
+                onOpenAdultArea =
+                    onOpenAdultArea,
+                metrics =
+                    metrics,
+                modifier =
+                    Modifier.weight(1f)
+            )
+        } else {
+            TallStartActions(
+                onStartPractice =
+                    onStartPractice,
+                onOpenSettings =
+                    onOpenSettings,
+                onOpenStats =
+                    onOpenStats,
+                onOpenAdultArea =
+                    onOpenAdultArea,
+                metrics =
+                    metrics,
+                modifier =
+                    Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+/**
+ * Displays the About and Exit actions in the upper board corners.
+ */
+@Composable
+private fun StartBoardUtilityActions(
+    metrics: BoardResponsiveMetrics,
+    onOpenAbout: () -> Unit,
+    onExit: () -> Unit
+) {
+    Box(
+        modifier =
+            Modifier.fillMaxSize()
+    ) {
+        ChalkTextAction(
+            text = "?",
+            color =
+                ChalkColors.PastelYellow,
+            metrics =
+                metrics,
+            textRole =
+                BoardTextRole.Compact,
+            paddingStart =
+                metrics.tinySpacing,
+            paddingTop =
+                metrics.tinySpacing,
+            paddingEnd =
+                metrics.tinySpacing,
+            paddingBottom =
+                metrics.tinySpacing,
+            modifier = Modifier
+                .align(
+                    Alignment.TopStart
+                )
+                .padding(
+                    start =
+                        metrics.tinySpacing,
+                    top =
+                        metrics.mediumSpacing
+                ),
+            onClick =
+                onOpenAbout
+        )
+
+        ChalkTextAction(
+            text = "Exit",
+            color =
+                ChalkColors.PastelPink,
+            metrics =
+                metrics,
+            textRole =
+                BoardTextRole.Compact,
+            paddingStart =
+                metrics.tinySpacing,
+            paddingTop =
+                metrics.tinySpacing,
+            paddingEnd =
+                metrics.tinySpacing,
+            paddingBottom =
+                metrics.tinySpacing,
             modifier = Modifier
                 .align(
                     Alignment.TopEnd
                 )
                 .padding(
-                    end = 8.dp
-                )
+                    top =
+                        metrics.mediumSpacing,
+                    end =
+                        metrics.tinySpacing
+                ),
+            onClick =
+                onExit
+        )
+    }
+}
+
+/**
+ * Displays the main actions in one vertical column.
+ */
+@Composable
+private fun TallStartActions(
+    onStartPractice: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onOpenStats: () -> Unit,
+    onOpenAdultArea: () -> Unit,
+    metrics: BoardResponsiveMetrics,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(
+                top =
+                    metrics.tallActionTopSpacing
+            ),
+        verticalArrangement =
+            Arrangement.spacedBy(
+                metrics.actionGroupSpacing
+            ),
+        horizontalAlignment =
+            Alignment.CenterHorizontally
+    ) {
+        StartAction(
+            text = "Start",
+            color =
+                ChalkColors.PastelGreen,
+            metrics =
+                metrics,
+            onClick =
+                onStartPractice
+        )
+
+        StartAction(
+            text = "Settings",
+            color =
+                ChalkColors.PastelPink,
+            metrics =
+                metrics,
+            onClick =
+                onOpenSettings
+        )
+
+        StartAction(
+            text = "My Stats",
+            color =
+                ChalkColors.PastelBlue,
+            metrics =
+                metrics,
+            onClick =
+                onOpenStats
+        )
+
+        StartAction(
+            text = "Adults",
+            color =
+                ChalkColors.PastelPurple,
+            metrics =
+                metrics,
+            onClick =
+                onOpenAdultArea
+        )
+    }
+}
+
+/**
+ * Displays the main actions in two columns.
+ */
+@Composable
+private fun WideStartActions(
+    onStartPractice: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onOpenStats: () -> Unit,
+    onOpenAdultArea: () -> Unit,
+    metrics: BoardResponsiveMetrics,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(
+                start =
+                    metrics.largeSpacing,
+                top =
+                    metrics.titleToActionsSpacing,
+                end =
+                    metrics.largeSpacing
+            ),
+        horizontalArrangement =
+            Arrangement.spacedBy(
+                metrics.largeSpacing,
+                alignment =
+                    Alignment.CenterHorizontally
+            ),
+        verticalAlignment =
+            Alignment.Top
+    ) {
+        Column(
+            modifier =
+                Modifier.weight(1f),
+            verticalArrangement =
+                Arrangement.spacedBy(
+                    metrics.actionGroupSpacing
+                ),
+            horizontalAlignment =
+                Alignment.CenterHorizontally
         ) {
-            ChalkTextAction(
-                text = "Exit",
+            StartAction(
+                text = "Start",
                 color =
-                    ChalkColors.PastelPink,
-                fontSize = 16.sp,
+                    ChalkColors.PastelGreen,
+                metrics =
+                    metrics,
+                fontSize =
+                    metrics.widePrimaryActionTextSize,
                 onClick =
-                    onExit
+                    onStartPractice
+            )
+
+            StartAction(
+                text = "My Stats",
+                color =
+                    ChalkColors.PastelBlue,
+                metrics =
+                    metrics,
+                fontSize =
+                    metrics.widePrimaryActionTextSize,
+                onClick =
+                    onOpenStats
             )
         }
 
-        Box(
-            modifier = Modifier
-                .align(
-                    Alignment.BottomStart
-                )
-                .offset(
-                    x = 8.dp,
-//                    y = 30.dp
-                )
-                .padding(
-                    end = 12.dp,
-                    bottom = 10.dp
-                )
+        Column(
+            modifier =
+                Modifier.weight(1f),
+            verticalArrangement =
+                Arrangement.spacedBy(
+                    metrics.actionGroupSpacing
+                ),
+            horizontalAlignment =
+                Alignment.CenterHorizontally
         ) {
-            ChalkTextAction(
-                text = "?",
+            StartAction(
+                text = "Settings",
                 color =
-                    ChalkColors.PastelYellow,
-                fontSize = 26.sp,
+                    ChalkColors.PastelPink,
+                metrics =
+                    metrics,
+                fontSize =
+                    metrics.widePrimaryActionTextSize,
                 onClick =
-                    onOpenAbout
+                    onOpenSettings
+            )
+
+            StartAction(
+                text = "Adults",
+                color =
+                    ChalkColors.PastelPurple,
+                metrics =
+                    metrics,
+                fontSize =
+                    metrics.widePrimaryActionTextSize,
+                onClick =
+                    onOpenAdultArea
             )
         }
     }
+}
+
+/**
+ * Displays one primary Start-board navigation action.
+ */
+@Composable
+private fun StartAction(
+    text: String,
+    color: Color,
+    metrics: BoardResponsiveMetrics,
+    fontSize: TextUnit? = null,
+    onClick: () -> Unit
+) {
+    ChalkTextAction(
+        text = text,
+        color = color,
+        metrics = metrics,
+        textRole =
+            BoardTextRole.PrimaryAction,
+        fontSize =
+            fontSize,
+        onClick =
+            onClick
+    )
 }
