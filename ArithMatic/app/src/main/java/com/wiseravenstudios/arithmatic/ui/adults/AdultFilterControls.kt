@@ -18,16 +18,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.wiseravenstudios.arithmatic.domain.adults.AdultHistoryPeriod
 import com.wiseravenstudios.arithmatic.domain.adults.AdultHistorySelection
 import com.wiseravenstudios.arithmatic.domain.history.query.CorrectnessFilter
 import com.wiseravenstudios.arithmatic.domain.history.query.OperandRange
 import com.wiseravenstudios.arithmatic.domain.history.query.OperationMatchMode
 import com.wiseravenstudios.arithmatic.domain.model.ArithmeticOperation
+import com.wiseravenstudios.arithmatic.ui.common.BoardResponsiveMetrics
 import com.wiseravenstudios.arithmatic.ui.components.ChalkTextAction
 import com.wiseravenstudios.arithmatic.ui.theme.ChalkColors
 import com.wiseravenstudios.arithmatic.ui.theme.Chalktastic
@@ -39,32 +39,89 @@ import java.time.format.DateTimeFormatter
 
 /**
  * Shared filter controls used by Adult Statistics and Adult Reports.
- *
- * Updates [AdultHistorySelection] as filter controls change.
  */
 @Composable
 fun AdultFilterControls(
     selection: AdultHistorySelection,
+    metrics: BoardResponsiveMetrics,
     onSelectionChanged: (AdultHistorySelection) -> Unit,
     onClearFilters: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier.fillMaxWidth(),
+        modifier =
+            modifier.fillMaxWidth(),
         verticalArrangement =
-            Arrangement.spacedBy(14.dp)
+            Arrangement.spacedBy(
+                metrics.mediumSpacing
+            )
     ) {
         Text(
             text = "Filters",
-            color = ChalkColors.ChalkWhite,
-            fontFamily = Chalktastic,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold
+            color =
+                ChalkColors.ChalkWhite,
+            fontFamily =
+                Chalktastic,
+            fontSize =
+                if (metrics.isDoubleColumn) {
+                    metrics.headingTextSize
+                } else {
+                    metrics.bodyTextSize
+                },
+            fontWeight =
+                FontWeight.Bold
         )
 
+        if (metrics.isDoubleColumn) {
+            DoubleColumnAdultFilters(
+                selection = selection,
+                metrics = metrics,
+                onSelectionChanged =
+                    onSelectionChanged
+            )
+        } else {
+            SingleColumnAdultFilters(
+                selection = selection,
+                metrics = metrics,
+                onSelectionChanged =
+                    onSelectionChanged
+            )
+        }
+
+        ChalkTextAction(
+            text = "Clear Filters",
+            color =
+                ChalkColors.PastelOrange,
+            fontSize =
+                metrics.compactTextSize,
+            paddingTop =
+                metrics.tinySpacing,
+            paddingBottom =
+                metrics.tinySpacing,
+            onClick =
+                onClearFilters
+        )
+    }
+}
+
+@Composable
+private fun SingleColumnAdultFilters(
+    selection: AdultHistorySelection,
+    metrics: BoardResponsiveMetrics,
+    onSelectionChanged: (AdultHistorySelection) -> Unit
+) {
+    Column(
+        modifier =
+            Modifier.fillMaxWidth(),
+        verticalArrangement =
+            Arrangement.spacedBy(
+                metrics.mediumSpacing
+            )
+    ) {
         AdultTimePeriodFilter(
             selectedPeriod =
                 selection.period,
+            metrics = metrics,
             onPeriodChanged = { period ->
                 onSelectionChanged(
                     selection.copy(
@@ -77,26 +134,22 @@ fun AdultFilterControls(
         AdultOperationFilter(
             selectedOperations =
                 selection.operations,
+            metrics = metrics,
             onOperationChanged = {
                     operation,
                     enabled ->
 
-                val updatedOperations =
-                    selection.operations
-                        .toMutableSet()
-                        .apply {
-                            if (enabled) {
-                                add(operation)
-                            } else {
-                                remove(operation)
-                            }
-                        }
-                        .toSet()
-
                 onSelectionChanged(
                     selection.copy(
                         operations =
-                            updatedOperations
+                            updateOperationSet(
+                                current =
+                                    selection.operations,
+                                operation =
+                                    operation,
+                                enabled =
+                                    enabled
+                            )
                     )
                 )
             }
@@ -104,6 +157,7 @@ fun AdultFilterControls(
 
         AdultOperandFilter(
             selection = selection,
+            metrics = metrics,
             onSelectionChanged =
                 onSelectionChanged
         )
@@ -111,6 +165,7 @@ fun AdultFilterControls(
         AdultCorrectnessFilter(
             correctness =
                 selection.correctness,
+            metrics = metrics,
             onCorrectnessChanged = {
                     correctness ->
 
@@ -124,9 +179,11 @@ fun AdultFilterControls(
         )
 
         AdultBooleanAttemptFilter(
-            label = "Contains Negatives",
+            label =
+                "Contains Negatives",
             value =
                 selection.containsNegativeOperand,
+            metrics = metrics,
             onValueChanged = { value ->
                 onSelectionChanged(
                     selection.copy(
@@ -138,9 +195,11 @@ fun AdultFilterControls(
         )
 
         AdultBooleanAttemptFilter(
-            label = "Contains Decimals",
+            label =
+                "Contains Decimals",
             value =
                 selection.containsDecimalOperand,
+            metrics = metrics,
             onValueChanged = { value ->
                 onSelectionChanged(
                     selection.copy(
@@ -154,26 +213,22 @@ fun AdultFilterControls(
         AdultDigitFilter(
             selectedDigits =
                 selection.wholeNumberDigits,
+            metrics = metrics,
             onDigitChanged = {
                     digitCount,
                     enabled ->
 
-                val updatedDigits =
-                    selection.wholeNumberDigits
-                        .toMutableSet()
-                        .apply {
-                            if (enabled) {
-                                add(digitCount)
-                            } else {
-                                remove(digitCount)
-                            }
-                        }
-                        .toSet()
-
                 onSelectionChanged(
                     selection.copy(
                         wholeNumberDigits =
-                            updatedDigits
+                            updateDigitSet(
+                                current =
+                                    selection.wholeNumberDigits,
+                                digitCount =
+                                    digitCount,
+                                enabled =
+                                    enabled
+                            )
                     )
                 )
             }
@@ -184,26 +239,22 @@ fun AdultFilterControls(
                 selection.enabledRoundOperations,
             matchMode =
                 selection.enabledRoundOperationMatchMode,
+            metrics = metrics,
             onOperationChanged = {
                     operation,
                     enabled ->
 
-                val updatedOperations =
-                    selection.enabledRoundOperations
-                        .toMutableSet()
-                        .apply {
-                            if (enabled) {
-                                add(operation)
-                            } else {
-                                remove(operation)
-                            }
-                        }
-                        .toSet()
-
                 onSelectionChanged(
                     selection.copy(
                         enabledRoundOperations =
-                            updatedOperations
+                            updateOperationSet(
+                                current =
+                                    selection.enabledRoundOperations,
+                                operation =
+                                    operation,
+                                enabled =
+                                    enabled
+                            )
                     )
                 )
             },
@@ -216,26 +267,528 @@ fun AdultFilterControls(
                 )
             }
         )
+    }
+}
 
-        ChalkTextAction(
-            text = "Clear Filters",
-            color = ChalkColors.PastelOrange,
-            fontSize = 19.sp,
-            onClick = onClearFilters
+@Composable
+private fun DoubleColumnAdultFilters(
+    selection: AdultHistorySelection,
+    metrics: BoardResponsiveMetrics,
+    onSelectionChanged: (AdultHistorySelection) -> Unit
+) {
+    Column(
+        modifier =
+            Modifier.fillMaxWidth(),
+        verticalArrangement =
+            Arrangement.spacedBy(
+                metrics.mediumSpacing
+            )
+    ) {
+        Row(
+            modifier =
+                Modifier.fillMaxWidth(),
+            horizontalArrangement =
+                Arrangement.spacedBy(
+                    metrics.largeSpacing
+                ),
+            verticalAlignment =
+                Alignment.Top
+        ) {
+            Column(
+                modifier =
+                    Modifier.weight(1f)
+            ) {
+                AdultTimePeriodFilter(
+                    selectedPeriod =
+                        selection.period,
+                    metrics = metrics,
+                    onPeriodChanged = { period ->
+                        onSelectionChanged(
+                            selection.copy(
+                                period = period
+                            )
+                        )
+                    }
+                )
+            }
+
+            Column(
+                modifier =
+                    Modifier.weight(1f)
+            ) {
+                AdultOperationFilter(
+                    selectedOperations =
+                        selection.operations,
+                    metrics = metrics,
+                    onOperationChanged = {
+                            operation,
+                            enabled ->
+
+                        onSelectionChanged(
+                            selection.copy(
+                                operations =
+                                    updateOperationSet(
+                                        current =
+                                            selection.operations,
+                                        operation =
+                                            operation,
+                                        enabled =
+                                            enabled
+                                    )
+                            )
+                        )
+                    }
+                )
+            }
+        }
+
+        Row(
+            modifier =
+                Modifier.fillMaxWidth(),
+            horizontalArrangement =
+                Arrangement.spacedBy(
+                    metrics.largeSpacing
+                ),
+            verticalAlignment =
+                Alignment.Top
+        ) {
+            Column(
+                modifier =
+                    Modifier.weight(1f)
+            ) {
+                AdultOperandFilter(
+                    selection = selection,
+                    metrics = metrics,
+                    onSelectionChanged =
+                        onSelectionChanged
+                )
+            }
+
+            Column(
+                modifier =
+                    Modifier.weight(1f)
+            ) {
+                AdultCorrectnessFilter(
+                    correctness =
+                        selection.correctness,
+                    metrics = metrics,
+                    onCorrectnessChanged = {
+                            correctness ->
+
+                        onSelectionChanged(
+                            selection.copy(
+                                correctness =
+                                    correctness
+                            )
+                        )
+                    }
+                )
+            }
+        }
+
+        Row(
+            modifier =
+                Modifier.fillMaxWidth(),
+            horizontalArrangement =
+                Arrangement.spacedBy(
+                    metrics.largeSpacing
+                ),
+            verticalAlignment =
+                Alignment.Top
+        ) {
+            Column(
+                modifier =
+                    Modifier.weight(1f)
+            ) {
+                AdultBooleanAttemptFilter(
+                    label =
+                        "Contains Negatives",
+                    value =
+                        selection.containsNegativeOperand,
+                    metrics = metrics,
+                    onValueChanged = { value ->
+                        onSelectionChanged(
+                            selection.copy(
+                                containsNegativeOperand =
+                                    value
+                            )
+                        )
+                    }
+                )
+            }
+
+            Column(
+                modifier =
+                    Modifier.weight(1f)
+            ) {
+                AdultBooleanAttemptFilter(
+                    label =
+                        "Contains Decimals",
+                    value =
+                        selection.containsDecimalOperand,
+                    metrics = metrics,
+                    onValueChanged = { value ->
+                        onSelectionChanged(
+                            selection.copy(
+                                containsDecimalOperand =
+                                    value
+                            )
+                        )
+                    }
+                )
+            }
+        }
+
+        Row(
+            modifier =
+                Modifier.fillMaxWidth(),
+            horizontalArrangement =
+                Arrangement.spacedBy(
+                    metrics.largeSpacing
+                ),
+            verticalAlignment =
+                Alignment.Top
+        ) {
+            Column(
+                modifier =
+                    Modifier.weight(1f)
+            ) {
+                AdultDigitFilter(
+                    selectedDigits =
+                        selection.wholeNumberDigits,
+                    metrics = metrics,
+                    onDigitChanged = {
+                            digitCount,
+                            enabled ->
+
+                        onSelectionChanged(
+                            selection.copy(
+                                wholeNumberDigits =
+                                    updateDigitSet(
+                                        current =
+                                            selection.wholeNumberDigits,
+                                        digitCount =
+                                            digitCount,
+                                        enabled =
+                                            enabled
+                                    )
+                            )
+                        )
+                    }
+                )
+            }
+
+            Column(
+                modifier =
+                    Modifier.weight(1f)
+            ) {
+                AdultRoundOperationFilter(
+                    selectedOperations =
+                        selection.enabledRoundOperations,
+                    matchMode =
+                        selection.enabledRoundOperationMatchMode,
+                    metrics = metrics,
+                    onOperationChanged = {
+                            operation,
+                            enabled ->
+
+                        onSelectionChanged(
+                            selection.copy(
+                                enabledRoundOperations =
+                                    updateOperationSet(
+                                        current =
+                                            selection.enabledRoundOperations,
+                                        operation =
+                                            operation,
+                                        enabled =
+                                            enabled
+                                    )
+                            )
+                        )
+                    },
+                    onMatchModeChanged = { matchMode ->
+                        onSelectionChanged(
+                            selection.copy(
+                                enabledRoundOperationMatchMode =
+                                    matchMode
+                            )
+                        )
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AdultTimePeriodFilter(
+    selectedPeriod: AdultHistoryPeriod,
+    metrics: BoardResponsiveMetrics,
+    onPeriodChanged: (AdultHistoryPeriod) -> Unit
+) {
+    var showCustomDatePicker by remember {
+        mutableStateOf(false)
+    }
+
+    Column(
+        modifier =
+            Modifier.fillMaxWidth(),
+        verticalArrangement =
+            Arrangement.spacedBy(
+                metrics.tinySpacing
+            )
+    ) {
+        FilterHeading(
+            text = "Time",
+            metrics = metrics
         )
+
+        Row(
+            modifier =
+                Modifier.fillMaxWidth(),
+            horizontalArrangement =
+                Arrangement.SpaceEvenly,
+            verticalAlignment =
+                Alignment.CenterVertically
+        ) {
+            TimePeriodOption(
+                text = "Day",
+                selected =
+                    selectedPeriod ==
+                            AdultHistoryPeriod.Day,
+                metrics = metrics,
+                onClick = {
+                    onPeriodChanged(
+                        AdultHistoryPeriod.Day
+                    )
+                }
+            )
+
+            TimePeriodOption(
+                text = "7",
+                selected =
+                    selectedPeriod ==
+                            AdultHistoryPeriod.Last7Days,
+                metrics = metrics,
+                onClick = {
+                    onPeriodChanged(
+                        AdultHistoryPeriod.Last7Days
+                    )
+                }
+            )
+
+            TimePeriodOption(
+                text = "30",
+                selected =
+                    selectedPeriod ==
+                            AdultHistoryPeriod.Last30Days,
+                metrics = metrics,
+                onClick = {
+                    onPeriodChanged(
+                        AdultHistoryPeriod.Last30Days
+                    )
+                }
+            )
+        }
+
+        Row(
+            modifier =
+                Modifier.fillMaxWidth(),
+            horizontalArrangement =
+                Arrangement.SpaceEvenly,
+            verticalAlignment =
+                Alignment.CenterVertically
+        ) {
+            TimePeriodOption(
+                text = "365",
+                selected =
+                    selectedPeriod ==
+                            AdultHistoryPeriod.Last365Days,
+                metrics = metrics,
+                onClick = {
+                    onPeriodChanged(
+                        AdultHistoryPeriod.Last365Days
+                    )
+                }
+            )
+
+            TimePeriodOption(
+                text = "Custom",
+                selected =
+                    selectedPeriod is
+                            AdultHistoryPeriod.Custom,
+                metrics = metrics,
+                onClick = {
+                    showCustomDatePicker =
+                        true
+                }
+            )
+        }
+
+        Text(
+            text =
+                selectedPeriod
+                    .displayDescription(),
+            color =
+                ChalkColors.ChalkWhite.copy(
+                    alpha = 0.75f
+                ),
+            fontFamily =
+                Chalktastic,
+            fontSize =
+                metrics.microTextSize,
+            maxLines = 1,
+            softWrap = false
+        )
+    }
+
+    if (showCustomDatePicker) {
+        CustomDateRangeDialog(
+            currentPeriod =
+                selectedPeriod,
+            onDismiss = {
+                showCustomDatePicker =
+                    false
+            },
+            onRangeSelected = {
+                    startDate,
+                    endDate ->
+
+                onPeriodChanged(
+                    AdultHistoryPeriod.Custom(
+                        startDate =
+                            startDate,
+                        endDate =
+                            endDate
+                    )
+                )
+
+                showCustomDatePicker =
+                    false
+            }
+        )
+    }
+}
+
+@Composable
+private fun TimePeriodOption(
+    text: String,
+    selected: Boolean,
+    metrics: BoardResponsiveMetrics,
+    onClick: () -> Unit
+) {
+    ChalkTextAction(
+        text = text,
+        color =
+            if (selected) {
+                ChalkColors.PastelGreen
+            } else {
+                ChalkColors.ChalkWhite
+            },
+        fontSize =
+            metrics.bodyTextSize,
+        paddingStart =
+            metrics.tinySpacing,
+        paddingEnd =
+            metrics.tinySpacing,
+        paddingTop =
+            metrics.tinySpacing,
+        paddingBottom =
+            metrics.tinySpacing,
+        onClick = onClick
+    )
+}
+
+@Composable
+private fun AdultOperationFilter(
+    selectedOperations: Set<ArithmeticOperation>,
+    metrics: BoardResponsiveMetrics,
+    onOperationChanged: (
+        ArithmeticOperation,
+        Boolean
+    ) -> Unit
+) {
+    Column(
+        modifier =
+            Modifier.fillMaxWidth(),
+        verticalArrangement =
+            Arrangement.spacedBy(
+                metrics.tinySpacing
+            )
+    ) {
+        FilterHeading(
+            text = "Problems",
+            metrics = metrics
+        )
+
+        FilterHint(
+            text =
+                "Choose which operations to include.",
+            metrics = metrics
+        )
+
+        Row(
+            modifier =
+                Modifier.fillMaxWidth(),
+            horizontalArrangement =
+                Arrangement.SpaceEvenly,
+            verticalAlignment =
+                Alignment.CenterVertically
+        ) {
+            ArithmeticOperation.entries
+                .forEach { operation ->
+
+                    val selected =
+                        operation in
+                                selectedOperations
+
+                    ChalkTextAction(
+                        text =
+                            operation.symbol,
+                        color =
+                            if (selected) {
+                                ChalkColors.PastelGreen
+                            } else {
+                                ChalkColors.ChalkWhite
+                            },
+                        fontSize =
+                            metrics.headingTextSize,
+                        paddingTop =
+                            metrics.tinySpacing,
+                        paddingBottom =
+                            metrics.tinySpacing,
+                        onClick = {
+                            onOperationChanged(
+                                operation,
+                                !selected
+                            )
+                        }
+                    )
+                }
+        }
+
+        if (selectedOperations.isEmpty()) {
+            FilterHint(
+                text =
+                    "All operations included",
+                metrics = metrics
+            )
+        }
     }
 }
 
 @Composable
 private fun AdultOperandFilter(
     selection: AdultHistorySelection,
+    metrics: BoardResponsiveMetrics,
     onSelectionChanged: (AdultHistorySelection) -> Unit
 ) {
     var exactEnabled by remember(
         selection.exactOperands
     ) {
         mutableStateOf(
-            selection.exactOperands.isNotEmpty()
+            selection.exactOperands
+                .isNotEmpty()
         )
     }
 
@@ -243,7 +796,8 @@ private fun AdultOperandFilter(
         selection.operandRanges
     ) {
         mutableStateOf(
-            selection.operandRanges.isNotEmpty()
+            selection.operandRanges
+                .isNotEmpty()
         )
     }
 
@@ -290,22 +844,31 @@ private fun AdultOperandFilter(
     }
 
     Column(
+        modifier =
+            Modifier.fillMaxWidth(),
         verticalArrangement =
-            Arrangement.spacedBy(7.dp)
+            Arrangement.spacedBy(
+                metrics.smallSpacing
+            )
     ) {
         FilterHeading(
-            text = "Operands"
+            text = "Operands",
+            metrics = metrics
         )
 
         FilterHint(
             text =
-                "Exact values and ranges are combined with OR."
+                "Exact values and ranges are combined with OR.",
+            metrics = metrics
         )
 
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier =
+                Modifier.fillMaxWidth(),
             horizontalArrangement =
-                Arrangement.SpaceEvenly
+                Arrangement.SpaceEvenly,
+            verticalAlignment =
+                Alignment.CenterVertically
         ) {
             ChalkTextAction(
                 text =
@@ -320,7 +883,12 @@ private fun AdultOperandFilter(
                     } else {
                         ChalkColors.ChalkWhite
                     },
-                fontSize = 17.sp,
+                fontSize =
+                    metrics.compactTextSize,
+                paddingTop =
+                    metrics.tinySpacing,
+                paddingBottom =
+                    metrics.tinySpacing,
                 onClick = {
                     exactEnabled =
                         !exactEnabled
@@ -360,7 +928,12 @@ private fun AdultOperandFilter(
                     } else {
                         ChalkColors.ChalkWhite
                     },
-                fontSize = 17.sp,
+                fontSize =
+                    metrics.compactTextSize,
+                paddingTop =
+                    metrics.tinySpacing,
+                paddingBottom =
+                    metrics.tinySpacing,
                 onClick = {
                     rangeEnabled =
                         !rangeEnabled
@@ -411,14 +984,27 @@ private fun AdultOperandFilter(
                 },
                 modifier =
                     Modifier.fillMaxWidth(),
+                textStyle =
+                    TextStyle(
+                        fontFamily =
+                            Chalktastic,
+                        fontSize =
+                            metrics.compactTextSize
+                    ),
                 label = {
                     Text(
-                        text = "Exact Operand(s)"
+                        text =
+                            "Exact Operand(s)",
+                        fontSize =
+                            metrics.microTextSize
                     )
                 },
                 placeholder = {
                     Text(
-                        text = "Example: 7, 12, 17"
+                        text =
+                            "Example: 7, 12, 17",
+                        fontSize =
+                            metrics.microTextSize
                     )
                 },
                 singleLine = true
@@ -430,7 +1016,9 @@ private fun AdultOperandFilter(
                 modifier =
                     Modifier.fillMaxWidth(),
                 horizontalArrangement =
-                    Arrangement.spacedBy(8.dp),
+                    Arrangement.spacedBy(
+                        metrics.smallSpacing
+                    ),
                 verticalAlignment =
                     Alignment.CenterVertically
             ) {
@@ -456,9 +1044,18 @@ private fun AdultOperandFilter(
                     },
                     modifier =
                         Modifier.weight(1f),
+                    textStyle =
+                        TextStyle(
+                            fontFamily =
+                                Chalktastic,
+                            fontSize =
+                                metrics.compactTextSize
+                        ),
                     label = {
                         Text(
-                            text = "Minimum"
+                            text = "Minimum",
+                            fontSize =
+                                metrics.microTextSize
                         )
                     },
                     singleLine = true
@@ -470,7 +1067,8 @@ private fun AdultOperandFilter(
                         ChalkColors.ChalkWhite,
                     fontFamily =
                         Chalktastic,
-                    fontSize = 16.sp
+                    fontSize =
+                        metrics.compactTextSize
                 )
 
                 OutlinedTextField(
@@ -495,9 +1093,18 @@ private fun AdultOperandFilter(
                     },
                     modifier =
                         Modifier.weight(1f),
+                    textStyle =
+                        TextStyle(
+                            fontFamily =
+                                Chalktastic,
+                            fontSize =
+                                metrics.compactTextSize
+                        ),
                     label = {
                         Text(
-                            text = "Maximum"
+                            text = "Maximum",
+                            fontSize =
+                                metrics.microTextSize
                         )
                     },
                     singleLine = true
@@ -508,135 +1115,81 @@ private fun AdultOperandFilter(
 }
 
 @Composable
-private fun AdultTimePeriodFilter(
-    selectedPeriod: AdultHistoryPeriod,
-    onPeriodChanged: (AdultHistoryPeriod) -> Unit
+private fun AdultCorrectnessFilter(
+    correctness: CorrectnessFilter,
+    metrics: BoardResponsiveMetrics,
+    onCorrectnessChanged: (
+        CorrectnessFilter
+    ) -> Unit
 ) {
-    var showCustomDatePicker by remember {
-        mutableStateOf(false)
-    }
-
     Column(
+        modifier =
+            Modifier.fillMaxWidth(),
         verticalArrangement =
-            Arrangement.spacedBy(4.dp)
+            Arrangement.spacedBy(
+                metrics.tinySpacing
+            )
     ) {
         FilterHeading(
-            text = "Time"
+            text = "Answers",
+            metrics = metrics
         )
 
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier =
+                Modifier.fillMaxWidth(),
             horizontalArrangement =
                 Arrangement.SpaceEvenly,
             verticalAlignment =
                 Alignment.CenterVertically
         ) {
-            TimePeriodOption(
-                text = "Day",
+            CorrectnessOption(
+                text = "All",
                 selected =
-                    selectedPeriod ==
-                            AdultHistoryPeriod.Day,
+                    correctness ==
+                            CorrectnessFilter.All,
+                metrics = metrics,
                 onClick = {
-                    onPeriodChanged(
-                        AdultHistoryPeriod.Day
+                    onCorrectnessChanged(
+                        CorrectnessFilter.All
                     )
                 }
             )
 
-            TimePeriodOption(
-                text = "7",
+            CorrectnessOption(
+                text = "Correct",
                 selected =
-                    selectedPeriod ==
-                            AdultHistoryPeriod.Last7Days,
+                    correctness ==
+                            CorrectnessFilter.CorrectOnly,
+                metrics = metrics,
                 onClick = {
-                    onPeriodChanged(
-                        AdultHistoryPeriod.Last7Days
+                    onCorrectnessChanged(
+                        CorrectnessFilter.CorrectOnly
                     )
                 }
             )
 
-            TimePeriodOption(
-                text = "30",
+            CorrectnessOption(
+                text = "Incorrect",
                 selected =
-                    selectedPeriod ==
-                            AdultHistoryPeriod.Last30Days,
+                    correctness ==
+                            CorrectnessFilter.IncorrectOnly,
+                metrics = metrics,
                 onClick = {
-                    onPeriodChanged(
-                        AdultHistoryPeriod.Last30Days
+                    onCorrectnessChanged(
+                        CorrectnessFilter.IncorrectOnly
                     )
-                }
-            )
-
-            TimePeriodOption(
-                text = "365",
-                selected =
-                    selectedPeriod ==
-                            AdultHistoryPeriod.Last365Days,
-                onClick = {
-                    onPeriodChanged(
-                        AdultHistoryPeriod.Last365Days
-                    )
-                }
-            )
-
-            TimePeriodOption(
-                text = "Custom",
-                selected =
-                    selectedPeriod is
-                            AdultHistoryPeriod.Custom,
-                onClick = {
-                    showCustomDatePicker =
-                        true
                 }
             )
         }
-
-        Text(
-            text =
-                selectedPeriod
-                    .displayDescription(),
-            color =
-                ChalkColors.ChalkWhite.copy(
-                    alpha = 0.75f
-                ),
-            fontFamily =
-                Chalktastic,
-            fontSize = 14.sp
-        )
-    }
-
-    if (showCustomDatePicker) {
-        CustomDateRangeDialog(
-            currentPeriod =
-                selectedPeriod,
-            onDismiss = {
-                showCustomDatePicker =
-                    false
-            },
-            onRangeSelected = {
-                    startDate,
-                    endDate ->
-
-                onPeriodChanged(
-                    AdultHistoryPeriod.Custom(
-                        startDate =
-                            startDate,
-                        endDate =
-                            endDate
-                    )
-                )
-
-                showCustomDatePicker =
-                    false
-            }
-        )
     }
 }
 
 @Composable
-private fun TimePeriodOption(
+private fun CorrectnessOption(
     text: String,
     selected: Boolean,
+    metrics: BoardResponsiveMetrics,
     onClick: () -> Unit
 ) {
     ChalkTextAction(
@@ -647,12 +1200,362 @@ private fun TimePeriodOption(
             } else {
                 ChalkColors.ChalkWhite
             },
-        fontSize = 16.sp,
-        paddingStart = 5.dp,
-        paddingEnd = 5.dp,
-        paddingTop = 4.dp,
-        paddingBottom = 4.dp,
+        fontSize =
+            metrics.compactTextSize,
+        paddingStart =
+            metrics.tinySpacing,
+        paddingEnd =
+            metrics.tinySpacing,
+        paddingTop =
+            metrics.tinySpacing,
+        paddingBottom =
+            metrics.tinySpacing,
         onClick = onClick
+    )
+}
+
+@Composable
+private fun AdultBooleanAttemptFilter(
+    label: String,
+    value: Boolean?,
+    metrics: BoardResponsiveMetrics,
+    onValueChanged: (Boolean?) -> Unit
+) {
+    Column(
+        modifier =
+            Modifier.fillMaxWidth(),
+        verticalArrangement =
+            Arrangement.spacedBy(
+                metrics.tinySpacing
+            )
+    ) {
+        FilterHeading(
+            text = label,
+            metrics = metrics
+        )
+
+        Row(
+            modifier =
+                Modifier.fillMaxWidth(),
+            horizontalArrangement =
+                Arrangement.SpaceEvenly,
+            verticalAlignment =
+                Alignment.CenterVertically
+        ) {
+            NullableBooleanOption(
+                text = "Any",
+                selected =
+                    value == null,
+                metrics = metrics,
+                onClick = {
+                    onValueChanged(null)
+                }
+            )
+
+            NullableBooleanOption(
+                text = "Yes",
+                selected =
+                    value == true,
+                metrics = metrics,
+                onClick = {
+                    onValueChanged(true)
+                }
+            )
+
+            NullableBooleanOption(
+                text = "No",
+                selected =
+                    value == false,
+                metrics = metrics,
+                onClick = {
+                    onValueChanged(false)
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun NullableBooleanOption(
+    text: String,
+    selected: Boolean,
+    metrics: BoardResponsiveMetrics,
+    onClick: () -> Unit
+) {
+    ChalkTextAction(
+        text = text,
+        color =
+            if (selected) {
+                ChalkColors.PastelGreen
+            } else {
+                ChalkColors.ChalkWhite
+            },
+        fontSize =
+            metrics.bodyTextSize,
+        paddingStart =
+            metrics.tinySpacing,
+        paddingEnd =
+            metrics.tinySpacing,
+        paddingTop =
+            metrics.tinySpacing,
+        paddingBottom =
+            metrics.tinySpacing,
+        onClick = onClick
+    )
+}
+
+@Composable
+private fun AdultDigitFilter(
+    selectedDigits: Set<Int>,
+    metrics: BoardResponsiveMetrics,
+    onDigitChanged: (
+        Int,
+        Boolean
+    ) -> Unit
+) {
+    Column(
+        modifier =
+            Modifier.fillMaxWidth(),
+        verticalArrangement =
+            Arrangement.spacedBy(
+                metrics.tinySpacing
+            )
+    ) {
+        FilterHeading(
+            text =
+                "Round Number Size",
+            metrics = metrics
+        )
+
+        FilterHint(
+            text =
+                "Filter by the digit setting used for the round.",
+            metrics = metrics
+        )
+
+        Row(
+            modifier =
+                Modifier.fillMaxWidth(),
+            horizontalArrangement =
+                Arrangement.SpaceEvenly,
+            verticalAlignment =
+                Alignment.CenterVertically
+        ) {
+            for (
+            digitCount in
+            MIN_FILTER_DIGITS..
+                    MAX_FILTER_DIGITS
+            ) {
+                val selected =
+                    digitCount in
+                            selectedDigits
+
+                ChalkTextAction(
+                    text =
+                        digitCount.toString(),
+                    color =
+                        if (selected) {
+                            ChalkColors.PastelGreen
+                        } else {
+                            ChalkColors.ChalkWhite
+                        },
+                    fontSize =
+                        metrics.compactTextSize,
+                    paddingTop =
+                        metrics.tinySpacing,
+                    paddingBottom =
+                        metrics.tinySpacing,
+                    onClick = {
+                        onDigitChanged(
+                            digitCount,
+                            !selected
+                        )
+                    }
+                )
+            }
+        }
+
+        if (selectedDigits.isEmpty()) {
+            FilterHint(
+                text =
+                    "All round sizes included",
+                metrics = metrics
+            )
+        }
+    }
+}
+
+@Composable
+private fun AdultRoundOperationFilter(
+    selectedOperations: Set<ArithmeticOperation>,
+    matchMode: OperationMatchMode,
+    metrics: BoardResponsiveMetrics,
+    onOperationChanged: (
+        ArithmeticOperation,
+        Boolean
+    ) -> Unit,
+    onMatchModeChanged: (
+        OperationMatchMode
+    ) -> Unit
+) {
+    Column(
+        modifier =
+            Modifier.fillMaxWidth(),
+        verticalArrangement =
+            Arrangement.spacedBy(
+                metrics.tinySpacing
+            )
+    ) {
+        FilterHeading(
+            text =
+                "Round Operations",
+            metrics = metrics
+        )
+
+        FilterHint(
+            text =
+                "Filter by operations enabled for the whole round.",
+            metrics = metrics
+        )
+
+        Row(
+            modifier =
+                Modifier.fillMaxWidth(),
+            horizontalArrangement =
+                Arrangement.SpaceEvenly,
+            verticalAlignment =
+                Alignment.CenterVertically
+        ) {
+            ArithmeticOperation.entries
+                .forEach { operation ->
+
+                    val selected =
+                        operation in
+                                selectedOperations
+
+                    ChalkTextAction(
+                        text =
+                            operation.symbol,
+                        color =
+                            if (selected) {
+                                ChalkColors.PastelBlue
+                            } else {
+                                ChalkColors.ChalkWhite
+                            },
+                        fontSize =
+                            metrics.headingTextSize,
+                        paddingTop =
+                            metrics.tinySpacing,
+                        paddingBottom =
+                            metrics.tinySpacing,
+                        onClick = {
+                            onOperationChanged(
+                                operation,
+                                !selected
+                            )
+                        }
+                    )
+                }
+        }
+
+        if (selectedOperations.isNotEmpty()) {
+            Row(
+                modifier =
+                    Modifier.fillMaxWidth(),
+                horizontalArrangement =
+                    Arrangement.SpaceEvenly,
+                verticalAlignment =
+                    Alignment.CenterVertically
+            ) {
+                ChalkTextAction(
+                    text = "Any",
+                    color =
+                        if (
+                            matchMode ==
+                            OperationMatchMode.Any
+                        ) {
+                            ChalkColors.PastelGreen
+                        } else {
+                            ChalkColors.ChalkWhite
+                        },
+                    fontSize =
+                        metrics.compactTextSize,
+                    paddingTop =
+                        metrics.tinySpacing,
+                    paddingBottom =
+                        metrics.tinySpacing,
+                    onClick = {
+                        onMatchModeChanged(
+                            OperationMatchMode.Any
+                        )
+                    }
+                )
+
+                ChalkTextAction(
+                    text = "All",
+                    color =
+                        if (
+                            matchMode ==
+                            OperationMatchMode.All
+                        ) {
+                            ChalkColors.PastelGreen
+                        } else {
+                            ChalkColors.ChalkWhite
+                        },
+                    fontSize =
+                        metrics.compactTextSize,
+                    paddingTop =
+                        metrics.tinySpacing,
+                    paddingBottom =
+                        metrics.tinySpacing,
+                    onClick = {
+                        onMatchModeChanged(
+                            OperationMatchMode.All
+                        )
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FilterHeading(
+    text: String,
+    metrics: BoardResponsiveMetrics
+) {
+    Text(
+        text = text,
+        color =
+            ChalkColors.PastelYellow,
+        fontFamily =
+            Chalktastic,
+        fontSize =
+            metrics.bodyTextSize,
+        fontWeight =
+            FontWeight.Bold,
+        maxLines = 1,
+        softWrap = false
+    )
+}
+
+@Composable
+private fun FilterHint(
+    text: String,
+    metrics: BoardResponsiveMetrics
+) {
+    Text(
+        text = text,
+        color =
+            ChalkColors.ChalkWhite.copy(
+                alpha = 0.75f
+            ),
+        fontFamily =
+            Chalktastic,
+        fontSize =
+            metrics.microTextSize,
+        textAlign =
+            TextAlign.Start
     )
 }
 
@@ -722,7 +1625,8 @@ private fun CustomDateRangeDialog(
         },
         dismissButton = {
             TextButton(
-                onClick = onDismiss
+                onClick =
+                    onDismiss
             ) {
                 Text(
                     text = "Cancel"
@@ -745,425 +1649,38 @@ private fun CustomDateRangeDialog(
     }
 }
 
-@Composable
-private fun AdultOperationFilter(
-    selectedOperations: Set<ArithmeticOperation>,
-    onOperationChanged: (
-        ArithmeticOperation,
-        Boolean
-    ) -> Unit
-) {
-    Column(
-        verticalArrangement =
-            Arrangement.spacedBy(4.dp)
-    ) {
-        FilterHeading(
-            text = "Problems"
-        )
-
-        FilterHint(
-            text =
-                "Choose which operations to include."
-        )
-
-        Row(
-            modifier =
-                Modifier.fillMaxWidth(),
-            horizontalArrangement =
-                Arrangement.SpaceEvenly,
-            verticalAlignment =
-                Alignment.CenterVertically
-        ) {
-            ArithmeticOperation.entries
-                .forEach { operation ->
-
-                    val selected =
-                        operation in
-                                selectedOperations
-
-                    ChalkTextAction(
-                        text =
-                            operation.symbol,
-                        color =
-                            if (selected) {
-                                ChalkColors.PastelGreen
-                            } else {
-                                ChalkColors.ChalkWhite
-                            },
-                        fontSize = 28.sp,
-                        onClick = {
-                            onOperationChanged(
-                                operation,
-                                !selected
-                            )
-                        }
-                    )
-                }
-        }
-
-        if (selectedOperations.isEmpty()) {
-            FilterHint(
-                text =
-                    "All operations included"
-            )
-        }
-    }
-}
-
-@Composable
-private fun AdultCorrectnessFilter(
-    correctness: CorrectnessFilter,
-    onCorrectnessChanged: (
-        CorrectnessFilter
-    ) -> Unit
-) {
-    Column(
-        verticalArrangement =
-            Arrangement.spacedBy(4.dp)
-    ) {
-        FilterHeading(
-            text = "Answers"
-        )
-
-        Row(
-            modifier =
-                Modifier.fillMaxWidth(),
-            horizontalArrangement =
-                Arrangement.SpaceEvenly
-        ) {
-            CorrectnessOption(
-                text = "All",
-                selected =
-                    correctness ==
-                            CorrectnessFilter.All,
-                onClick = {
-                    onCorrectnessChanged(
-                        CorrectnessFilter.All
-                    )
-                }
-            )
-
-            CorrectnessOption(
-                text = "Correct",
-                selected =
-                    correctness ==
-                            CorrectnessFilter.CorrectOnly,
-                onClick = {
-                    onCorrectnessChanged(
-                        CorrectnessFilter.CorrectOnly
-                    )
-                }
-            )
-
-            CorrectnessOption(
-                text = "Incorrect",
-                selected =
-                    correctness ==
-                            CorrectnessFilter.IncorrectOnly,
-                onClick = {
-                    onCorrectnessChanged(
-                        CorrectnessFilter.IncorrectOnly
-                    )
-                }
-            )
-        }
-    }
-}
-
-@Composable
-private fun CorrectnessOption(
-    text: String,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    ChalkTextAction(
-        text = text,
-        color =
-            if (selected) {
-                ChalkColors.PastelGreen
+private fun updateOperationSet(
+    current: Set<ArithmeticOperation>,
+    operation: ArithmeticOperation,
+    enabled: Boolean
+): Set<ArithmeticOperation> {
+    return current
+        .toMutableSet()
+        .apply {
+            if (enabled) {
+                add(operation)
             } else {
-                ChalkColors.ChalkWhite
-            },
-        fontSize = 18.sp,
-        onClick = onClick
-    )
-}
-
-@Composable
-private fun AdultBooleanAttemptFilter(
-    label: String,
-    value: Boolean?,
-    onValueChanged: (Boolean?) -> Unit
-) {
-    Column(
-        verticalArrangement =
-            Arrangement.spacedBy(4.dp)
-    ) {
-        FilterHeading(
-            text = label
-        )
-
-        Row(
-            modifier =
-                Modifier.fillMaxWidth(),
-            horizontalArrangement =
-                Arrangement.SpaceEvenly
-        ) {
-            NullableBooleanOption(
-                text = "Any",
-                selected =
-                    value == null,
-                onClick = {
-                    onValueChanged(null)
-                }
-            )
-
-            NullableBooleanOption(
-                text = "Yes",
-                selected =
-                    value == true,
-                onClick = {
-                    onValueChanged(true)
-                }
-            )
-
-            NullableBooleanOption(
-                text = "No",
-                selected =
-                    value == false,
-                onClick = {
-                    onValueChanged(false)
-                }
-            )
-        }
-    }
-}
-
-@Composable
-private fun NullableBooleanOption(
-    text: String,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    ChalkTextAction(
-        text = text,
-        color =
-            if (selected) {
-                ChalkColors.PastelGreen
-            } else {
-                ChalkColors.ChalkWhite
-            },
-        fontSize = 18.sp,
-        onClick = onClick
-    )
-}
-
-@Composable
-private fun AdultDigitFilter(
-    selectedDigits: Set<Int>,
-    onDigitChanged: (
-        Int,
-        Boolean
-    ) -> Unit
-) {
-    Column(
-        verticalArrangement =
-            Arrangement.spacedBy(4.dp)
-    ) {
-        FilterHeading(
-            text = "Round Number Size"
-        )
-
-        FilterHint(
-            text =
-                "Filter by the digit setting used for the round."
-        )
-
-        Row(
-            modifier =
-                Modifier.fillMaxWidth(),
-            horizontalArrangement =
-                Arrangement.SpaceEvenly,
-            verticalAlignment =
-                Alignment.CenterVertically
-        ) {
-            for (
-            digitCount in
-            MIN_FILTER_DIGITS..
-                    MAX_FILTER_DIGITS
-            ) {
-                val selected =
-                    digitCount in
-                            selectedDigits
-
-                ChalkTextAction(
-                    text =
-                        digitCount.toString(),
-                    color =
-                        if (selected) {
-                            ChalkColors.PastelGreen
-                        } else {
-                            ChalkColors.ChalkWhite
-                        },
-                    fontSize = 20.sp,
-                    onClick = {
-                        onDigitChanged(
-                            digitCount,
-                            !selected
-                        )
-                    }
-                )
+                remove(operation)
             }
         }
-
-        if (selectedDigits.isEmpty()) {
-            FilterHint(
-                text =
-                    "All round sizes included"
-            )
-        }
-    }
+        .toSet()
 }
 
-@Composable
-private fun AdultRoundOperationFilter(
-    selectedOperations: Set<ArithmeticOperation>,
-    matchMode: OperationMatchMode,
-    onOperationChanged: (
-        ArithmeticOperation,
-        Boolean
-    ) -> Unit,
-    onMatchModeChanged: (
-        OperationMatchMode
-    ) -> Unit
-) {
-    Column(
-        verticalArrangement =
-            Arrangement.spacedBy(4.dp)
-    ) {
-        FilterHeading(
-            text = "Round Operations"
-        )
-
-        FilterHint(
-            text =
-                "Filter by operations enabled for the whole round."
-        )
-
-        Row(
-            modifier =
-                Modifier.fillMaxWidth(),
-            horizontalArrangement =
-                Arrangement.SpaceEvenly
-        ) {
-            ArithmeticOperation.entries
-                .forEach { operation ->
-
-                    val selected =
-                        operation in
-                                selectedOperations
-
-                    ChalkTextAction(
-                        text =
-                            operation.symbol,
-                        color =
-                            if (selected) {
-                                ChalkColors.PastelBlue
-                            } else {
-                                ChalkColors.ChalkWhite
-                            },
-                        fontSize = 25.sp,
-                        onClick = {
-                            onOperationChanged(
-                                operation,
-                                !selected
-                            )
-                        }
-                    )
-                }
-        }
-
-        if (selectedOperations.isNotEmpty()) {
-            Row(
-                modifier =
-                    Modifier.fillMaxWidth(),
-                horizontalArrangement =
-                    Arrangement.SpaceEvenly
-            ) {
-                ChalkTextAction(
-                    text = "Any",
-                    color =
-                        if (
-                            matchMode ==
-                            OperationMatchMode.Any
-                        ) {
-                            ChalkColors.PastelGreen
-                        } else {
-                            ChalkColors.ChalkWhite
-                        },
-                    fontSize = 17.sp,
-                    onClick = {
-                        onMatchModeChanged(
-                            OperationMatchMode.Any
-                        )
-                    }
-                )
-
-                ChalkTextAction(
-                    text = "All",
-                    color =
-                        if (
-                            matchMode ==
-                            OperationMatchMode.All
-                        ) {
-                            ChalkColors.PastelGreen
-                        } else {
-                            ChalkColors.ChalkWhite
-                        },
-                    fontSize = 17.sp,
-                    onClick = {
-                        onMatchModeChanged(
-                            OperationMatchMode.All
-                        )
-                    }
-                )
+private fun updateDigitSet(
+    current: Set<Int>,
+    digitCount: Int,
+    enabled: Boolean
+): Set<Int> {
+    return current
+        .toMutableSet()
+        .apply {
+            if (enabled) {
+                add(digitCount)
+            } else {
+                remove(digitCount)
             }
         }
-    }
-}
-
-@Composable
-private fun FilterHeading(
-    text: String
-) {
-    Text(
-        text = text,
-        color =
-            ChalkColors.PastelYellow,
-        fontFamily =
-            Chalktastic,
-        fontSize = 19.sp,
-        fontWeight =
-            FontWeight.Bold
-    )
-}
-
-@Composable
-private fun FilterHint(
-    text: String
-) {
-    Text(
-        text = text,
-        color =
-            ChalkColors.ChalkWhite.copy(
-                alpha = 0.75f
-            ),
-        fontFamily =
-            Chalktastic,
-        fontSize = 14.sp,
-        textAlign =
-            TextAlign.Start
-    )
+        .toSet()
 }
 
 private fun parseExactOperands(

@@ -15,10 +15,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 import com.wiseravenstudios.arithmatic.ui.common.BoardResponsiveMetrics
 import com.wiseravenstudios.arithmatic.ui.common.BoardTextRole
-import com.wiseravenstudios.arithmatic.ui.common.calculateBoardResponsiveMetrics
+import com.wiseravenstudios.arithmatic.ui.common.calculateStartBoardMetrics
 import com.wiseravenstudios.arithmatic.ui.components.ChalkTextAction
 import com.wiseravenstudios.arithmatic.ui.theme.ChalkColors
 import com.wiseravenstudios.arithmatic.ui.theme.Chalktastic
@@ -44,7 +45,7 @@ fun StartBoard(
             modifier.fillMaxSize()
     ) {
         val metrics =
-            calculateBoardResponsiveMetrics(
+            calculateStartBoardMetrics(
                 width = maxWidth,
                 height = maxHeight
             )
@@ -80,6 +81,11 @@ fun StartBoard(
 
 /**
  * Displays the title and main navigation actions.
+ *
+ * In NarrowTall layouts, titleTopSpacing includes enough responsive
+ * clearance to place the title visually beneath the utility actions.
+ *
+ * Wider shapes retain the compact shared-header appearance.
  */
 @Composable
 private fun StartBoardMainContent(
@@ -99,7 +105,7 @@ private fun StartBoardMainContent(
                     metrics.contentVerticalPadding +
                             metrics.titleTopSpacing,
                 end =
-                    metrics.contentHorizontalPadding,
+                    metrics.contentHorizontalPadding
             ),
         horizontalAlignment =
             Alignment.CenterHorizontally
@@ -118,11 +124,14 @@ private fun StartBoardMainContent(
                 FontWeight.Bold,
             textAlign =
                 TextAlign.Center,
-            maxLines = 1
+            maxLines = 1,
+            softWrap = false,
+            overflow =
+                TextOverflow.Clip
         )
 
-        if (metrics.isWide) {
-            WideStartActions(
+        if (metrics.isDoubleColumn) {
+            DoubleColumnStartActions(
                 onStartPractice =
                     onStartPractice,
                 onOpenSettings =
@@ -137,7 +146,7 @@ private fun StartBoardMainContent(
                     Modifier.weight(1f)
             )
         } else {
-            TallStartActions(
+            SingleColumnStartActions(
                 onStartPractice =
                     onStartPractice,
                 onOpenSettings =
@@ -157,6 +166,9 @@ private fun StartBoardMainContent(
 
 /**
  * Displays the About and Exit actions in the upper board corners.
+ *
+ * Their font size is derived from the same Start Board base scale as
+ * the title and primary actions, preserving the intended hierarchy.
  */
 @Composable
 private fun StartBoardUtilityActions(
@@ -234,7 +246,7 @@ private fun StartBoardUtilityActions(
  * Displays the main actions in one vertical column.
  */
 @Composable
-private fun TallStartActions(
+private fun SingleColumnStartActions(
     onStartPractice: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenStats: () -> Unit,
@@ -300,9 +312,13 @@ private fun TallStartActions(
 
 /**
  * Displays the main actions in two columns.
+ *
+ * The double-column layout uses extra horizontal outer padding so
+ * the action groups retain breathing room on wide boards without
+ * affecting the single-column layout.
  */
 @Composable
-private fun WideStartActions(
+private fun DoubleColumnStartActions(
     onStartPractice: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenStats: () -> Unit,
@@ -315,11 +331,11 @@ private fun WideStartActions(
             .fillMaxWidth()
             .padding(
                 start =
-                    metrics.largeSpacing,
+                    metrics.extraLargeSpacing,
                 top =
                     metrics.titleToActionsSpacing,
                 end =
-                    metrics.largeSpacing
+                    metrics.extraLargeSpacing
             ),
         horizontalArrangement =
             Arrangement.spacedBy(
@@ -346,8 +362,6 @@ private fun WideStartActions(
                     ChalkColors.PastelGreen,
                 metrics =
                     metrics,
-                fontSize =
-                    metrics.widePrimaryActionTextSize,
                 onClick =
                     onStartPractice
             )
@@ -358,8 +372,6 @@ private fun WideStartActions(
                     ChalkColors.PastelBlue,
                 metrics =
                     metrics,
-                fontSize =
-                    metrics.widePrimaryActionTextSize,
                 onClick =
                     onOpenStats
             )
@@ -381,8 +393,6 @@ private fun WideStartActions(
                     ChalkColors.PastelPink,
                 metrics =
                     metrics,
-                fontSize =
-                    metrics.widePrimaryActionTextSize,
                 onClick =
                     onOpenSettings
             )
@@ -393,8 +403,6 @@ private fun WideStartActions(
                     ChalkColors.PastelPurple,
                 metrics =
                     metrics,
-                fontSize =
-                    metrics.widePrimaryActionTextSize,
                 onClick =
                     onOpenAdultArea
             )

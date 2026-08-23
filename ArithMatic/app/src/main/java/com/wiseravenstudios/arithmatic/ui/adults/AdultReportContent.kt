@@ -22,13 +22,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.wiseravenstudios.arithmatic.domain.adults.AdultHistorySelection
 import com.wiseravenstudios.arithmatic.domain.adults.report.AdultReportOptions
 import com.wiseravenstudios.arithmatic.domain.adults.report.ExportType
 import com.wiseravenstudios.arithmatic.domain.adults.report.ReportDetailLevel
 import com.wiseravenstudios.arithmatic.domain.adults.statistics.AdultStatsSummary
+import com.wiseravenstudios.arithmatic.ui.common.BoardResponsiveMetrics
 import com.wiseravenstudios.arithmatic.ui.components.ChalkTextAction
 import com.wiseravenstudios.arithmatic.ui.theme.ChalkColors
 import com.wiseravenstudios.arithmatic.ui.theme.Chalktastic
@@ -44,6 +43,7 @@ import java.util.Locale
 fun AdultReportContent(
     selection: AdultHistorySelection,
     summary: AdultStatsSummary,
+    metrics: BoardResponsiveMetrics,
     options: AdultReportOptions,
     onSelectionChanged: (AdultHistorySelection) -> Unit,
     onClearFilters: () -> Unit,
@@ -74,23 +74,33 @@ fun AdultReportContent(
                 }
             }
             .padding(
-                bottom = 12.dp
+                bottom =
+                    metrics.smallSpacing
             ),
         verticalArrangement =
-            Arrangement.spacedBy(14.dp)
+            Arrangement.spacedBy(
+                metrics.mediumSpacing
+            )
     ) {
         Text(
             text = "Reports",
-            color = ChalkColors.PastelPurple,
-            fontFamily = Chalktastic,
-            fontSize = 27.sp,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
+            color =
+                ChalkColors.PastelPurple,
+            fontFamily =
+                Chalktastic,
+            fontSize =
+                metrics.headingTextSize,
+            fontWeight =
+                FontWeight.Bold,
+            textAlign =
+                TextAlign.Center,
+            modifier =
+                Modifier.fillMaxWidth()
         )
 
         AdultFilterControls(
             selection = selection,
+            metrics = metrics,
             onSelectionChanged =
                 onSelectionChanged,
             onClearFilters =
@@ -99,37 +109,44 @@ fun AdultReportContent(
 
         ReportFormatSection(
             options = options,
+            metrics = metrics,
             onOptionsChanged =
                 onOptionsChanged
         )
 
         ReportDetailSection(
             options = options,
+            metrics = metrics,
             onOptionsChanged =
                 onOptionsChanged
         )
 
         ReportContentOptionsSection(
             options = options,
+            metrics = metrics,
             onOptionsChanged =
                 onOptionsChanged
         )
 
         ReportPreviewSection(
             summary = summary,
-            options = options
+            options = options,
+            metrics = metrics
         )
 
         ExportSection(
             summary = summary,
             options = options,
+            metrics = metrics,
             isExporting = isExporting,
             onExport = onExport
         )
 
         Spacer(
             modifier =
-                Modifier.height(4.dp)
+                Modifier.height(
+                    metrics.tinySpacing
+                )
         )
     }
 }
@@ -140,12 +157,14 @@ fun AdultReportContent(
 @Composable
 private fun ReportFormatSection(
     options: AdultReportOptions,
+    metrics: BoardResponsiveMetrics,
     onOptionsChanged: (AdultReportOptions) -> Unit
 ) {
     ReportSection(
         title = "Format",
         titleColor =
-            ChalkColors.PastelPurple
+            ChalkColors.PastelPurple,
+        metrics = metrics
     ) {
         Text(
             text =
@@ -154,12 +173,15 @@ private fun ReportFormatSection(
                 ChalkColors.ChalkWhite,
             fontFamily =
                 Chalktastic,
-            fontSize = 15.sp
+            fontSize =
+                metrics.compactTextSize
         )
 
         Spacer(
             modifier =
-                Modifier.height(5.dp)
+                Modifier.height(
+                    metrics.tinySpacing
+                )
         )
 
         Row(
@@ -179,6 +201,7 @@ private fun ReportFormatSection(
                         selected =
                             options.exportType ==
                                     exportType,
+                        metrics = metrics,
                         onClick = {
                             onOptionsChanged(
                                 options.copy(
@@ -199,12 +222,14 @@ private fun ReportFormatSection(
 @Composable
 private fun ReportDetailSection(
     options: AdultReportOptions,
+    metrics: BoardResponsiveMetrics,
     onOptionsChanged: (AdultReportOptions) -> Unit
 ) {
     ReportSection(
         title = "Detail",
         titleColor =
-            ChalkColors.PastelBlue
+            ChalkColors.PastelBlue,
+        metrics = metrics
     ) {
         Text(
             text =
@@ -214,19 +239,24 @@ private fun ReportDetailSection(
                 ChalkColors.ChalkWhite,
             fontFamily =
                 Chalktastic,
-            fontSize = 15.sp
+            fontSize =
+                metrics.compactTextSize
         )
 
         Spacer(
             modifier =
-                Modifier.height(5.dp)
+                Modifier.height(
+                    metrics.tinySpacing
+                )
         )
 
         Column(
             modifier =
                 Modifier.fillMaxWidth(),
             verticalArrangement =
-                Arrangement.spacedBy(6.dp)
+                Arrangement.spacedBy(
+                    metrics.smallSpacing
+                )
         ) {
             Row(
                 modifier =
@@ -241,6 +271,7 @@ private fun ReportDetailSection(
                     selected =
                         options.detailLevel ==
                                 ReportDetailLevel.Summary,
+                    metrics = metrics,
                     onClick = {
                         onOptionsChanged(
                             options.copy(
@@ -256,6 +287,7 @@ private fun ReportDetailSection(
                     selected =
                         options.detailLevel ==
                                 ReportDetailLevel.Rounds,
+                    metrics = metrics,
                     onClick = {
                         onOptionsChanged(
                             options.copy(
@@ -280,6 +312,7 @@ private fun ReportDetailSection(
                     selected =
                         options.detailLevel ==
                                 ReportDetailLevel.Attempts,
+                    metrics = metrics,
                     onClick = {
                         onOptionsChanged(
                             options.copy(
@@ -300,12 +333,14 @@ private fun ReportDetailSection(
 @Composable
 private fun ReportContentOptionsSection(
     options: AdultReportOptions,
+    metrics: BoardResponsiveMetrics,
     onOptionsChanged: (AdultReportOptions) -> Unit
 ) {
     ReportSection(
         title = "Report Contents",
         titleColor =
-            ChalkColors.PastelYellow
+            ChalkColors.PastelYellow,
+        metrics = metrics
     ) {
         ReportBooleanOption(
             label = "Operand Stratification",
@@ -313,6 +348,7 @@ private fun ReportContentOptionsSection(
                 "Break performance down by operand size for each operation.",
             enabled =
                 options.includeStratification,
+            metrics = metrics,
             onEnabledChanged = { enabled ->
                 onOptionsChanged(
                     options.copy(
@@ -325,7 +361,9 @@ private fun ReportContentOptionsSection(
 
         Spacer(
             modifier =
-                Modifier.height(8.dp)
+                Modifier.height(
+                    metrics.smallSpacing
+                )
         )
 
         if (
@@ -338,6 +376,7 @@ private fun ReportContentOptionsSection(
                     "Include progress and operation-performance graphs.",
                 enabled =
                     options.includeGraphs,
+                metrics = metrics,
                 onEnabledChanged = { enabled ->
                     onOptionsChanged(
                         options.copy(
@@ -354,7 +393,8 @@ private fun ReportContentOptionsSection(
                     ChalkColors.ChalkWhite,
                 fontFamily =
                     Chalktastic,
-                fontSize = 17.sp,
+                fontSize =
+                    metrics.bodyTextSize,
                 fontWeight =
                     FontWeight.Bold
             )
@@ -368,25 +408,27 @@ private fun ReportContentOptionsSection(
                     ),
                 fontFamily =
                     Chalktastic,
-                fontSize = 14.sp
+                fontSize =
+                    metrics.microTextSize
             )
         }
     }
 }
 
 /**
- * Shows the amount and overall performance of the data currently selected for
- * export.
+ * Shows the amount and overall performance of the selected data.
  */
 @Composable
 private fun ReportPreviewSection(
     summary: AdultStatsSummary,
-    options: AdultReportOptions
+    options: AdultReportOptions,
+    metrics: BoardResponsiveMetrics
 ) {
     ReportSection(
         title = "Report Preview",
         titleColor =
-            ChalkColors.PastelGreen
+            ChalkColors.PastelGreen,
+        metrics = metrics
     ) {
         if (!summary.hasData) {
             Text(
@@ -396,7 +438,8 @@ private fun ReportPreviewSection(
                     ChalkColors.PastelOrange,
                 fontFamily =
                     Chalktastic,
-                fontSize = 17.sp,
+                fontSize =
+                    metrics.bodyTextSize,
                 textAlign =
                     TextAlign.Center,
                 modifier =
@@ -409,15 +452,15 @@ private fun ReportPreviewSection(
         ReportStatisticRow(
             label = "Rounds",
             value =
-                summary.roundCount
-                    .toString()
+                summary.roundCount.toString(),
+            metrics = metrics
         )
 
         ReportStatisticRow(
             label = "Questions",
             value =
-                summary.questionCount
-                    .toString()
+                summary.questionCount.toString(),
+            metrics = metrics
         )
 
         ReportStatisticRow(
@@ -425,7 +468,8 @@ private fun ReportPreviewSection(
             value =
                 formatPercent(
                     summary.accuracyPercent
-                )
+                ),
+            metrics = metrics
         )
 
         ReportStatisticRow(
@@ -433,21 +477,24 @@ private fun ReportPreviewSection(
             value =
                 summary.operationSummaries
                     .size
-                    .toString()
+                    .toString(),
+            metrics = metrics
         )
 
         ReportStatisticRow(
             label = "Format",
             value =
                 options.exportType
-                    .displayName()
+                    .displayName(),
+            metrics = metrics
         )
 
         ReportStatisticRow(
             label = "Detail",
             value =
                 options.detailLevel
-                    .displayName()
+                    .displayName(),
+            metrics = metrics
         )
     }
 }
@@ -459,6 +506,7 @@ private fun ReportPreviewSection(
 private fun ExportSection(
     summary: AdultStatsSummary,
     options: AdultReportOptions,
+    metrics: BoardResponsiveMetrics,
     isExporting: Boolean,
     onExport: () -> Unit
 ) {
@@ -468,7 +516,9 @@ private fun ExportSection(
         horizontalAlignment =
             Alignment.CenterHorizontally,
         verticalArrangement =
-            Arrangement.spacedBy(5.dp)
+            Arrangement.spacedBy(
+                metrics.tinySpacing
+            )
     ) {
         if (summary.hasData) {
             ChalkTextAction(
@@ -489,7 +539,12 @@ private fun ExportSection(
                     } else {
                         ChalkColors.PastelGreen
                     },
-                fontSize = 23.sp,
+                fontSize =
+                    metrics.primaryActionTextSize,
+                paddingTop =
+                    metrics.actionVerticalPadding,
+                paddingBottom =
+                    metrics.actionVerticalPadding,
                 onClick = {
                     if (!isExporting) {
                         onExport()
@@ -508,7 +563,8 @@ private fun ExportSection(
                     ),
                 fontFamily =
                     Chalktastic,
-                fontSize = 13.sp,
+                fontSize =
+                    metrics.microTextSize,
                 textAlign =
                     TextAlign.Center,
                 modifier =
@@ -524,7 +580,8 @@ private fun ExportSection(
                     ),
                 fontFamily =
                     Chalktastic,
-                fontSize = 15.sp,
+                fontSize =
+                    metrics.compactTextSize,
                 textAlign =
                     TextAlign.Center,
                 modifier =
@@ -539,13 +596,16 @@ private fun ReportBooleanOption(
     label: String,
     description: String,
     enabled: Boolean,
+    metrics: BoardResponsiveMetrics,
     onEnabledChanged: (Boolean) -> Unit
 ) {
     Column(
         modifier =
             Modifier.fillMaxWidth(),
         verticalArrangement =
-            Arrangement.spacedBy(3.dp)
+            Arrangement.spacedBy(
+                metrics.tinySpacing
+            )
     ) {
         Row(
             modifier =
@@ -561,7 +621,8 @@ private fun ReportBooleanOption(
                     ChalkColors.ChalkWhite,
                 fontFamily =
                     Chalktastic,
-                fontSize = 17.sp,
+                fontSize =
+                    metrics.bodyTextSize,
                 fontWeight =
                     FontWeight.Bold
             )
@@ -579,7 +640,12 @@ private fun ReportBooleanOption(
                     } else {
                         ChalkColors.ChalkWhite
                     },
-                fontSize = 17.sp,
+                fontSize =
+                    metrics.bodyTextSize,
+                paddingTop =
+                    metrics.actionVerticalPadding,
+                paddingBottom =
+                    metrics.actionVerticalPadding,
                 onClick = {
                     onEnabledChanged(
                         !enabled
@@ -596,7 +662,8 @@ private fun ReportBooleanOption(
                 ),
             fontFamily =
                 Chalktastic,
-            fontSize = 14.sp
+            fontSize =
+                metrics.microTextSize
         )
     }
 }
@@ -605,6 +672,7 @@ private fun ReportBooleanOption(
 private fun ReportOption(
     text: String,
     selected: Boolean,
+    metrics: BoardResponsiveMetrics,
     onClick: () -> Unit
 ) {
     ChalkTextAction(
@@ -615,7 +683,12 @@ private fun ReportOption(
             } else {
                 ChalkColors.ChalkWhite
             },
-        fontSize = 18.sp,
+        fontSize =
+            metrics.bodyTextSize,
+        paddingTop =
+            metrics.actionVerticalPadding,
+        paddingBottom =
+            metrics.actionVerticalPadding,
         onClick = onClick
     )
 }
@@ -624,17 +697,21 @@ private fun ReportOption(
 private fun ReportSection(
     title: String,
     titleColor: Color,
+    metrics: BoardResponsiveMetrics,
     content: @Composable () -> Unit
 ) {
     Column(
         modifier =
             Modifier.fillMaxWidth(),
         verticalArrangement =
-            Arrangement.spacedBy(7.dp)
+            Arrangement.spacedBy(
+                metrics.smallSpacing
+            )
     ) {
         ReportSectionHeading(
             text = title,
-            color = titleColor
+            color = titleColor,
+            metrics = metrics
         )
 
         Column(
@@ -642,7 +719,7 @@ private fun ReportSection(
                 .fillMaxWidth()
                 .clip(
                     RoundedCornerShape(
-                        9.dp
+                        metrics.smallSpacing
                     )
                 )
                 .background(
@@ -651,8 +728,10 @@ private fun ReportSection(
                     )
                 )
                 .padding(
-                    horizontal = 12.dp,
-                    vertical = 9.dp
+                    horizontal =
+                        metrics.contentHorizontalPadding,
+                    vertical =
+                        metrics.smallSpacing
                 )
         ) {
             content()
@@ -663,13 +742,15 @@ private fun ReportSection(
 @Composable
 private fun ReportStatisticRow(
     label: String,
-    value: String
+    value: String,
+    metrics: BoardResponsiveMetrics
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
-                vertical = 2.dp
+                vertical =
+                    metrics.tinySpacing
             ),
         verticalAlignment =
             Alignment.CenterVertically
@@ -682,7 +763,8 @@ private fun ReportStatisticRow(
                 ChalkColors.ChalkWhite,
             fontFamily =
                 Chalktastic,
-            fontSize = 16.sp,
+            fontSize =
+                metrics.compactTextSize,
             maxLines = 1
         )
 
@@ -694,7 +776,8 @@ private fun ReportStatisticRow(
                 ChalkColors.PastelYellow,
             fontFamily =
                 Chalktastic,
-            fontSize = 16.sp,
+            fontSize =
+                metrics.compactTextSize,
             fontWeight =
                 FontWeight.Bold,
             textAlign =
@@ -707,13 +790,16 @@ private fun ReportStatisticRow(
 @Composable
 private fun ReportSectionHeading(
     text: String,
-    color: Color
+    color: Color,
+    metrics: BoardResponsiveMetrics
 ) {
     Text(
         text = text,
         color = color,
-        fontFamily = Chalktastic,
-        fontSize = 22.sp,
+        fontFamily =
+            Chalktastic,
+        fontSize =
+            metrics.bodyTextSize,
         fontWeight =
             FontWeight.Bold
     )

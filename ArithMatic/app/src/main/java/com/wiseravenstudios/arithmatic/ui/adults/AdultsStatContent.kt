@@ -4,7 +4,6 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -31,13 +30,12 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.wiseravenstudios.arithmatic.domain.adults.AdultHistorySelection
 import com.wiseravenstudios.arithmatic.domain.adults.statistics.AdultStatsSummary
 import com.wiseravenstudios.arithmatic.domain.adults.statistics.OperationStatsSummary
 import com.wiseravenstudios.arithmatic.domain.adults.statistics.StatsTimePoint
 import com.wiseravenstudios.arithmatic.domain.model.ArithmeticOperation
+import com.wiseravenstudios.arithmatic.ui.common.BoardResponsiveMetrics
 import com.wiseravenstudios.arithmatic.ui.components.ChalkTextAction
 import com.wiseravenstudios.arithmatic.ui.theme.ChalkColors
 import com.wiseravenstudios.arithmatic.ui.theme.Chalktastic
@@ -51,18 +49,12 @@ import kotlin.math.max
  * Complete UI for the Adult Statistics tab.
  *
  * History selection and calculation occur outside Compose.
- *
- * This screen only:
- *
- * - displays and edits the shared history filters;
- * - displays the calculated summary;
- * - displays progress over time;
- * - displays per-operation performance.
  */
 @Composable
 fun AdultStatsContent(
     selection: AdultHistorySelection,
     summary: AdultStatsSummary,
+    metrics: BoardResponsiveMetrics,
     onSelectionChanged: (AdultHistorySelection) -> Unit,
     onClearFilters: () -> Unit,
     modifier: Modifier = Modifier
@@ -89,23 +81,33 @@ fun AdultStatsContent(
                 }
             }
             .padding(
-                bottom = 12.dp
+                bottom =
+                    metrics.smallSpacing
             ),
         verticalArrangement =
-            Arrangement.spacedBy(14.dp)
+            Arrangement.spacedBy(
+                metrics.mediumSpacing
+            )
     ) {
         Text(
             text = "Statistics",
-            color = ChalkColors.PastelBlue,
-            fontFamily = Chalktastic,
-            fontSize = 27.sp,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
+            color =
+                ChalkColors.PastelBlue,
+            fontFamily =
+                Chalktastic,
+            fontSize =
+                metrics.headingTextSize,
+            fontWeight =
+                FontWeight.Bold,
+            textAlign =
+                TextAlign.Center,
+            modifier =
+                Modifier.fillMaxWidth()
         )
 
         AdultFilterControls(
             selection = selection,
+            metrics = metrics,
             onSelectionChanged =
                 onSelectionChanged,
             onClearFilters =
@@ -113,28 +115,35 @@ fun AdultStatsContent(
         )
 
         if (!summary.hasData) {
-            EmptyStatsContent()
+            EmptyStatsContent(
+                metrics = metrics
+            )
 
             return@Column
         }
 
         SummarySection(
-            summary = summary
+            summary = summary,
+            metrics = metrics
         )
 
         ProgressSection(
             timePoints =
-                summary.timePoints
+                summary.timePoints,
+            metrics = metrics
         )
 
         OperationSection(
             summaries =
-                summary.operationSummaries
+                summary.operationSummaries,
+            metrics = metrics
         )
 
         Spacer(
             modifier =
-                Modifier.height(4.dp)
+                Modifier.height(
+                    metrics.tinySpacing
+                )
         )
     }
 }
@@ -144,36 +153,42 @@ fun AdultStatsContent(
  */
 @Composable
 private fun SummarySection(
-    summary: AdultStatsSummary
+    summary: AdultStatsSummary,
+    metrics: BoardResponsiveMetrics
 ) {
     StatsSection(
         title = "Summary",
         titleColor =
-            ChalkColors.PastelGreen
+            ChalkColors.PastelGreen,
+        metrics = metrics
     ) {
         StatisticRow(
             label = "Rounds",
             value =
-                summary.roundCount.toString()
+                summary.roundCount.toString(),
+            metrics = metrics
         )
 
         StatisticRow(
             label = "Questions",
             value =
-                summary.questionCount.toString()
+                summary.questionCount.toString(),
+            metrics = metrics
         )
 
         StatisticRow(
             label = "Correct",
             value =
                 "${summary.correctCount} / " +
-                        "${summary.questionCount}"
+                        "${summary.questionCount}",
+            metrics = metrics
         )
 
         StatisticRow(
             label = "Incorrect",
             value =
-                summary.incorrectCount.toString()
+                summary.incorrectCount.toString(),
+            metrics = metrics
         )
 
         StatisticRow(
@@ -181,7 +196,8 @@ private fun SummarySection(
             value =
                 formatPercent(
                     summary.accuracyPercent
-                )
+                ),
+            metrics = metrics
         )
 
         StatisticRow(
@@ -190,7 +206,8 @@ private fun SummarySection(
                 formatDuration(
                     summary
                         .averageQuestionDurationMillis
-                )
+                ),
+            metrics = metrics
         )
 
         StatisticRow(
@@ -199,7 +216,8 @@ private fun SummarySection(
                 formatDuration(
                     summary
                         .averageRoundDurationMillis
-                )
+                ),
+            metrics = metrics
         )
 
         StatisticRow(
@@ -208,22 +226,19 @@ private fun SummarySection(
                 formatLongDuration(
                     summary
                         .totalQuestionDurationMillis
-                )
+                ),
+            metrics = metrics
         )
     }
 }
 
 /**
  * Progress graph.
- *
- * The same calculated time points can be viewed as either:
- *
- * - accuracy;
- * - average response time.
  */
 @Composable
 private fun ProgressSection(
-    timePoints: List<StatsTimePoint>
+    timePoints: List<StatsTimePoint>,
+    metrics: BoardResponsiveMetrics
 ) {
     if (timePoints.isEmpty()) {
         return
@@ -236,18 +251,23 @@ private fun ProgressSection(
     }
 
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier =
+            Modifier.fillMaxWidth(),
         verticalArrangement =
-            Arrangement.spacedBy(8.dp)
+            Arrangement.spacedBy(
+                metrics.smallSpacing
+            )
     ) {
         SectionHeading(
             text = "Progress",
             color =
-                ChalkColors.PastelBlue
+                ChalkColors.PastelBlue,
+            metrics = metrics
         )
 
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier =
+                Modifier.fillMaxWidth(),
             horizontalArrangement =
                 Arrangement.SpaceEvenly,
             verticalAlignment =
@@ -264,7 +284,12 @@ private fun ProgressSection(
                     } else {
                         ChalkColors.ChalkWhite
                     },
-                fontSize = 17.sp,
+                fontSize =
+                    metrics.compactTextSize,
+                paddingTop =
+                    metrics.actionVerticalPadding,
+                paddingBottom =
+                    metrics.actionVerticalPadding,
                 onClick = {
                     metric =
                         AdultGraphMetric.Accuracy
@@ -282,7 +307,12 @@ private fun ProgressSection(
                     } else {
                         ChalkColors.ChalkWhite
                     },
-                fontSize = 17.sp,
+                fontSize =
+                    metrics.compactTextSize,
+                paddingTop =
+                    metrics.actionVerticalPadding,
+                paddingBottom =
+                    metrics.actionVerticalPadding,
                 onClick = {
                     metric =
                         AdultGraphMetric.AverageTime
@@ -294,7 +324,9 @@ private fun ProgressSection(
             timePoints =
                 timePoints,
             metric =
-                metric
+                metric,
+            metrics =
+                metrics
         )
     }
 }
@@ -302,7 +334,8 @@ private fun ProgressSection(
 @Composable
 private fun StatsGraphCard(
     timePoints: List<StatsTimePoint>,
-    metric: AdultGraphMetric
+    metric: AdultGraphMetric,
+    metrics: BoardResponsiveMetrics
 ) {
     val firstPoint =
         timePoints.first()
@@ -310,11 +343,27 @@ private fun StatsGraphCard(
     val lastPoint =
         timePoints.last()
 
+    /*
+     * The graph grows with the available Adult board height.
+     * It remains bounded so it does not become too small or consume
+     * excessive space on a large tablet or Chromebook.
+     */
+    val graphHeight =
+        (metrics.height * 0.30f)
+            .coerceIn(
+                minimumValue =
+                    metrics.minimumTouchTarget * 2f,
+                maximumValue =
+                    metrics.minimumTouchTarget * 5f
+            )
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(
-                RoundedCornerShape(10.dp)
+                RoundedCornerShape(
+                    metrics.smallSpacing
+                )
             )
             .background(
                 ChalkColors.PastelBlue.copy(
@@ -322,11 +371,15 @@ private fun StatsGraphCard(
                 )
             )
             .padding(
-                horizontal = 10.dp,
-                vertical = 10.dp
+                horizontal =
+                    metrics.contentHorizontalPadding,
+                vertical =
+                    metrics.smallSpacing
             ),
         verticalArrangement =
-            Arrangement.spacedBy(6.dp)
+            Arrangement.spacedBy(
+                metrics.smallSpacing
+            )
     ) {
         Text(
             text =
@@ -334,9 +387,12 @@ private fun StatsGraphCard(
                     timePoints =
                         timePoints
                 ),
-            color = ChalkColors.PastelYellow,
-            fontFamily = Chalktastic,
-            fontSize = 15.sp
+            color =
+                ChalkColors.PastelYellow,
+            fontFamily =
+                Chalktastic,
+            fontSize =
+                metrics.compactTextSize
         )
 
         AdultProgressGraph(
@@ -346,11 +402,14 @@ private fun StatsGraphCard(
                 metric,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(180.dp)
+                .height(
+                    graphHeight
+                )
         )
 
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier =
+                Modifier.fillMaxWidth(),
             horizontalArrangement =
                 Arrangement.SpaceBetween
         ) {
@@ -364,8 +423,10 @@ private fun StatsGraphCard(
                     ChalkColors.ChalkWhite.copy(
                         alpha = 0.75f
                     ),
-                fontFamily = Chalktastic,
-                fontSize = 13.sp
+                fontFamily =
+                    Chalktastic,
+                fontSize =
+                    metrics.microTextSize
             )
 
             Text(
@@ -378,8 +439,10 @@ private fun StatsGraphCard(
                     ChalkColors.ChalkWhite.copy(
                         alpha = 0.75f
                     ),
-                fontFamily = Chalktastic,
-                fontSize = 13.sp
+                fontFamily =
+                    Chalktastic,
+                fontSize =
+                    metrics.microTextSize
             )
         }
 
@@ -395,8 +458,10 @@ private fun StatsGraphCard(
                 ChalkColors.ChalkWhite.copy(
                     alpha = 0.6f
                 ),
-            fontFamily = Chalktastic,
-            fontSize = 12.sp,
+            fontFamily =
+                Chalktastic,
+            fontSize =
+                metrics.microTextSize,
             modifier =
                 Modifier.align(
                     Alignment.CenterHorizontally
@@ -407,15 +472,6 @@ private fun StatsGraphCard(
 
 /**
  * Lightweight graph renderer requiring no external chart dependency.
- *
- * The y-axis behavior depends on the selected metric:
- *
- * Accuracy:
- *     fixed 0-100% scale
- *
- * Average Time:
- *     fixed zero baseline with the highest visible average establishing the
- *     top of the graph.
  */
 @Composable
 private fun AdultProgressGraph(
@@ -458,10 +514,6 @@ private fun AdultProgressGraph(
             size.height -
                     verticalInset * 2f
 
-        /*
-         * Four faint guidelines make the graph easier to read without
-         * visually overwhelming the chalkboard.
-         */
         val gridLineCount =
             4
 
@@ -626,32 +678,35 @@ private fun AdultProgressGraph(
 
 /**
  * Per-operation statistics.
- *
- * Only operations represented in the filtered history are present in the
- * summary.
  */
 @Composable
 private fun OperationSection(
-    summaries: List<OperationStatsSummary>
+    summaries: List<OperationStatsSummary>,
+    metrics: BoardResponsiveMetrics
 ) {
     if (summaries.isEmpty()) {
         return
     }
 
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier =
+            Modifier.fillMaxWidth(),
         verticalArrangement =
-            Arrangement.spacedBy(8.dp)
+            Arrangement.spacedBy(
+                metrics.smallSpacing
+            )
     ) {
         SectionHeading(
             text = "By Operation",
             color =
-                ChalkColors.PastelYellow
+                ChalkColors.PastelYellow,
+            metrics = metrics
         )
 
         summaries.forEach { summary ->
             OperationCard(
-                summary = summary
+                summary = summary,
+                metrics = metrics
             )
         }
     }
@@ -659,7 +714,8 @@ private fun OperationSection(
 
 @Composable
 private fun OperationCard(
-    summary: OperationStatsSummary
+    summary: OperationStatsSummary,
+    metrics: BoardResponsiveMetrics
 ) {
     val color =
         summary.operation
@@ -669,7 +725,9 @@ private fun OperationCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(
-                RoundedCornerShape(9.dp)
+                RoundedCornerShape(
+                    metrics.smallSpacing
+                )
             )
             .background(
                 color.copy(
@@ -677,8 +735,10 @@ private fun OperationCard(
                 )
             )
             .padding(
-                horizontal = 12.dp,
-                vertical = 9.dp
+                horizontal =
+                    metrics.contentHorizontalPadding,
+                vertical =
+                    metrics.smallSpacing
             )
     ) {
         Text(
@@ -686,35 +746,43 @@ private fun OperationCard(
                 summary.operation
                     .displayName(),
             color = color,
-            fontFamily = Chalktastic,
-            fontSize = 21.sp,
-            fontWeight = FontWeight.Bold
+            fontFamily =
+                Chalktastic,
+            fontSize =
+                metrics.bodyTextSize,
+            fontWeight =
+                FontWeight.Bold
         )
 
         Spacer(
             modifier =
-                Modifier.height(5.dp)
+                Modifier.height(
+                    metrics.tinySpacing
+                )
         )
 
         StatisticRow(
             label = "Questions",
             value =
                 summary.questionCount
-                    .toString()
+                    .toString(),
+            metrics = metrics
         )
 
         StatisticRow(
             label = "Correct",
             value =
                 "${summary.correctCount} / " +
-                        "${summary.questionCount}"
+                        "${summary.questionCount}",
+            metrics = metrics
         )
 
         StatisticRow(
             label = "Incorrect",
             value =
                 summary.incorrectCount
-                    .toString()
+                    .toString(),
+            metrics = metrics
         )
 
         StatisticRow(
@@ -722,7 +790,8 @@ private fun OperationCard(
             value =
                 formatPercent(
                     summary.accuracyPercent
-                )
+                ),
+            metrics = metrics
         )
 
         StatisticRow(
@@ -731,7 +800,8 @@ private fun OperationCard(
                 formatDuration(
                     summary
                         .averageDurationMillis
-                )
+                ),
+            metrics = metrics
         )
     }
 }
@@ -740,23 +810,30 @@ private fun OperationCard(
 private fun StatsSection(
     title: String,
     titleColor: Color,
+    metrics: BoardResponsiveMetrics,
     content: @Composable () -> Unit
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier =
+            Modifier.fillMaxWidth(),
         verticalArrangement =
-            Arrangement.spacedBy(7.dp)
+            Arrangement.spacedBy(
+                metrics.smallSpacing
+            )
     ) {
         SectionHeading(
             text = title,
-            color = titleColor
+            color = titleColor,
+            metrics = metrics
         )
 
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(
-                    RoundedCornerShape(9.dp)
+                    RoundedCornerShape(
+                        metrics.smallSpacing
+                    )
                 )
                 .background(
                     titleColor.copy(
@@ -764,8 +841,10 @@ private fun StatsSection(
                     )
                 )
                 .padding(
-                    horizontal = 12.dp,
-                    vertical = 9.dp
+                    horizontal =
+                        metrics.contentHorizontalPadding,
+                    vertical =
+                        metrics.smallSpacing
                 )
         ) {
             content()
@@ -776,13 +855,15 @@ private fun StatsSection(
 @Composable
 private fun StatisticRow(
     label: String,
-    value: String
+    value: String,
+    metrics: BoardResponsiveMetrics
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
-                vertical = 2.dp
+                vertical =
+                    metrics.tinySpacing
             ),
         verticalAlignment =
             Alignment.CenterVertically
@@ -795,7 +876,8 @@ private fun StatisticRow(
                 ChalkColors.ChalkWhite,
             fontFamily =
                 Chalktastic,
-            fontSize = 16.sp,
+            fontSize =
+                metrics.compactTextSize,
             maxLines = 1
         )
 
@@ -807,7 +889,8 @@ private fun StatisticRow(
                 ChalkColors.PastelYellow,
             fontFamily =
                 Chalktastic,
-            fontSize = 16.sp,
+            fontSize =
+                metrics.compactTextSize,
             fontWeight =
                 FontWeight.Bold,
             textAlign =
@@ -820,29 +903,38 @@ private fun StatisticRow(
 @Composable
 private fun SectionHeading(
     text: String,
-    color: Color
+    color: Color,
+    metrics: BoardResponsiveMetrics
 ) {
     Text(
         text = text,
         color = color,
-        fontFamily = Chalktastic,
-        fontSize = 22.sp,
-        fontWeight = FontWeight.Bold
+        fontFamily =
+            Chalktastic,
+        fontSize =
+            metrics.bodyTextSize,
+        fontWeight =
+            FontWeight.Bold
     )
 }
 
 @Composable
-private fun EmptyStatsContent() {
+private fun EmptyStatsContent(
+    metrics: BoardResponsiveMetrics
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
-                vertical = 26.dp
+                vertical =
+                    metrics.largeSpacing
             ),
         horizontalAlignment =
             Alignment.CenterHorizontally,
         verticalArrangement =
-            Arrangement.spacedBy(8.dp)
+            Arrangement.spacedBy(
+                metrics.smallSpacing
+            )
     ) {
         Text(
             text = "No matching practice",
@@ -850,7 +942,8 @@ private fun EmptyStatsContent() {
                 ChalkColors.PastelBlue,
             fontFamily =
                 Chalktastic,
-            fontSize = 23.sp,
+            fontSize =
+                metrics.headingTextSize,
             fontWeight =
                 FontWeight.Bold,
             textAlign =
@@ -864,7 +957,8 @@ private fun EmptyStatsContent() {
                 ChalkColors.ChalkWhite,
             fontFamily =
                 Chalktastic,
-            fontSize = 16.sp,
+            fontSize =
+                metrics.compactTextSize,
             textAlign =
                 TextAlign.Center
         )
