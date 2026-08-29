@@ -146,10 +146,24 @@ object ExportJson {
             )
 
             builder.property(
-                name = "wholeNumberDigits",
+                name = "maximumOperand",
                 value =
-                    round.wholeNumberDigits
+                    round.maximumOperand
             )
+
+            if (
+                round.focusNumber != null
+            ) {
+                builder.property(
+                    name = "focusNumber",
+                    value =
+                        round.focusNumber
+                )
+            } else {
+                builder.nullProperty(
+                    name = "focusNumber"
+                )
+            }
 
             builder.property(
                 name =
@@ -472,16 +486,32 @@ object ExportJson {
         )
 
         builder.name(
-            name = "wholeNumberDigits"
+            name = "maximumOperands"
         )
 
         builder.beginArray()
 
-        selection.wholeNumberDigits
+        selection.maximumOperands
             .sorted()
-            .forEach { digitCount ->
+            .forEach { maximumOperand ->
                 builder.value(
-                    digitCount
+                    maximumOperand
+                )
+            }
+
+        builder.endArray()
+
+        builder.name(
+            name = "focusNumbers"
+        )
+
+        builder.beginArray()
+
+        selection.focusNumbers
+            .sorted()
+            .forEach { focusNumber ->
+                builder.value(
+                    focusNumber
                 )
             }
 

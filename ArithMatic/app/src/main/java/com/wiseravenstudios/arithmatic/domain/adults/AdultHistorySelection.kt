@@ -8,6 +8,7 @@ import com.wiseravenstudios.arithmatic.domain.history.query.OperationMatchMode
 import com.wiseravenstudios.arithmatic.domain.history.query.RoundCriteria
 import com.wiseravenstudios.arithmatic.domain.history.query.TimeRange
 import com.wiseravenstudios.arithmatic.domain.model.ArithmeticOperation
+import com.wiseravenstudios.arithmatic.domain.model.PracticeConfig
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
@@ -83,19 +84,46 @@ data class AdultHistorySelection(
         OperationMatchMode.Any,
 
     /**
-     * Empty includes every configured whole-number digit size.
+     * Exact configured maximum operand values to include.
+     *
+     * An empty set includes every configured maximum operand.
      */
-    val wholeNumberDigits: Set<Int> =
+    val maximumOperands: Set<Int> =
+        emptySet(),
+
+    /**
+     * Exact configured focus numbers to include.
+     *
+     * An empty set includes rounds regardless of their configured focus
+     * number.
+     */
+    val focusNumbers: Set<Int> =
         emptySet()
 ) {
 
     init {
         require(
-            wholeNumberDigits.all { digitCount ->
-                digitCount > 0
+            maximumOperands.all { maximumOperand ->
+                maximumOperand in
+                        PracticeConfig.MIN_MAXIMUM_OPERAND..
+                        PracticeConfig.MAX_MAXIMUM_OPERAND
             }
         ) {
-            "Whole-number digit counts must be greater than zero."
+            "Maximum operands must be between " +
+                    "${PracticeConfig.MIN_MAXIMUM_OPERAND} and " +
+                    "${PracticeConfig.MAX_MAXIMUM_OPERAND}."
+        }
+
+        require(
+            focusNumbers.all { focusNumber ->
+                focusNumber in
+                        PracticeConfig.MIN_FOCUS_NUMBER..
+                        PracticeConfig.MAX_MAXIMUM_OPERAND
+            }
+        ) {
+            "Focus numbers must be between " +
+                    "${PracticeConfig.MIN_FOCUS_NUMBER} and " +
+                    "${PracticeConfig.MAX_MAXIMUM_OPERAND}."
         }
     }
 
@@ -110,43 +138,44 @@ data class AdultHistorySelection(
             ZoneId.systemDefault()
     ): HistoryQuery {
         return HistoryQuery(
-            roundCriteria = RoundCriteria(
-                completedTimeRange =
-                    period.toTimeRange(
-                        nowEpochMillis =
-                            nowEpochMillis,
-                        zoneId =
-                            zoneId
-                    ),
-                enabledOperations =
-                    enabledRoundOperations,
-                enabledOperationMatchMode =
-                    enabledRoundOperationMatchMode,
-                wholeNumberDigits =
-                    wholeNumberDigits
-            ),
-            attemptCriteria = AttemptCriteria(
-                operations =
-                    operations,
-                correctness =
-                    correctness,
-                exactOperands =
-                    exactOperands,
-                operandRanges =
-                    operandRanges,
-                containsNegativeOperand =
-                    containsNegativeOperand,
-                containsDecimalOperand =
-                    containsDecimalOperand
-            )
+            roundCriteria =
+                RoundCriteria(
+                    completedTimeRange =
+                        period.toTimeRange(
+                            nowEpochMillis =
+                                nowEpochMillis,
+                            zoneId =
+                                zoneId
+                        ),
+                    enabledOperations =
+                        enabledRoundOperations,
+                    enabledOperationMatchMode =
+                        enabledRoundOperationMatchMode,
+                    maximumOperands =
+                        maximumOperands,
+                    focusNumbers =
+                        focusNumbers
+                ),
+            attemptCriteria =
+                AttemptCriteria(
+                    operations =
+                        operations,
+                    correctness =
+                        correctness,
+                    exactOperands =
+                        exactOperands,
+                    operandRanges =
+                        operandRanges,
+                    containsNegativeOperand =
+                        containsNegativeOperand,
+                    containsDecimalOperand =
+                        containsDecimalOperand
+                )
         )
     }
 
     companion object {
 
-        /**
-         * Default Adult-area selection.
-         */
         val Default =
             AdultHistorySelection()
 
@@ -179,23 +208,24 @@ sealed interface AdultHistoryPeriod {
 
         init {
             require(
-                !endDate.isBefore(startDate)
+                !endDate.isBefore(
+                    startDate
+                )
             ) {
                 "Custom history end date cannot be before its start date."
             }
         }
     }
 
-    /**
-     * Converts the selected calendar period into its timestamp boundaries.
-     */
     fun toTimeRange(
         nowEpochMillis: Long =
             System.currentTimeMillis(),
         zoneId: ZoneId =
             ZoneId.systemDefault()
     ): TimeRange {
-        require(nowEpochMillis >= 0L) {
+        require(
+            nowEpochMillis >= 0L
+        ) {
             "Current timestamp cannot be negative."
         }
 
@@ -203,17 +233,23 @@ sealed interface AdultHistoryPeriod {
             Instant.ofEpochMilli(
                 nowEpochMillis
             )
-                .atZone(zoneId)
+                .atZone(
+                    zoneId
+                )
 
         val today =
             now.toLocalDate()
 
-        return when (this) {
+        return when (
+            this
+        ) {
             Day -> {
                 TimeRange(
                     startEpochMillisInclusive =
                         today
-                            .atStartOfDay(zoneId)
+                            .atStartOfDay(
+                                zoneId
+                            )
                             .toInstant()
                             .toEpochMilli(),
                     endEpochMillisExclusive =
@@ -223,8 +259,10 @@ sealed interface AdultHistoryPeriod {
 
             Last7Days -> {
                 presetRange(
-                    today = today,
-                    days = 7L,
+                    today =
+                        today,
+                    days =
+                        7L,
                     nowEpochMillis =
                         nowEpochMillis,
                     zoneId =
@@ -234,8 +272,10 @@ sealed interface AdultHistoryPeriod {
 
             Last30Days -> {
                 presetRange(
-                    today = today,
-                    days = 30L,
+                    today =
+                        today,
+                    days =
+                        30L,
                     nowEpochMillis =
                         nowEpochMillis,
                     zoneId =
@@ -245,8 +285,10 @@ sealed interface AdultHistoryPeriod {
 
             Last365Days -> {
                 presetRange(
-                    today = today,
-                    days = 365L,
+                    today =
+                        today,
+                    days =
+                        365L,
                     nowEpochMillis =
                         nowEpochMillis,
                     zoneId =
@@ -258,13 +300,19 @@ sealed interface AdultHistoryPeriod {
                 TimeRange(
                     startEpochMillisInclusive =
                         startDate
-                            .atStartOfDay(zoneId)
+                            .atStartOfDay(
+                                zoneId
+                            )
                             .toInstant()
                             .toEpochMilli(),
                     endEpochMillisExclusive =
                         endDate
-                            .plusDays(1L)
-                            .atStartOfDay(zoneId)
+                            .plusDays(
+                                1L
+                            )
+                            .atStartOfDay(
+                                zoneId
+                            )
                             .toInstant()
                             .toEpochMilli()
                 )
@@ -272,23 +320,15 @@ sealed interface AdultHistoryPeriod {
         }
     }
 
-    /**
-     * Returns the number of calendar days represented by this period.
-     *
-     * Graph resolution:
-     *
-     * 1 day       -> individual rounds
-     * 2-30 days   -> 1-day buckets
-     * 31-90 days  -> 3-day buckets
-     * 91+ days    -> 7-day buckets
-     */
     fun calendarDayCount(
         nowEpochMillis: Long =
             System.currentTimeMillis(),
         zoneId: ZoneId =
             ZoneId.systemDefault()
     ): Long {
-        return when (this) {
+        return when (
+            this
+        ) {
             Day ->
                 1L
 
@@ -324,7 +364,9 @@ sealed interface AdultHistoryPeriod {
         return TimeRange(
             startEpochMillisInclusive =
                 startDate
-                    .atStartOfDay(zoneId)
+                    .atStartOfDay(
+                        zoneId
+                    )
                     .toInstant()
                     .toEpochMilli(),
             endEpochMillisExclusive =

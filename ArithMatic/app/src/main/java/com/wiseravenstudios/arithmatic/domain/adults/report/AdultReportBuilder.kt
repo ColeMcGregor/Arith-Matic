@@ -23,7 +23,9 @@ object AdultReportBuilder {
         zoneId: ZoneId =
             ZoneId.systemDefault()
     ): AdultReport {
-        require(generatedAtEpochMillis >= 0L) {
+        require(
+            generatedAtEpochMillis >= 0L
+        ) {
             "Report generation timestamp cannot be negative."
         }
 
@@ -40,7 +42,9 @@ object AdultReportBuilder {
             )
 
         val rounds =
-            when (options.detailLevel) {
+            when (
+                options.detailLevel
+            ) {
                 ReportDetailLevel.Summary ->
                     emptyList()
 
@@ -85,8 +89,12 @@ object AdultReportBuilder {
         return filteredHistory
             .sortedWith(
                 compareBy(
-                    { it.round.completedAtEpochMillis },
-                    { it.round.id }
+                    {
+                        it.round.completedAtEpochMillis
+                    },
+                    {
+                        it.round.id
+                    }
                 )
             )
             .map { filteredRound ->
@@ -107,13 +115,17 @@ object AdultReportBuilder {
             filteredRound.round
 
         val attempts =
-            if (includeAttempts) {
+            if (
+                includeAttempts
+            ) {
                 filteredRound
                     .matchingAttempts
                     .sortedBy { attempt ->
                         attempt.questionIndex
                     }
-                    .map(::toAttemptEntry)
+                    .map(
+                        ::toAttemptEntry
+                    )
             } else {
                 emptyList()
             }
@@ -121,26 +133,40 @@ object AdultReportBuilder {
         return AdultReport.RoundEntry(
             id =
                 round.id,
+
             completedAtEpochMillis =
                 round.completedAtEpochMillis,
+
             activeRoundDurationMillis =
                 round.activeRoundDurationMillis,
+
             enabledOperations =
                 round.enabledOperations,
+
             allowNegatives =
                 round.allowNegatives,
+
             allowDecimals =
                 round.allowDecimals,
-            wholeNumberDigits =
-                round.wholeNumberDigits,
+
+            maximumOperand =
+                round.maximumOperand,
+
+            focusNumber =
+                round.focusNumber,
+
             originalQuestionCount =
                 round.questionCount,
+
             matchingQuestionCount =
                 filteredRound.matchingAttemptCount,
+
             matchingCorrectCount =
                 filteredRound.matchingCorrectCount,
+
             matchingIncorrectCount =
                 filteredRound.matchingIncorrectCount,
+
             attempts =
                 attempts
         )
@@ -152,24 +178,34 @@ object AdultReportBuilder {
         return AdultReport.AttemptEntry(
             questionIndex =
                 attempt.questionIndex,
+
             operation =
                 attempt.operation,
+
             operands =
                 attempt.operands,
+
             questionText =
                 attempt.questionText,
+
             expectedAnswer =
                 attempt.expectedAnswer,
+
             selectedAnswer =
                 attempt.selectedAnswer,
+
             answerChoices =
                 attempt.answerChoices,
+
             selectedChoiceIndex =
                 attempt.selectedChoiceIndex,
+
             correctChoiceIndex =
                 attempt.correctChoiceIndex,
+
             isCorrect =
                 attempt.isCorrect,
+
             activeDurationMillis =
                 attempt.activeDurationMillis
         )

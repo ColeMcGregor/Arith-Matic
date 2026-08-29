@@ -1,6 +1,7 @@
 package com.wiseravenstudios.arithmatic.domain.history.query
 
 import com.wiseravenstudios.arithmatic.domain.model.ArithmeticOperation
+import com.wiseravenstudios.arithmatic.domain.model.PracticeConfig
 import java.math.BigDecimal
 
 /**
@@ -15,34 +16,28 @@ import java.math.BigDecimal
  * It contains no Android, Compose, Room, or UI dependencies.
  */
 data class HistoryQuery(
-    val roundCriteria: RoundCriteria = RoundCriteria(),
-    val attemptCriteria: AttemptCriteria = AttemptCriteria()
+    val roundCriteria: RoundCriteria =
+        RoundCriteria(),
+    val attemptCriteria: AttemptCriteria =
+        AttemptCriteria()
 ) {
 
     companion object {
 
-        /**
-         * Selects every stored completed round and every attempt.
-         */
-        val All = HistoryQuery()
+        val All =
+            HistoryQuery()
     }
 }
 
 /**
  * Filters complete rounds according to their saved configuration.
- *
- * These criteria answer questions about how the round itself was configured,
- * not necessarily which individual attempts should appear in the final
- * filtered result.
  */
 data class RoundCriteria(
-    val completedTimeRange: TimeRange? = null,
+    val completedTimeRange: TimeRange? =
+        null,
 
     /**
      * When empty, rounds are not restricted by their enabled operations.
-     *
-     * When populated, the behavior is controlled by
-     * [enabledOperationMatchMode].
      */
     val enabledOperations: Set<ArithmeticOperation> =
         emptySet(),
@@ -53,36 +48,61 @@ data class RoundCriteria(
     /**
      * null means either setting is accepted.
      */
-    val allowNegatives: Boolean? = null,
+    val allowNegatives: Boolean? =
+        null,
 
     /**
      * null means either setting is accepted.
      */
-    val allowDecimals: Boolean? = null,
+    val allowDecimals: Boolean? =
+        null,
 
     /**
-     * When empty, all configured whole-number digit counts are accepted.
+     * Exact configured maximum operand values to include.
+     *
+     * An empty set accepts every configured maximum operand.
      */
-    val wholeNumberDigits: Set<Int> =
+    val maximumOperands: Set<Int> =
+        emptySet(),
+
+    /**
+     * Exact configured focus numbers to include.
+     *
+     * An empty set does not restrict rounds by focus number.
+     */
+    val focusNumbers: Set<Int> =
         emptySet()
 ) {
 
     init {
         require(
-            wholeNumberDigits.all { digitCount ->
-                digitCount > 0
+            maximumOperands.all { maximumOperand ->
+                maximumOperand in
+                        PracticeConfig.MIN_MAXIMUM_OPERAND..
+                        PracticeConfig.MAX_MAXIMUM_OPERAND
             }
         ) {
-            "Whole-number digit counts must be greater than zero."
+            "Maximum operands must be between " +
+                    "${PracticeConfig.MIN_MAXIMUM_OPERAND} and " +
+                    "${PracticeConfig.MAX_MAXIMUM_OPERAND}."
+        }
+
+        require(
+            focusNumbers.all { focusNumber ->
+                focusNumber in
+                        PracticeConfig.MIN_FOCUS_NUMBER..
+                        PracticeConfig.MAX_MAXIMUM_OPERAND
+            }
+        ) {
+            "Focus numbers must be between " +
+                    "${PracticeConfig.MIN_FOCUS_NUMBER} and " +
+                    "${PracticeConfig.MAX_MAXIMUM_OPERAND}."
         }
     }
 }
 
 /**
  * Filters individual attempts inside rounds that passed [RoundCriteria].
- *
- * Operation, correctness, operand-content, and operand-value criteria all
- * apply to the actual saved question attempt.
  */
 data class AttemptCriteria(
     val operations: Set<ArithmeticOperation> =
@@ -96,8 +116,6 @@ data class AttemptCriteria(
      *
      * An attempt matches when at least one operand equals at least one selected
      * exact value.
-     *
-     * An empty set means no exact-operand restriction is active.
      */
     val exactOperands: Set<BigDecimal> =
         emptySet(),
@@ -106,28 +124,18 @@ data class AttemptCriteria(
      * Inclusive operand ranges to match.
      *
      * An attempt matches a range when every operand falls within that range.
-     *
-     * Multiple ranges are combined with OR.
      */
     val operandRanges: List<OperandRange> =
         emptyList(),
 
     /**
      * null accepts attempts regardless of negative operands.
-     *
-     * true requires at least one negative operand.
-     *
-     * false requires no negative operands.
      */
     val containsNegativeOperand: Boolean? =
         null,
 
     /**
      * null accepts attempts regardless of decimal operands.
-     *
-     * true requires at least one operand with a fractional component.
-     *
-     * false requires all operands to be whole numbers.
      */
     val containsDecimalOperand: Boolean? =
         null
@@ -143,7 +151,8 @@ data class OperandRange(
 
     init {
         require(
-            minimumInclusive <= maximumInclusive
+            minimumInclusive <=
+                    maximumInclusive
         ) {
             "Operand range minimum must not exceed its maximum."
         }
@@ -152,8 +161,10 @@ data class OperandRange(
     fun contains(
         value: BigDecimal
     ): Boolean {
-        return value >= minimumInclusive &&
-                value <= maximumInclusive
+        return value >=
+                minimumInclusive &&
+                value <=
+                maximumInclusive
     }
 }
 
@@ -162,12 +173,12 @@ data class OperandRange(
  *
  * The start is inclusive.
  * The end is exclusive.
- *
- * Either boundary may be null.
  */
 data class TimeRange(
-    val startEpochMillisInclusive: Long? = null,
-    val endEpochMillisExclusive: Long? = null
+    val startEpochMillisInclusive: Long? =
+        null,
+    val endEpochMillisExclusive: Long? =
+        null
 ) {
 
     init {
@@ -195,22 +206,21 @@ data class TimeRange(
         }
     }
 
-    /**
-     * Returns true when the supplied timestamp falls within this range.
-     */
     fun contains(
         epochMillis: Long
     ): Boolean {
         if (
             startEpochMillisInclusive != null &&
-            epochMillis < startEpochMillisInclusive
+            epochMillis <
+            startEpochMillisInclusive
         ) {
             return false
         }
 
         if (
             endEpochMillisExclusive != null &&
-            epochMillis >= endEpochMillisExclusive
+            epochMillis >=
+            endEpochMillisExclusive
         ) {
             return false
         }
@@ -219,9 +229,6 @@ data class TimeRange(
     }
 }
 
-/**
- * Controls whether correct attempts, incorrect attempts, or both are included.
- */
 enum class CorrectnessFilter {
     All,
     CorrectOnly,
@@ -243,9 +250,6 @@ enum class CorrectnessFilter {
     }
 }
 
-/**
- * Controls how a collection of selected operations is matched.
- */
 enum class OperationMatchMode {
     Any,
     All

@@ -8,7 +8,9 @@ import androidx.room.PrimaryKey
 )
 data class CompletedRoundEntity(
 
-    @PrimaryKey(autoGenerate = true)
+    @PrimaryKey(
+        autoGenerate = true
+    )
     val id: Long = 0L,
 
     val completedAtEpochMillis: Long,
@@ -21,7 +23,9 @@ data class CompletedRoundEntity(
 
     val allowDecimals: Boolean,
 
-    val wholeNumberDigits: Int,
+    val maximumOperand: Int,
+
+    val focusNumber: Int?,
 
     val questionCount: Int
 )

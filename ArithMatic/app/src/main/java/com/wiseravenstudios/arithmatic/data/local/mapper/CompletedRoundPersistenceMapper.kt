@@ -30,8 +30,11 @@ object CompletedRoundPersistenceMapper {
             allowDecimals =
                 completedRound.config.allowDecimals,
 
-            wholeNumberDigits =
-                completedRound.config.wholeNumberDigits,
+            maximumOperand =
+                completedRound.config.maximumOperand,
+
+            focusNumber =
+                completedRound.config.focusNumber,
 
             questionCount =
                 completedRound.config.questionCount
@@ -47,7 +50,8 @@ object CompletedRoundPersistenceMapper {
         ).map { (question, attempt) ->
 
             QuestionAttemptEntity(
-                roundId = roundId,
+                roundId =
+                    roundId,
 
                 questionIndex =
                     attempt.questionIndex,
@@ -57,10 +61,12 @@ object CompletedRoundPersistenceMapper {
 
                 operands =
                     extractOperands(
-                        expression = question.expression
+                        expression =
+                            question.expression
                     )
                         .joinToString(
-                            separator = OPERAND_SEPARATOR
+                            separator =
+                                OPERAND_SEPARATOR
                         ) { operand ->
                             operand.toDatabaseString()
                         },
@@ -108,14 +114,12 @@ object CompletedRoundPersistenceMapper {
         }
     }
 
-    /**
-     * Extracts expression values from left to right so persisted operand order
-     * matches the displayed arithmetic expression.
-     */
     private fun extractOperands(
         expression: ArithmeticExpression
     ): List<BigDecimal> {
-        return when (expression) {
+        return when (
+            expression
+        ) {
             is ArithmeticExpression.Value -> {
                 listOf(
                     expression.value
@@ -124,10 +128,12 @@ object CompletedRoundPersistenceMapper {
 
             is ArithmeticExpression.BinaryOperation -> {
                 extractOperands(
-                    expression = expression.left
+                    expression =
+                        expression.left
                 ) +
                         extractOperands(
-                            expression = expression.right
+                            expression =
+                                expression.right
                         )
             }
         }

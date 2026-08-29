@@ -48,7 +48,9 @@ object ExportCsv {
             )
         }
 
-        if (report.rounds.isNotEmpty()) {
+        if (
+            report.rounds.isNotEmpty()
+        ) {
             appendRounds(
                 builder = builder,
                 report = report,
@@ -60,7 +62,9 @@ object ExportCsv {
                     round.attempts.isNotEmpty()
                 }
 
-            if (hasAttempts) {
+            if (
+                hasAttempts
+            ) {
                 appendAttempts(
                     builder = builder,
                     report = report,
@@ -228,8 +232,7 @@ object ExportCsv {
         builder.appendLine()
 
         if (
-            summary.operationSummaries
-                .isNotEmpty()
+            summary.operationSummaries.isNotEmpty()
         ) {
             builder.appendLine(
                 csvRow(
@@ -283,9 +286,6 @@ object ExportCsv {
         }
     }
 
-    /**
-     * Writes the per-operation operand-size breakdown selected for the report.
-     */
     private fun appendStratification(
         builder: StringBuilder,
         report: AdultReport
@@ -369,7 +369,8 @@ object ExportCsv {
                 "Enabled Operations",
                 "Negatives Enabled",
                 "Decimals Enabled",
-                "Whole Number Digits",
+                "Maximum Operand",
+                "Focus Number",
                 "Original Questions",
                 "Matching Questions",
                 "Matching Correct",
@@ -381,15 +382,18 @@ object ExportCsv {
             builder.appendLine(
                 csvRow(
                     round.id.toString(),
+
                     formatDateTime(
                         epochMillis =
                             round.completedAtEpochMillis,
                         zoneId =
                             zoneId
                     ),
+
                     round
                         .activeRoundDurationMillis
                         .toString(),
+
                     round
                         .enabledOperations
                         .sortedBy { operation ->
@@ -400,24 +404,36 @@ object ExportCsv {
                         ) { operation ->
                             operation.name
                         },
+
                     round
                         .allowNegatives
                         .toString(),
+
                     round
                         .allowDecimals
                         .toString(),
+
                     round
-                        .wholeNumberDigits
+                        .maximumOperand
                         .toString(),
+
+                    round
+                        .focusNumber
+                        ?.toString()
+                        .orEmpty(),
+
                     round
                         .originalQuestionCount
                         .toString(),
+
                     round
                         .matchingQuestionCount
                         .toString(),
+
                     round
                         .matchingCorrectCount
                         .toString(),
+
                     round
                         .matchingIncorrectCount
                         .toString()
@@ -462,19 +478,23 @@ object ExportCsv {
                 builder.appendLine(
                     csvRow(
                         round.id.toString(),
+
                         formatDateTime(
                             epochMillis =
                                 round.completedAtEpochMillis,
                             zoneId =
                                 zoneId
                         ),
+
                         attempt
                             .questionIndex
                             .toString(),
+
                         attempt
                             .operation
                             ?.name
                             .orEmpty(),
+
                         attempt
                             .operands
                             .joinToString(
@@ -482,23 +502,31 @@ object ExportCsv {
                             ) { operand ->
                                 operand.toExportString()
                             },
+
                         attempt.questionText,
+
                         attempt.expectedAnswer,
+
                         attempt.selectedAnswer,
+
                         attempt
                             .answerChoices
                             .joinToString(
                                 separator = "|"
                             ),
+
                         attempt
                             .selectedChoiceIndex
                             .toString(),
+
                         attempt
                             .correctChoiceIndex
                             .toString(),
+
                         attempt
                             .isCorrect
                             .toString(),
+
                         attempt
                             .activeDurationMillis
                             .toString()
@@ -510,9 +538,6 @@ object ExportCsv {
         builder.appendLine()
     }
 
-    /**
-     * Escapes one CSV field using standard quote escaping.
-     */
     private fun escape(
         value: String
     ): String {
@@ -531,7 +556,9 @@ object ExportCsv {
         return values.joinToString(
             separator = ","
         ) { value ->
-            escape(value)
+            escape(
+                value
+            )
         }
     }
 
@@ -552,7 +579,9 @@ object ExportCsv {
         return Instant.ofEpochMilli(
             epochMillis
         )
-            .atZone(zoneId)
+            .atZone(
+                zoneId
+            )
             .format(
                 DATE_TIME_FORMAT
             )

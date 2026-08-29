@@ -4,7 +4,6 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
-import android.graphics.RectF
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
 import com.wiseravenstudios.arithmatic.domain.adults.AdultHistoryPeriod
@@ -371,8 +370,7 @@ object ExportPdf {
                     "All"
                 } else {
                     selection.operations
-                        .sortedBy {
-                                operation ->
+                        .sortedBy { operation ->
                             operation.ordinal
                         }
                         .joinToString(
@@ -478,15 +476,32 @@ object ExportPdf {
             )
 
             if (
-                selection.wholeNumberDigits
+                selection.maximumOperands
                     .isNotEmpty()
             ) {
                 drawLabelValue(
                     label =
-                        "Round digit settings",
+                        "Maximum operands",
                     value =
                         selection
-                            .wholeNumberDigits
+                            .maximumOperands
+                            .sorted()
+                            .joinToString(
+                                separator = ", "
+                            )
+                )
+            }
+
+            if (
+                selection.focusNumbers
+                    .isNotEmpty()
+            ) {
+                drawLabelValue(
+                    label =
+                        "Focus numbers",
+                    value =
+                        selection
+                            .focusNumbers
                             .sorted()
                             .joinToString(
                                 separator = ", "
@@ -504,8 +519,7 @@ object ExportPdf {
                     value =
                         selection
                             .enabledRoundOperations
-                            .sortedBy {
-                                    operation ->
+                            .sortedBy { operation ->
                                 operation.ordinal
                             }
                             .joinToString(
@@ -656,12 +670,10 @@ object ExportPdf {
                         summary.timePoints,
                     maximumValue =
                         100.0,
-                    valueSelector = {
-                            point ->
+                    valueSelector = { point ->
                         point.accuracyPercent
                     },
-                    valueFormatter = {
-                            value ->
+                    valueFormatter = { value ->
                         "${value.toInt()}%"
                     }
                 )
@@ -674,22 +686,19 @@ object ExportPdf {
                     maximumValue =
                         max(
                             summary.timePoints
-                                .maxOf {
-                                        point ->
+                                .maxOf { point ->
                                     point
                                         .averageDurationMillis
                                         .toDouble()
                                 },
                             1_000.0
                         ),
-                    valueSelector = {
-                            point ->
+                    valueSelector = { point ->
                         point
                             .averageDurationMillis
                             .toDouble()
                     },
-                    valueFormatter = {
-                            value ->
+                    valueFormatter = { value ->
                         formatDuration(
                             value.toLong()
                         )
@@ -708,13 +717,11 @@ object ExportPdf {
                         summary.operationSummaries,
                     maximumValue =
                         100.0,
-                    valueSelector = {
-                            operation ->
+                    valueSelector = { operation ->
                         operation
                             .accuracyPercent
                     },
-                    valueFormatter = {
-                            value ->
+                    valueFormatter = { value ->
                         formatPercent(
                             value
                         )
@@ -729,22 +736,19 @@ object ExportPdf {
                     maximumValue =
                         max(
                             summary.operationSummaries
-                                .maxOf {
-                                        operation ->
+                                .maxOf { operation ->
                                     operation
                                         .averageDurationMillis
                                         .toDouble()
                                 },
                             1_000.0
                         ),
-                    valueSelector = {
-                            operation ->
+                    valueSelector = { operation ->
                         operation
                             .averageDurationMillis
                             .toDouble()
                     },
-                    valueFormatter = {
-                            value ->
+                    valueFormatter = { value ->
                         formatDuration(
                             value.toLong()
                         )
@@ -846,14 +850,12 @@ object ExportPdf {
             }
 
             val firstTime =
-                points.minOf {
-                        point ->
+                points.minOf { point ->
                     point.startEpochMillis
                 }
 
             val lastTime =
-                points.maxOf {
-                        point ->
+                points.maxOf { point ->
                     point.startEpochMillis
                 }
 
@@ -918,8 +920,7 @@ object ExportPdf {
                     Path()
 
                 points
-                    .sortedBy {
-                            point ->
+                    .sortedBy { point ->
                         point.startEpochMillis
                     }
                     .forEachIndexed {
@@ -1248,8 +1249,7 @@ object ExportPdf {
                     val operationSummary =
                         report.summary
                             .operationSummaries
-                            .firstOrNull {
-                                    summary ->
+                            .firstOrNull { summary ->
                                 summary.operation ==
                                         stratification.operation
                             }
@@ -1259,8 +1259,7 @@ object ExportPdf {
                     ) {
                         val classifiedCount =
                             stratification.strata
-                                .sumOf {
-                                        stratum ->
+                                .sumOf { stratum ->
                                     stratum.questionCount
                                 }
 
@@ -1324,8 +1323,7 @@ object ExportPdf {
                             "Enabled operations",
                         value =
                             round.enabledOperations
-                                .sortedBy {
-                                        operation ->
+                                .sortedBy { operation ->
                                     operation.ordinal
                                 }
                                 .joinToString(
@@ -1339,8 +1337,14 @@ object ExportPdf {
                         label =
                             "Round settings",
                         value =
-                            "${round.wholeNumberDigits} digit(s), " +
-                                    "negatives=${round.allowNegatives}, " +
+                            "maximum operand=${round.maximumOperand}, " +
+                                    "focus number=" +
+                                    (
+                                            round.focusNumber
+                                                ?.toString()
+                                                ?: "Off"
+                                            ) +
+                                    ", negatives=${round.allowNegatives}, " +
                                     "decimals=${round.allowDecimals}"
                     )
 

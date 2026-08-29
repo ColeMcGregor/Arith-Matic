@@ -7,8 +7,10 @@ import java.math.BigDecimal
 import kotlin.random.Random
 
 class DivisionGenerator(
-    private val random: Random = Random.Default,
-    private val answerChoiceGenerator: AnswerChoiceGenerator =
+    private val random: Random =
+        Random.Default,
+    private val answerChoiceGenerator:
+    AnswerChoiceGenerator =
         AnswerChoiceGenerator(random)
 ) : OperationQuestionGenerator {
 
@@ -16,17 +18,34 @@ class DivisionGenerator(
         config: PracticeConfig
     ): ArithmeticQuestion {
         val positiveQuestion =
-            if (config.allowDecimals) {
-                generateDecimalDivision(config)
+            if (
+                config.focusNumber != null
+            ) {
+                generateFocusedDivision(
+                    config = config
+                )
+            } else if (
+                config.allowDecimals
+            ) {
+                generateDecimalDivision(
+                    config = config
+                )
             } else {
-                generateWholeNumberDivision(config)
+                generateWholeNumberDivision(
+                    config = config
+                )
             }
 
         val signedOperands =
             applyNegativeRules(
-                dividend = positiveQuestion.dividend,
-                divisor = positiveQuestion.divisor,
-                allowNegatives = config.allowNegatives
+                dividend =
+                    positiveQuestion.dividend,
+                divisor =
+                    positiveQuestion.divisor,
+                allowNegatives =
+                    config.allowNegatives,
+                focusPosition =
+                    positiveQuestion.focusPosition
             )
 
         val dividend =
@@ -43,21 +62,319 @@ class DivisionGenerator(
             "DivisionGenerator produced a zero divisor."
         }
 
-        /*
-         * Verify that the division has an exact terminating result.
-         */
-        dividend.divide(divisor)
+        dividend.divide(
+            divisor
+        )
 
         val expression =
             GeneratorSupport.binaryExpression(
-                leftOperand = dividend,
-                operation = ArithmeticOperation.Division,
-                rightOperand = divisor
+                leftOperand =
+                    dividend,
+                operation =
+                    ArithmeticOperation.Division,
+                rightOperand =
+                    divisor
             )
 
-        return answerChoiceGenerator.generateQuestion(
-            expression = expression,
-            config = config
+        return answerChoiceGenerator
+            .generateQuestion(
+                expression = expression,
+                config = config
+            )
+    }
+
+    private fun generateFocusedDivision(
+        config: PracticeConfig
+    ): CompatibleDivision {
+        val focusNumber =
+            requireNotNull(
+                config.focusNumber
+            )
+
+        val focusIsDividend =
+            focusNumber == 0 ||
+                    random.nextBoolean()
+
+        return if (
+            focusIsDividend
+        ) {
+            generateWithFocusedDividend(
+                config = config,
+                focusNumber = focusNumber
+            )
+        } else {
+            generateWithFocusedDivisor(
+                config = config,
+                focusNumber = focusNumber
+            )
+        }
+    }
+
+    private fun generateWithFocusedDividend(
+        config: PracticeConfig,
+        focusNumber: Int
+    ): CompatibleDivision {
+        return if (
+            config.allowDecimals
+        ) {
+            generateDecimalFocusedDividend(
+                config = config,
+                focusNumber = focusNumber
+            )
+        } else {
+            generateWholeFocusedDividend(
+                config = config,
+                focusNumber = focusNumber
+            )
+        }
+    }
+
+    private fun generateWithFocusedDivisor(
+        config: PracticeConfig,
+        focusNumber: Int
+    ): CompatibleDivision {
+        require(
+            focusNumber != 0
+        ) {
+            "Zero cannot be used as a division divisor."
+        }
+
+        return if (
+            config.allowDecimals
+        ) {
+            generateDecimalFocusedDivisor(
+                config = config,
+                focusNumber = focusNumber
+            )
+        } else {
+            generateWholeFocusedDivisor(
+                config = config,
+                focusNumber = focusNumber
+            )
+        }
+    }
+
+    private fun generateWholeFocusedDividend(
+        config: PracticeConfig,
+        focusNumber: Int
+    ): CompatibleDivision {
+        val maximum =
+            GeneratorSupport.maximumOperand(
+                config = config
+            )
+
+        val divisor =
+            if (
+                focusNumber == 0
+            ) {
+                random.nextLong(
+                    from = 1L,
+                    until =
+                        Math.addExact(
+                            maximum,
+                            1L
+                        )
+                )
+            } else {
+                val validDivisors =
+                    mutableListOf<Long>()
+
+                for (
+                candidate in 1L..
+                        focusNumber.toLong()
+                ) {
+                    if (
+                        focusNumber.toLong() %
+                        candidate ==
+                        0L
+                    ) {
+                        validDivisors +=
+                            candidate
+                    }
+                }
+
+                validDivisors.random(
+                    random
+                )
+            }
+
+        return CompatibleDivision(
+            dividend =
+                BigDecimal.valueOf(
+                    focusNumber.toLong()
+                ),
+            divisor =
+                BigDecimal.valueOf(
+                    divisor
+                ),
+            focusPosition =
+                FocusPosition.Dividend
+        )
+    }
+
+    private fun generateWholeFocusedDivisor(
+        config: PracticeConfig,
+        focusNumber: Int
+    ): CompatibleDivision {
+        val maximum =
+            GeneratorSupport.maximumOperand(
+                config = config
+            )
+
+        val maximumQuotient =
+            maximum /
+                    focusNumber.toLong()
+
+        val quotient =
+            random.nextLong(
+                from = 1L,
+                until =
+                    Math.addExact(
+                        maximumQuotient,
+                        1L
+                    )
+            )
+
+        val dividend =
+            Math.multiplyExact(
+                focusNumber.toLong(),
+                quotient
+            )
+
+        return CompatibleDivision(
+            dividend =
+                BigDecimal.valueOf(
+                    dividend
+                ),
+            divisor =
+                BigDecimal.valueOf(
+                    focusNumber.toLong()
+                ),
+            focusPosition =
+                FocusPosition.Divisor
+        )
+    }
+
+    private fun generateDecimalFocusedDividend(
+        config: PracticeConfig,
+        focusNumber: Int
+    ): CompatibleDivision {
+        val scale =
+            GeneratorSupport.scaleFor(
+                config = config
+            )
+
+        val maximumUnits =
+            GeneratorSupport.maximumUnits(
+                config = config
+            )
+
+        val focusUnits =
+            Math.multiplyExact(
+                focusNumber.toLong(),
+                10L
+            )
+
+        val divisorUnits =
+            if (
+                focusNumber == 0
+            ) {
+                random.nextLong(
+                    from = 1L,
+                    until =
+                        Math.addExact(
+                            maximumUnits,
+                            1L
+                        )
+                )
+            } else {
+                val validDivisorUnits =
+                    mutableListOf<Long>()
+
+                for (
+                candidate in 1L..
+                        focusUnits
+                ) {
+                    if (
+                        focusUnits %
+                        candidate ==
+                        0L
+                    ) {
+                        validDivisorUnits +=
+                            candidate
+                    }
+                }
+
+                validDivisorUnits.random(
+                    random
+                )
+            }
+
+        return CompatibleDivision(
+            dividend =
+                BigDecimal.valueOf(
+                    focusNumber.toLong()
+                ),
+            divisor =
+                GeneratorSupport.unitsToBigDecimal(
+                    units =
+                        divisorUnits,
+                    scale =
+                        scale
+                ),
+            focusPosition =
+                FocusPosition.Dividend
+        )
+    }
+
+    private fun generateDecimalFocusedDivisor(
+        config: PracticeConfig,
+        focusNumber: Int
+    ): CompatibleDivision {
+        val scale =
+            GeneratorSupport.scaleFor(
+                config = config
+            )
+
+        val maximumUnits =
+            GeneratorSupport.maximumUnits(
+                config = config
+            )
+
+        val maximumQuotientUnits =
+            maximumUnits /
+                    focusNumber.toLong()
+
+        val quotientUnits =
+            random.nextLong(
+                from = 1L,
+                until =
+                    Math.addExact(
+                        maximumQuotientUnits,
+                        1L
+                    )
+            )
+
+        val dividendUnits =
+            Math.multiplyExact(
+                focusNumber.toLong(),
+                quotientUnits
+            )
+
+        return CompatibleDivision(
+            dividend =
+                GeneratorSupport.unitsToBigDecimal(
+                    units =
+                        dividendUnits,
+                    scale =
+                        scale
+                ),
+            divisor =
+                BigDecimal.valueOf(
+                    focusNumber.toLong()
+                ),
+            focusPosition =
+                FocusPosition.Divisor
         )
     }
 
@@ -65,44 +382,36 @@ class DivisionGenerator(
         config: PracticeConfig
     ): CompatibleDivision {
         val maximum =
-            GeneratorSupport.maximumWholeNumber(
-                config
+            GeneratorSupport.maximumOperand(
+                config = config
             )
 
-        if (maximum < 9L) {
+        if (
+            maximum < 9L
+        ) {
             return generateSmallRangeDivision(
                 maximum = maximum
             )
         }
 
         val roll =
-            random.nextInt(100)
+            random.nextInt(
+                100
+            )
 
         return when {
-            /*
-             * About 5% of questions have either a divisor
-             * or quotient of 1.
-             */
             roll < 5 ->
                 generateDivisionWithFactor(
                     maximum = maximum,
                     specialFactor = 1L
                 )
 
-            /*
-             * About 10% of questions have either a divisor
-             * or quotient of 2.
-             */
             roll < 10 ->
                 generateDivisionWithFactor(
                     maximum = maximum,
                     specialFactor = 2L
                 )
 
-            /*
-             * The remaining questions have both a divisor
-             * and quotient of at least 3.
-             */
             else ->
                 generateStandardDivision(
                     maximum = maximum
@@ -110,20 +419,6 @@ class DivisionGenerator(
         }
     }
 
-    /**
-     * Generates a division question where either the divisor or quotient
-     * is the requested special factor.
-     *
-     * Examples for factor 1:
-     *
-     * 8 ÷ 1 = 8
-     * 8 ÷ 8 = 1
-     *
-     * Examples for factor 2:
-     *
-     * 12 ÷ 2 = 6
-     * 12 ÷ 6 = 2
-     */
     private fun generateDivisionWithFactor(
         maximum: Long,
         specialFactor: Long
@@ -131,7 +426,9 @@ class DivisionGenerator(
         val specialFactorIsDivisor =
             random.nextBoolean()
 
-        return if (specialFactorIsDivisor) {
+        return if (
+            specialFactorIsDivisor
+        ) {
             generateWithFixedDivisor(
                 maximum = maximum,
                 divisor = specialFactor
@@ -150,9 +447,7 @@ class DivisionGenerator(
     ): CompatibleDivision {
         val minimumQuotient =
             when (divisor) {
-                1L ->
-                    3L
-
+                1L,
                 2L ->
                     3L
 
@@ -166,11 +461,13 @@ class DivisionGenerator(
 
         val quotient =
             random.nextLong(
-                from = minimumQuotient,
-                until = Math.addExact(
-                    maximumQuotient,
-                    1L
-                )
+                from =
+                    minimumQuotient,
+                until =
+                    Math.addExact(
+                        maximumQuotient,
+                        1L
+                    )
             )
 
         val dividend =
@@ -197,9 +494,7 @@ class DivisionGenerator(
     ): CompatibleDivision {
         val minimumDivisor =
             when (quotient) {
-                1L ->
-                    3L
-
+                1L,
                 2L ->
                     3L
 
@@ -213,11 +508,13 @@ class DivisionGenerator(
 
         val divisor =
             random.nextLong(
-                from = minimumDivisor,
-                until = Math.addExact(
-                    maximumDivisor,
-                    1L
-                )
+                from =
+                    minimumDivisor,
+                until =
+                    Math.addExact(
+                        maximumDivisor,
+                        1L
+                    )
             )
 
         val dividend =
@@ -238,24 +535,21 @@ class DivisionGenerator(
         )
     }
 
-    /**
-     * Generates the normal division pool.
-     *
-     * Both divisor and quotient are at least 3.
-     */
     private fun generateStandardDivision(
         maximum: Long
     ): CompatibleDivision {
         val maximumDivisor =
-            maximum / 3L
+            maximum /
+                    3L
 
         val divisor =
             random.nextLong(
                 from = 3L,
-                until = Math.addExact(
-                    maximumDivisor,
-                    1L
-                )
+                until =
+                    Math.addExact(
+                        maximumDivisor,
+                        1L
+                    )
             )
 
         val maximumQuotient =
@@ -265,10 +559,11 @@ class DivisionGenerator(
         val quotient =
             random.nextLong(
                 from = 3L,
-                until = Math.addExact(
-                    maximumQuotient,
-                    1L
-                )
+                until =
+                    Math.addExact(
+                        maximumQuotient,
+                        1L
+                    )
             )
 
         val dividend =
@@ -289,9 +584,6 @@ class DivisionGenerator(
         )
     }
 
-    /**
-     * Handles ranges too small to support the normal 3+ division pool.
-     */
     private fun generateSmallRangeDivision(
         maximum: Long
     ): CompatibleDivision {
@@ -304,13 +596,19 @@ class DivisionGenerator(
         val validPairs =
             mutableListOf<Pair<Long, Long>>()
 
-        for (divisor in 1L..maximum) {
-            for (quotient in 1L..maximum) {
+        for (
+        divisor in 1L..maximum
+        ) {
+            for (
+            quotient in 1L..maximum
+            ) {
                 val dividend =
                     divisor *
                             quotient
 
-                if (dividend <= maximum) {
+                if (
+                    dividend <= maximum
+                ) {
                     validPairs +=
                         divisor to
                                 quotient
@@ -350,45 +648,40 @@ class DivisionGenerator(
     private fun generateDecimalDivision(
         config: PracticeConfig
     ): CompatibleDivision {
-        return if (random.nextBoolean()) {
+        return if (
+            random.nextBoolean()
+        ) {
             generateDecimalDivisorQuestion(
-                config
+                config = config
             )
         } else {
             generateDecimalQuotientQuestion(
-                config
+                config = config
             )
         }
     }
 
-    /**
-     * Example:
-     *
-     * 4.8 ÷ 1.2 = 4
-     *
-     * The divisor may contain one decimal place.
-     * The quotient is whole.
-     */
     private fun generateDecimalDivisorQuestion(
         config: PracticeConfig
     ): CompatibleDivision {
         val scale =
             GeneratorSupport.scaleFor(
-                config
+                config = config
             )
 
         val maximumUnits =
             GeneratorSupport.maximumUnits(
-                config
+                config = config
             )
 
         val divisorUnits =
             random.nextLong(
                 from = 1L,
-                until = Math.addExact(
-                    maximumUnits,
-                    1L
-                )
+                until =
+                    Math.addExact(
+                        maximumUnits,
+                        1L
+                    )
             )
 
         val maximumWholeQuotient =
@@ -398,10 +691,11 @@ class DivisionGenerator(
         val quotient =
             random.nextLong(
                 from = 1L,
-                until = Math.addExact(
-                    maximumWholeQuotient,
-                    1L
-                )
+                until =
+                    Math.addExact(
+                        maximumWholeQuotient,
+                        1L
+                    )
             )
 
         val dividendUnits =
@@ -413,50 +707,47 @@ class DivisionGenerator(
         return CompatibleDivision(
             dividend =
                 GeneratorSupport.unitsToBigDecimal(
-                    units = dividendUnits,
-                    scale = scale
+                    units =
+                        dividendUnits,
+                    scale =
+                        scale
                 ),
             divisor =
                 GeneratorSupport.unitsToBigDecimal(
-                    units = divisorUnits,
-                    scale = scale
+                    units =
+                        divisorUnits,
+                    scale =
+                        scale
                 )
         )
     }
 
-    /**
-     * Example:
-     *
-     * 7.5 ÷ 3 = 2.5
-     *
-     * The divisor is whole.
-     * The quotient may contain one decimal place.
-     */
     private fun generateDecimalQuotientQuestion(
         config: PracticeConfig
     ): CompatibleDivision {
         val scale =
             GeneratorSupport.scaleFor(
-                config
+                config = config
             )
 
-        val maximumWholeNumber =
-            GeneratorSupport.maximumWholeNumber(
-                config
+        val maximumOperand =
+            GeneratorSupport.maximumOperand(
+                config = config
             )
 
         val maximumUnits =
             GeneratorSupport.maximumUnits(
-                config
+                config = config
             )
 
         val divisor =
             random.nextLong(
                 from = 1L,
-                until = Math.addExact(
-                    maximumWholeNumber,
-                    1L
-                )
+                until =
+                    Math.addExact(
+                        maximumOperand,
+                        1L
+                    )
             )
 
         val maximumQuotientUnits =
@@ -466,10 +757,11 @@ class DivisionGenerator(
         val quotientUnits =
             random.nextLong(
                 from = 1L,
-                until = Math.addExact(
-                    maximumQuotientUnits,
-                    1L
-                )
+                until =
+                    Math.addExact(
+                        maximumQuotientUnits,
+                        1L
+                    )
             )
 
         val dividendUnits =
@@ -481,8 +773,10 @@ class DivisionGenerator(
         return CompatibleDivision(
             dividend =
                 GeneratorSupport.unitsToBigDecimal(
-                    units = dividendUnits,
-                    scale = scale
+                    units =
+                        dividendUnits,
+                    scale =
+                        scale
                 ),
             divisor =
                 BigDecimal.valueOf(
@@ -494,32 +788,57 @@ class DivisionGenerator(
     private fun applyNegativeRules(
         dividend: BigDecimal,
         divisor: BigDecimal,
-        allowNegatives: Boolean
+        allowNegatives: Boolean,
+        focusPosition: FocusPosition?
     ): Pair<BigDecimal, BigDecimal> {
-        if (!allowNegatives) {
-            return dividend to divisor
+        if (
+            !allowNegatives
+        ) {
+            return dividend to
+                    divisor
         }
 
         val signedDividend =
-            GeneratorSupport.applyOptionalNegative(
-                value = dividend,
-                allowNegatives = true,
-                random = random
-            )
+            if (
+                focusPosition ==
+                FocusPosition.Dividend
+            ) {
+                dividend
+            } else {
+                GeneratorSupport.applyOptionalNegative(
+                    value = dividend,
+                    allowNegatives = true,
+                    random = random
+                )
+            }
 
         val signedDivisor =
-            GeneratorSupport.applyOptionalNegative(
-                value = divisor,
-                allowNegatives = true,
-                random = random
-            )
+            if (
+                focusPosition ==
+                FocusPosition.Divisor
+            ) {
+                divisor
+            } else {
+                GeneratorSupport.applyOptionalNegative(
+                    value = divisor,
+                    allowNegatives = true,
+                    random = random
+                )
+            }
 
         return signedDividend to
                 signedDivisor
     }
 
+    private enum class FocusPosition {
+        Dividend,
+        Divisor
+    }
+
     private data class CompatibleDivision(
         val dividend: BigDecimal,
-        val divisor: BigDecimal
+        val divisor: BigDecimal,
+        val focusPosition: FocusPosition? =
+            null
     )
 }

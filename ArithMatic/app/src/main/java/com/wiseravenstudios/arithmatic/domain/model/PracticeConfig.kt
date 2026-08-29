@@ -4,40 +4,80 @@ data class PracticeConfig(
     val enabledOperations: Set<ArithmeticOperation>,
     val allowNegatives: Boolean,
     val allowDecimals: Boolean,
-    val wholeNumberDigits: Int,
-    val questionCount: Int
+    val maximumOperand: Int,
+    val questionCount: Int,
+    val focusNumber: Int? = null
 ) {
     init {
-        require(enabledOperations.isNotEmpty()) {
+        require(
+            enabledOperations.isNotEmpty()
+        ) {
             "At least one arithmetic operation must be enabled."
         }
 
-        require(wholeNumberDigits in MIN_WHOLE_NUMBER_DIGITS..MAX_WHOLE_NUMBER_DIGITS) {
-            "Whole-number digit count must be between " +
-                    "$MIN_WHOLE_NUMBER_DIGITS and $MAX_WHOLE_NUMBER_DIGITS."
+        require(
+            maximumOperand in
+                    MIN_MAXIMUM_OPERAND..
+                    MAX_MAXIMUM_OPERAND
+        ) {
+            "Maximum operand must be between " +
+                    "$MIN_MAXIMUM_OPERAND and " +
+                    "$MAX_MAXIMUM_OPERAND."
         }
 
-        require(questionCount in MIN_QUESTION_COUNT..MAX_QUESTION_COUNT) {
+        require(
+            questionCount in
+                    MIN_QUESTION_COUNT..
+                    MAX_QUESTION_COUNT
+        ) {
             "Question count must be between " +
-                    "$MIN_QUESTION_COUNT and $MAX_QUESTION_COUNT."
+                    "$MIN_QUESTION_COUNT and " +
+                    "$MAX_QUESTION_COUNT."
+        }
+
+        require(
+            focusNumber == null ||
+                    focusNumber in
+                    MIN_FOCUS_NUMBER..
+                    maximumOperand
+        ) {
+            "Focus number must be between " +
+                    "$MIN_FOCUS_NUMBER and the maximum operand."
         }
     }
 
     companion object {
-        const val MIN_WHOLE_NUMBER_DIGITS = 1
-        const val MAX_WHOLE_NUMBER_DIGITS = 6
+        const val MIN_MAXIMUM_OPERAND =
+            1
 
-        const val MIN_QUESTION_COUNT = 1
-        const val MAX_QUESTION_COUNT = 100
+        const val MAX_MAXIMUM_OPERAND =
+            999_999
 
-        val Default = PracticeConfig(
-            enabledOperations = setOf(
-                ArithmeticOperation.Addition
-            ),
-            allowNegatives = false,
-            allowDecimals = false,
-            wholeNumberDigits = 1,
-            questionCount = 3
-        )
+        const val MIN_FOCUS_NUMBER =
+            0
+
+        const val MIN_QUESTION_COUNT =
+            1
+
+        const val MAX_QUESTION_COUNT =
+            100
+
+        val Default =
+            PracticeConfig(
+                enabledOperations =
+                    setOf(
+                        ArithmeticOperation.Addition
+                    ),
+                allowNegatives =
+                    false,
+                allowDecimals =
+                    false,
+                maximumOperand =
+                    9,
+                questionCount =
+                    3,
+                focusNumber =
+                    null
+            )
     }
 }

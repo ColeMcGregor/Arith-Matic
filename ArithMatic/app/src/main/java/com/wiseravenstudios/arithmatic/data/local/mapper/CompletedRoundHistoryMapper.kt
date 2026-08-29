@@ -18,32 +18,47 @@ object CompletedRoundHistoryMapper {
     fun toHistory(
         completedRound: CompletedRoundWithAttempts
     ): CompletedRoundHistory {
-        val round = completedRound.round
+        val round =
+            completedRound.round
 
         return CompletedRoundHistory(
-            id = round.id,
+            id =
+                round.id,
+
             completedAtEpochMillis =
                 round.completedAtEpochMillis,
+
             activeRoundDurationMillis =
                 round.activeRoundDurationMillis,
+
             enabledOperations =
                 parseEnabledOperations(
                     round.enabledOperations
                 ),
+
             allowNegatives =
                 round.allowNegatives,
+
             allowDecimals =
                 round.allowDecimals,
-            wholeNumberDigits =
-                round.wholeNumberDigits,
+
+            maximumOperand =
+                round.maximumOperand,
+
+            focusNumber =
+                round.focusNumber,
+
             questionCount =
                 round.questionCount,
+
             attempts =
                 completedRound.attempts
                     .sortedBy { attempt ->
                         attempt.questionIndex
                     }
-                    .map(::toAttempt)
+                    .map(
+                        ::toAttempt
+                    )
         )
     }
 
@@ -51,7 +66,8 @@ object CompletedRoundHistoryMapper {
      * Converts multiple completed rounds.
      */
     fun toHistoryList(
-        completedRounds: List<CompletedRoundWithAttempts>
+        completedRounds:
+        List<CompletedRoundWithAttempts>
     ): List<CompletedRoundHistory> {
         return completedRounds.map(
             ::toHistory
@@ -67,21 +83,29 @@ object CompletedRoundHistoryMapper {
         return CompletedRoundHistory.Attempt(
             questionIndex =
                 attempt.questionIndex,
+
             operation =
                 attempt.operation?.let {
-                    ArithmeticOperation.valueOf(it)
+                    ArithmeticOperation.valueOf(
+                        it
+                    )
                 },
+
             operands =
                 parseOperands(
                     storedOperands =
                         attempt.operands
                 ),
+
             questionText =
                 attempt.questionText,
+
             expectedAnswer =
                 attempt.expectedAnswer,
+
             selectedAnswer =
                 attempt.selectedAnswer,
+
             answerChoices =
                 listOf(
                     attempt.answerChoice0,
@@ -89,59 +113,60 @@ object CompletedRoundHistoryMapper {
                     attempt.answerChoice2,
                     attempt.answerChoice3
                 ),
+
             selectedChoiceIndex =
                 attempt.selectedChoiceIndex,
+
             correctChoiceIndex =
                 attempt.correctChoiceIndex,
+
             isCorrect =
                 attempt.isCorrect,
+
             activeDurationMillis =
                 attempt.activeDurationMillis
         )
     }
 
-    /**
-     * Parses the stored comma-separated operation list into enum values.
-     *
-     * Example:
-     *
-     * "Addition,Subtraction,Division"
-     */
     private fun parseEnabledOperations(
         storedOperations: String
     ): Set<ArithmeticOperation> {
         return storedOperations
             .split(",")
-            .map(String::trim)
-            .filter(String::isNotBlank)
-            .map(ArithmeticOperation::valueOf)
+            .map(
+                String::trim
+            )
+            .filter(
+                String::isNotBlank
+            )
+            .map(
+                ArithmeticOperation::valueOf
+            )
             .toSet()
     }
 
-    /**
-     * Parses the pipe-delimited operand values stored with an attempt.
-     *
-     * Examples:
-     *
-     * "12|7"
-     *
-     * "-3.5|8"
-     *
-     * An empty stored value represents historical data created before
-     * structured operands were persisted.
-     */
     private fun parseOperands(
         storedOperands: String
     ): List<BigDecimal> {
-        if (storedOperands.isBlank()) {
+        if (
+            storedOperands.isBlank()
+        ) {
             return emptyList()
         }
 
         return storedOperands
-            .split(OPERAND_SEPARATOR)
-            .map(String::trim)
-            .filter(String::isNotBlank)
-            .map(::BigDecimal)
+            .split(
+                OPERAND_SEPARATOR
+            )
+            .map(
+                String::trim
+            )
+            .filter(
+                String::isNotBlank
+            )
+            .map(
+                ::BigDecimal
+            )
     }
 
     private const val OPERAND_SEPARATOR =

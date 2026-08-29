@@ -262,9 +262,7 @@ private fun SingleColumnStartActions(
                     metrics.tallActionTopSpacing
             ),
         verticalArrangement =
-            Arrangement.spacedBy(
-                metrics.actionGroupSpacing
-            ),
+            Arrangement.SpaceEvenly,
         horizontalAlignment =
             Alignment.CenterHorizontally
     ) {

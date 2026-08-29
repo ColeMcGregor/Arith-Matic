@@ -1,8 +1,8 @@
 package com.wiseravenstudios.arithmatic.ui.common
 
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 fun calculateRoundSettingsBoardMetrics(
     width: Dp,
@@ -11,8 +11,10 @@ fun calculateRoundSettingsBoardMetrics(
 
     val environment =
         createBoardEnvironment(
-            width = width,
-            height = height,
+            width =
+                width,
+            height =
+                height,
             minimumReferenceWidth =
                 SETTINGS_MINIMUM_REFERENCE_WIDTH_DP,
             maximumReferenceWidth =
@@ -23,144 +25,12 @@ fun calculateRoundSettingsBoardMetrics(
                 SETTINGS_MAXIMUM_REFERENCE_HEIGHT_DP
         )
 
-    val widthScale =
-        environment.widthScale
-
-    val heightScale =
-        environment.heightScale
-
-    val typographyScale =
-        environment.typographyScale
-
-    /*
-     * ============================================================
-     * LAYOUT
-     * ============================================================
-     *
-     * NarrowTall:
-     * Single-column layout.
-     *
-     * Balanced:
-     * Single-column layout.
-     *
-     * Wide:
-     * Double-column layout.
-     */
-    val layoutMode =
-        when (environment.shape) {
-            BoardShape.NarrowTall ->
-                BoardLayoutMode.SingleColumn
-
-            BoardShape.Balanced ->
-                BoardLayoutMode.SingleColumn
-
-            BoardShape.Wide ->
-                BoardLayoutMode.DoubleColumn
-        }
-
-    val isDoubleColumn =
-        layoutMode ==
-                BoardLayoutMode.DoubleColumn
-
-    val typographyMultiplier =
-        if (isDoubleColumn) {
-            SETTINGS_DOUBLE_COLUMN_TYPOGRAPHY_SCALE
-        } else {
-            1f
-        }
-
-    /*
-     * ============================================================
-     * TYPOGRAPHY
-     * ============================================================
-     */
-
-    val problemTextSize =
-        settingsProblemTextSize(
-            sizeBand =
-                environment.sizeBand,
-            scale =
-                typographyScale,
-            multiplier =
-                typographyMultiplier
-        )
-
-    val displayTextSize =
-        settingsDisplayTextSize(
-            sizeBand =
-                environment.sizeBand,
-            scale =
-                typographyScale,
-            multiplier =
-                typographyMultiplier
-        )
-
-    val primaryActionTextSize =
-        settingsPrimaryActionTextSize(
-            sizeBand =
-                environment.sizeBand,
-            scale =
-                typographyScale,
-            multiplier =
-                typographyMultiplier
-        )
-
-    val headingTextSize =
-        settingsHeadingTextSize(
-            sizeBand =
-                environment.sizeBand,
-            scale =
-                typographyScale,
-            multiplier =
-                typographyMultiplier
-        )
-
-    val bodyTextSize =
-        settingsBodyTextSize(
-            sizeBand =
-                environment.sizeBand,
-            scale =
-                typographyScale,
-            multiplier =
-                typographyMultiplier
-        )
-
-    val compactTextSize =
-        settingsCompactTextSize(
-            sizeBand =
-                environment.sizeBand,
-            scale =
-                typographyScale,
-            multiplier =
-                typographyMultiplier
-        )
-
-    val microTextSize =
-        settingsMicroTextSize(
-            sizeBand =
-                environment.sizeBand,
-            scale =
-                typographyScale,
-            multiplier =
-                typographyMultiplier
-        )
-
-    /*
-     * ============================================================
-     * GENERAL SPACING
-     * ============================================================
-     *
-     * Round Settings is dense.
-     *
-     * Small devices intentionally use much tighter spacing.
-     */
-
     val tinySpacing =
         bandResponsiveDp(
             sizeBand =
                 environment.sizeBand,
             scale =
-                heightScale,
+                environment.heightScale,
 
             smallMinimum = 0f,
             smallMaximum = 2f,
@@ -177,7 +47,7 @@ fun calculateRoundSettingsBoardMetrics(
             sizeBand =
                 environment.sizeBand,
             scale =
-                heightScale,
+                environment.heightScale,
 
             smallMinimum = 1f,
             smallMaximum = 4f,
@@ -194,7 +64,7 @@ fun calculateRoundSettingsBoardMetrics(
             sizeBand =
                 environment.sizeBand,
             scale =
-                heightScale,
+                environment.heightScale,
 
             smallMinimum = 2f,
             smallMaximum = 7f,
@@ -211,7 +81,7 @@ fun calculateRoundSettingsBoardMetrics(
             sizeBand =
                 environment.sizeBand,
             scale =
-                heightScale,
+                environment.heightScale,
 
             smallMinimum = 4f,
             smallMaximum = 12f,
@@ -228,7 +98,7 @@ fun calculateRoundSettingsBoardMetrics(
             sizeBand =
                 environment.sizeBand,
             scale =
-                heightScale,
+                environment.heightScale,
 
             smallMinimum = 8f,
             smallMaximum = 20f,
@@ -240,18 +110,12 @@ fun calculateRoundSettingsBoardMetrics(
             largeMaximum = 48f
         )
 
-    /*
-     * ============================================================
-     * PADDING
-     * ============================================================
-     */
-
     val actionHorizontalPadding =
         bandResponsiveDp(
             sizeBand =
                 environment.sizeBand,
             scale =
-                widthScale,
+                environment.widthScale,
 
             smallMinimum = 1f,
             smallMaximum = 5f,
@@ -268,7 +132,7 @@ fun calculateRoundSettingsBoardMetrics(
             sizeBand =
                 environment.sizeBand,
             scale =
-                heightScale,
+                environment.heightScale,
 
             smallMinimum = 0f,
             smallMaximum = 3f,
@@ -285,7 +149,7 @@ fun calculateRoundSettingsBoardMetrics(
             sizeBand =
                 environment.sizeBand,
             scale =
-                widthScale,
+                environment.widthScale,
 
             smallMinimum = 1f,
             smallMaximum = 5f,
@@ -302,7 +166,7 @@ fun calculateRoundSettingsBoardMetrics(
             sizeBand =
                 environment.sizeBand,
             scale =
-                heightScale,
+                environment.heightScale,
 
             smallMinimum = 0f,
             smallMaximum = 3f,
@@ -314,66 +178,104 @@ fun calculateRoundSettingsBoardMetrics(
             largeMaximum = 10f
         )
 
-    /*
-     * ============================================================
-     * ROUND SETTINGS-SPECIFIC SPACING
-     * ============================================================
-     */
-
-    val titleTopSpacing =
-        when (environment.sizeBand) {
-            BoardSizeBand.Small ->
-                tinySpacing
-
-            BoardSizeBand.Medium ->
-                smallSpacing
-
-            BoardSizeBand.Large ->
-                mediumSpacing
-        }
-
-    val titleToActionsSpacing =
-        when (environment.sizeBand) {
-            BoardSizeBand.Small ->
-                smallSpacing
-
-            BoardSizeBand.Medium ->
-                mediumSpacing
-
-            BoardSizeBand.Large ->
-                largeSpacing
-        }
-
-    val actionGroupSpacing =
-        when (environment.sizeBand) {
-            BoardSizeBand.Small ->
-                tinySpacing
-
-            BoardSizeBand.Medium ->
-                smallSpacing
-
-            BoardSizeBand.Large ->
-                mediumSpacing
-        }
-
-    val singleColumnActionTopSpacing =
-        when (environment.sizeBand) {
-            BoardSizeBand.Small ->
-                smallSpacing
-
-            BoardSizeBand.Medium ->
-                mediumSpacing
-
-            BoardSizeBand.Large ->
-                largeSpacing
-        }
-
     val minimumTouchTarget =
-        SETTINGS_MINIMUM_TOUCH_TARGET_DP.dp
+        when (environment.sizeBand) {
+            BoardSizeBand.Small ->
+                SETTINGS_SMALL_MINIMUM_TOUCH_TARGET_DP.dp
+
+            BoardSizeBand.Medium ->
+                SETTINGS_MEDIUM_MINIMUM_TOUCH_TARGET_DP.dp
+
+            BoardSizeBand.Large ->
+                SETTINGS_LARGE_MINIMUM_TOUCH_TARGET_DP.dp
+        }
+
+    val singleColumnBaseScale =
+        calculateBasicSettingsBaseScale(
+            width =
+                width,
+            height =
+                height,
+            layoutMode =
+                BoardLayoutMode.SingleColumn,
+            contentHorizontalPadding =
+                contentHorizontalPadding,
+            contentVerticalPadding =
+                contentVerticalPadding,
+            tinySpacing =
+                tinySpacing,
+            mediumSpacing =
+                mediumSpacing,
+            largeSpacing =
+                largeSpacing,
+            actionHorizontalPadding =
+                actionHorizontalPadding,
+            minimumTouchTarget =
+                minimumTouchTarget
+        )
+
+    val doubleColumnBaseScale =
+        if (
+            environment.shape ==
+            BoardShape.NarrowTall
+        ) {
+            0f
+        } else {
+            calculateBasicSettingsBaseScale(
+                width =
+                    width,
+                height =
+                    height,
+                layoutMode =
+                    BoardLayoutMode.DoubleColumn,
+                contentHorizontalPadding =
+                    contentHorizontalPadding,
+                contentVerticalPadding =
+                    contentVerticalPadding,
+                tinySpacing =
+                    tinySpacing,
+                mediumSpacing =
+                    mediumSpacing,
+                largeSpacing =
+                    largeSpacing,
+                actionHorizontalPadding =
+                    actionHorizontalPadding,
+                minimumTouchTarget =
+                    minimumTouchTarget
+            )
+        }
+
+    val layoutMode =
+        if (
+            environment.shape ==
+            BoardShape.NarrowTall
+        ) {
+            BoardLayoutMode.SingleColumn
+        } else if (
+            doubleColumnBaseScale >
+            singleColumnBaseScale *
+            SETTINGS_DOUBLE_COLUMN_SELECTION_ADVANTAGE
+        ) {
+            BoardLayoutMode.DoubleColumn
+        } else {
+            BoardLayoutMode.SingleColumn
+        }
+
+    val baseScale =
+        if (
+            layoutMode ==
+            BoardLayoutMode.DoubleColumn
+        ) {
+            doubleColumnBaseScale
+        } else {
+            singleColumnBaseScale
+        }
 
     return BoardResponsiveMetrics(
-        width = width,
-        height = height,
+        width =
+            width,
+        height =
+            height,
         aspectRatio =
             environment.aspectRatio,
 
@@ -385,21 +287,52 @@ fun calculateRoundSettingsBoardMetrics(
             layoutMode,
 
         problemTextSize =
-            problemTextSize,
+            (
+                    baseScale *
+                            SETTINGS_PROBLEM_TEXT_RATIO
+                    ).sp,
+
         displayTextSize =
-            displayTextSize,
+            (
+                    baseScale *
+                            SETTINGS_DISPLAY_TEXT_RATIO
+                    ).sp,
+
         primaryActionTextSize =
-            primaryActionTextSize,
+            (
+                    baseScale *
+                            SETTINGS_PRIMARY_ACTION_TEXT_RATIO
+                    ).sp,
+
         widePrimaryActionTextSize =
-            primaryActionTextSize,
+            (
+                    baseScale *
+                            SETTINGS_PRIMARY_ACTION_TEXT_RATIO
+                    ).sp,
+
         headingTextSize =
-            headingTextSize,
+            (
+                    baseScale *
+                            SETTINGS_HEADING_TEXT_RATIO
+                    ).sp,
+
         bodyTextSize =
-            bodyTextSize,
+            (
+                    baseScale *
+                            SETTINGS_BODY_TEXT_RATIO
+                    ).sp,
+
         compactTextSize =
-            compactTextSize,
+            (
+                    baseScale *
+                            SETTINGS_COMPACT_TEXT_RATIO
+                    ).sp,
+
         microTextSize =
-            microTextSize,
+            (
+                    baseScale *
+                            SETTINGS_MICRO_TEXT_RATIO
+                    ).sp,
 
         tinySpacing =
             tinySpacing,
@@ -413,13 +346,13 @@ fun calculateRoundSettingsBoardMetrics(
             extraLargeSpacing,
 
         titleTopSpacing =
-            titleTopSpacing,
+            tinySpacing,
         titleToActionsSpacing =
-            titleToActionsSpacing,
+            smallSpacing,
         actionGroupSpacing =
-            actionGroupSpacing,
+            smallSpacing,
         tallActionTopSpacing =
-            singleColumnActionTopSpacing,
+            smallSpacing,
 
         actionHorizontalPadding =
             actionHorizontalPadding,
@@ -443,241 +376,300 @@ fun calculateRoundSettingsBoardMetrics(
     )
 }
 
-/*
- * ============================================================
- * ROUND SETTINGS TEXT RANGES
- * ============================================================
- */
+private fun calculateBasicSettingsBaseScale(
+    width: Dp,
+    height: Dp,
+    layoutMode: BoardLayoutMode,
+    contentHorizontalPadding: Dp,
+    contentVerticalPadding: Dp,
+    tinySpacing: Dp,
+    mediumSpacing: Dp,
+    largeSpacing: Dp,
+    actionHorizontalPadding: Dp,
+    minimumTouchTarget: Dp
+): Float {
 
-private fun settingsProblemTextSize(
-    sizeBand: BoardSizeBand,
-    scale: Float,
-    multiplier: Float = 1f
-): TextUnit {
-    return when (sizeBand) {
-        BoardSizeBand.Small ->
-            responsiveSp(
-                scale = scale,
-                minimum = 22f,
-                maximum = 30f,
-                multiplier = multiplier
+    val contentWidth =
+        (
+                width.value -
+                        contentHorizontalPadding.value * 2f
+                )
+            .coerceAtLeast(
+                1f
             )
 
-        BoardSizeBand.Medium ->
-            responsiveSp(
-                scale = scale,
-                minimum = 28f,
-                maximum = 40f,
-                multiplier = multiplier
+    val contentHeight =
+        (
+                height.value -
+                        contentVerticalPadding.value * 2f
+                )
+            .coerceAtLeast(
+                1f
             )
 
-        BoardSizeBand.Large ->
-            responsiveSp(
-                scale = scale,
-                minimum = 38f,
-                maximum = 54f,
-                multiplier = multiplier
+    val touchTarget =
+        minimumTouchTarget.value
+
+    return calculateLargestFittingBaseScale(
+        maximumCandidate =
+            maxOf(
+                width.value,
+                height.value
             )
+    ) { baseScale ->
+
+        val displayHeight =
+            baseScale *
+                    SETTINGS_DISPLAY_TEXT_RATIO *
+                    SETTINGS_CHALKTASTIC_LINE_HEIGHT_FACTOR
+
+        val primaryHeight =
+            baseScale *
+                    SETTINGS_PRIMARY_ACTION_TEXT_RATIO *
+                    SETTINGS_CHALKTASTIC_LINE_HEIGHT_FACTOR
+
+        val headingHeight =
+            baseScale *
+                    SETTINGS_HEADING_TEXT_RATIO *
+                    SETTINGS_CHALKTASTIC_LINE_HEIGHT_FACTOR
+
+        val bodyHeight =
+            baseScale *
+                    SETTINGS_BODY_TEXT_RATIO *
+                    SETTINGS_CHALKTASTIC_LINE_HEIGHT_FACTOR
+
+        val compactHeight =
+            baseScale *
+                    SETTINGS_COMPACT_TEXT_RATIO *
+                    SETTINGS_CHALKTASTIC_LINE_HEIGHT_FACTOR
+
+        val titleWidth =
+            baseScale *
+                    SETTINGS_DISPLAY_TEXT_RATIO *
+                    SETTINGS_TITLE_WIDTH_EM
+
+        val operationsLabelWidth =
+            baseScale *
+                    SETTINGS_HEADING_TEXT_RATIO *
+                    SETTINGS_OPERATIONS_WIDTH_EM
+
+        val questionsLabelWidth =
+            baseScale *
+                    SETTINGS_BODY_TEXT_RATIO *
+                    SETTINGS_QUESTIONS_WIDTH_EM
+
+        val biggestNumberLabelWidth =
+            baseScale *
+                    SETTINGS_BODY_TEXT_RATIO *
+                    SETTINGS_BIGGEST_NUMBER_WIDTH_EM
+
+        val maximumOperandWidth =
+            baseScale *
+                    SETTINGS_HEADING_TEXT_RATIO *
+                    SETTINGS_MAXIMUM_OPERAND_WIDTH_EM
+
+        val tabHeight =
+            maxOf(
+                touchTarget,
+                bodyHeight +
+                        tinySpacing.value * 2f
+            )
+
+        val headingActionHeight =
+            maxOf(
+                touchTarget,
+                headingHeight +
+                        tinySpacing.value * 2f
+            )
+
+        val primaryActionHeight =
+            maxOf(
+                touchTarget,
+                primaryHeight +
+                        tinySpacing.value * 2f
+            )
+
+        val bodyActionHeight =
+            maxOf(
+                touchTarget,
+                bodyHeight +
+                        tinySpacing.value * 2f
+            )
+
+        val compactActionHeight =
+            maxOf(
+                touchTarget,
+                compactHeight
+            )
+
+        val headingActionWidth =
+            maxOf(
+                touchTarget,
+                baseScale *
+                        SETTINGS_HEADING_TEXT_RATIO *
+                        SETTINGS_CONTROL_SYMBOL_WIDTH_EM +
+                        actionHorizontalPadding.value * 2f
+            )
+
+        val primaryActionWidth =
+            maxOf(
+                touchTarget,
+                baseScale *
+                        SETTINGS_PRIMARY_ACTION_TEXT_RATIO *
+                        SETTINGS_CONTROL_SYMBOL_WIDTH_EM +
+                        actionHorizontalPadding.value * 2f
+            )
+
+        val operationRowWidth =
+            primaryActionWidth *
+                    SETTINGS_OPERATION_COUNT +
+                    tinySpacing.value *
+                    (
+                            SETTINGS_OPERATION_COUNT -
+                                    1
+                            )
+
+        val operationWidth =
+            maxOf(
+                operationsLabelWidth,
+                operationRowWidth
+            )
+
+        val questionValueWidth =
+            baseScale *
+                    SETTINGS_HEADING_TEXT_RATIO *
+                    SETTINGS_MAXIMUM_QUESTION_VALUE_WIDTH_EM
+
+        val questionControlWidth =
+            headingActionWidth * 2f +
+                    questionValueWidth +
+                    mediumSpacing.value * 2f
+
+        val questionWidth =
+            maxOf(
+                questionsLabelWidth,
+                questionControlWidth
+            )
+
+        val maximumControlWidth =
+            headingActionWidth * 2f +
+                    maximumOperandWidth +
+                    mediumSpacing.value * 2f
+
+        val quickStepTextWidth =
+            baseScale *
+                    SETTINGS_COMPACT_TEXT_RATIO *
+                    SETTINGS_LARGEST_QUICK_STEP_WIDTH_EM
+
+        val quickStepActionWidth =
+            maxOf(
+                touchTarget,
+                quickStepTextWidth +
+                        tinySpacing.value * 2f
+            )
+
+        val quickStepRowWidth =
+            quickStepActionWidth *
+                    SETTINGS_QUICK_STEP_COUNT +
+                    tinySpacing.value *
+                    (
+                            SETTINGS_QUICK_STEP_COUNT -
+                                    1
+                            )
+
+        val biggestNumberWidth =
+            maxOf(
+                biggestNumberLabelWidth,
+                maximumControlWidth,
+                quickStepRowWidth
+            )
+
+        val footerActionWidth =
+            maxOf(
+                touchTarget,
+                baseScale *
+                        SETTINGS_BODY_TEXT_RATIO *
+                        SETTINGS_RESET_WIDTH_EM +
+                        actionHorizontalPadding.value * 2f
+            )
+
+        val footerWidth =
+            footerActionWidth *
+                    SETTINGS_FOOTER_ACTION_COUNT
+
+        val operationHeight =
+            headingHeight +
+                    primaryActionHeight
+
+        val questionHeight =
+            bodyHeight +
+                    headingActionHeight
+
+        val biggestNumberHeight =
+            bodyHeight +
+                    headingActionHeight +
+                    compactActionHeight +
+                    tinySpacing.value * 2f
+
+        val footerHeight =
+            bodyActionHeight
+
+        val shellHeight =
+            displayHeight +
+                    tabHeight +
+                    footerHeight
+
+        val contentFits =
+            when (layoutMode) {
+
+                BoardLayoutMode.SingleColumn -> {
+
+                    val requiredContentHeight =
+                        operationHeight +
+                                questionHeight +
+                                biggestNumberHeight
+
+                    operationWidth <=
+                            contentWidth &&
+                            questionWidth <=
+                            contentWidth &&
+                            biggestNumberWidth <=
+                            contentWidth &&
+                            shellHeight +
+                            requiredContentHeight <=
+                            contentHeight
+                }
+
+                BoardLayoutMode.DoubleColumn -> {
+
+                    val requiredContentWidth =
+                        operationWidth +
+                                questionWidth +
+                                biggestNumberWidth +
+                                largeSpacing.value * 2f
+
+                    val requiredContentHeight =
+                        maxOf(
+                            operationHeight,
+                            questionHeight,
+                            biggestNumberHeight
+                        )
+
+                    requiredContentWidth <=
+                            contentWidth &&
+                            shellHeight +
+                            requiredContentHeight <=
+                            contentHeight
+                }
+            }
+
+        titleWidth <=
+                contentWidth &&
+                footerWidth <=
+                contentWidth &&
+                contentFits
     }
 }
-
-private fun settingsDisplayTextSize(
-    sizeBand: BoardSizeBand,
-    scale: Float,
-    multiplier: Float = 1f
-): TextUnit {
-    return when (sizeBand) {
-        BoardSizeBand.Small ->
-            responsiveSp(
-                scale = scale,
-                minimum = 18f,
-                maximum = 26f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Medium ->
-            responsiveSp(
-                scale = scale,
-                minimum = 25f,
-                maximum = 36f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Large ->
-            responsiveSp(
-                scale = scale,
-                minimum = 34f,
-                maximum = 54f,
-                multiplier = multiplier
-            )
-    }
-}
-
-private fun settingsPrimaryActionTextSize(
-    sizeBand: BoardSizeBand,
-    scale: Float,
-    multiplier: Float = 1f
-): TextUnit {
-    return when (sizeBand) {
-        BoardSizeBand.Small ->
-            responsiveSp(
-                scale = scale,
-                minimum = 17f,
-                maximum = 24f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Medium ->
-            responsiveSp(
-                scale = scale,
-                minimum = 23f,
-                maximum = 32f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Large ->
-            responsiveSp(
-                scale = scale,
-                minimum = 30f,
-                maximum = 42f,
-                multiplier = multiplier
-            )
-    }
-}
-
-private fun settingsHeadingTextSize(
-    sizeBand: BoardSizeBand,
-    scale: Float,
-    multiplier: Float = 1f
-): TextUnit {
-    return when (sizeBand) {
-        BoardSizeBand.Small ->
-            responsiveSp(
-                scale = scale,
-                minimum = 12f,
-                maximum = 17f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Medium ->
-            responsiveSp(
-                scale = scale,
-                minimum = 16f,
-                maximum = 23f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Large ->
-            responsiveSp(
-                scale = scale,
-                minimum = 22f,
-                maximum = 32f,
-                multiplier = multiplier
-            )
-    }
-}
-
-private fun settingsBodyTextSize(
-    sizeBand: BoardSizeBand,
-    scale: Float,
-    multiplier: Float = 1f
-): TextUnit {
-    return when (sizeBand) {
-        BoardSizeBand.Small ->
-            responsiveSp(
-                scale = scale,
-                minimum = 10f,
-                maximum = 14f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Medium ->
-            responsiveSp(
-                scale = scale,
-                minimum = 14f,
-                maximum = 19f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Large ->
-            responsiveSp(
-                scale = scale,
-                minimum = 18f,
-                maximum = 26f,
-                multiplier = multiplier
-            )
-    }
-}
-
-private fun settingsCompactTextSize(
-    sizeBand: BoardSizeBand,
-    scale: Float,
-    multiplier: Float = 1f
-): TextUnit {
-    return when (sizeBand) {
-        BoardSizeBand.Small ->
-            responsiveSp(
-                scale = scale,
-                minimum = 8f,
-                maximum = 12f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Medium ->
-            responsiveSp(
-                scale = scale,
-                minimum = 12f,
-                maximum = 17f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Large ->
-            responsiveSp(
-                scale = scale,
-                minimum = 16f,
-                maximum = 24f,
-                multiplier = multiplier
-            )
-    }
-}
-
-private fun settingsMicroTextSize(
-    sizeBand: BoardSizeBand,
-    scale: Float,
-    multiplier: Float = 1f
-): TextUnit {
-    return when (sizeBand) {
-        BoardSizeBand.Small ->
-            responsiveSp(
-                scale = scale,
-                minimum = 7f,
-                maximum = 10f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Medium ->
-            responsiveSp(
-                scale = scale,
-                minimum = 10f,
-                maximum = 13f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Large ->
-            responsiveSp(
-                scale = scale,
-                minimum = 13f,
-                maximum = 16f,
-                multiplier = multiplier
-            )
-    }
-}
-
-/*
- * ============================================================
- * ROUND SETTINGS BAND HELPERS
- * ============================================================
- */
 
 private fun bandResponsiveDp(
     sizeBand: BoardSizeBand,
@@ -695,32 +687,35 @@ private fun bandResponsiveDp(
     return when (sizeBand) {
         BoardSizeBand.Small ->
             responsiveDp(
-                scale = scale,
-                minimum = smallMinimum,
-                maximum = smallMaximum
+                scale =
+                    scale,
+                minimum =
+                    smallMinimum,
+                maximum =
+                    smallMaximum
             )
 
         BoardSizeBand.Medium ->
             responsiveDp(
-                scale = scale,
-                minimum = mediumMinimum,
-                maximum = mediumMaximum
+                scale =
+                    scale,
+                minimum =
+                    mediumMinimum,
+                maximum =
+                    mediumMaximum
             )
 
         BoardSizeBand.Large ->
             responsiveDp(
-                scale = scale,
-                minimum = largeMinimum,
-                maximum = largeMaximum
+                scale =
+                    scale,
+                minimum =
+                    largeMinimum,
+                maximum =
+                    largeMaximum
             )
     }
 }
-
-/*
- * ============================================================
- * ROUND SETTINGS REFERENCE RANGE
- * ============================================================
- */
 
 private const val SETTINGS_MINIMUM_REFERENCE_WIDTH_DP =
     180f
@@ -734,14 +729,77 @@ private const val SETTINGS_MINIMUM_REFERENCE_HEIGHT_DP =
 private const val SETTINGS_MAXIMUM_REFERENCE_HEIGHT_DP =
     1200f
 
+private const val SETTINGS_DISPLAY_TEXT_RATIO =
+    1.00f
+
+private const val SETTINGS_PROBLEM_TEXT_RATIO =
+    1.05f
+
+private const val SETTINGS_PRIMARY_ACTION_TEXT_RATIO =
+    0.84f
+
+private const val SETTINGS_HEADING_TEXT_RATIO =
+    0.78f
+
+private const val SETTINGS_BODY_TEXT_RATIO =
+    0.72f
+
+private const val SETTINGS_COMPACT_TEXT_RATIO =
+    0.43f
+
+private const val SETTINGS_MICRO_TEXT_RATIO =
+    0.32f
+
+private const val SETTINGS_TITLE_WIDTH_EM =
+    9.184f
+
+private const val SETTINGS_OPERATIONS_WIDTH_EM =
+    6.950f
+
+private const val SETTINGS_QUESTIONS_WIDTH_EM =
+    6.133f
+
 /*
- * ============================================================
- * ROUND SETTINGS LAYOUT
- * ============================================================
+ * Conservative Chalktastic width estimates for the new controls.
  */
+private const val SETTINGS_BIGGEST_NUMBER_WIDTH_EM =
+    9.2f
 
-private const val SETTINGS_DOUBLE_COLUMN_TYPOGRAPHY_SCALE =
-    0.90f
+private const val SETTINGS_MAXIMUM_OPERAND_WIDTH_EM =
+    4.6f
 
-private const val SETTINGS_MINIMUM_TOUCH_TARGET_DP =
+private const val SETTINGS_LARGEST_QUICK_STEP_WIDTH_EM =
+    5.6f
+
+private const val SETTINGS_RESET_WIDTH_EM =
+    3.458f
+
+private const val SETTINGS_CONTROL_SYMBOL_WIDTH_EM =
+    1.0f
+
+private const val SETTINGS_MAXIMUM_QUESTION_VALUE_WIDTH_EM =
+    1.731f
+
+private const val SETTINGS_CHALKTASTIC_LINE_HEIGHT_FACTOR =
+    1.29f
+
+private const val SETTINGS_OPERATION_COUNT =
+    4
+
+private const val SETTINGS_QUICK_STEP_COUNT =
+    4
+
+private const val SETTINGS_FOOTER_ACTION_COUNT =
+    3
+
+private const val SETTINGS_DOUBLE_COLUMN_SELECTION_ADVANTAGE =
+    1.06f
+
+private const val SETTINGS_SMALL_MINIMUM_TOUCH_TARGET_DP =
+    40f
+
+private const val SETTINGS_MEDIUM_MINIMUM_TOUCH_TARGET_DP =
+    44f
+
+private const val SETTINGS_LARGE_MINIMUM_TOUCH_TARGET_DP =
     48f

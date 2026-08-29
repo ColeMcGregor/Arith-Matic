@@ -43,7 +43,9 @@ object RoundHistoryFilter {
                     )
                 }
 
-            if (matchingAttempts.isEmpty()) {
+            if (
+                matchingAttempts.isEmpty()
+            ) {
                 null
             } else {
                 FilteredRoundHistory(
@@ -68,9 +70,12 @@ object RoundHistoryFilter {
 
         if (
             !matchesEnabledOperations(
-                roundOperations = round.enabledOperations,
-                selectedOperations = criteria.enabledOperations,
-                matchMode = criteria.enabledOperationMatchMode
+                roundOperations =
+                    round.enabledOperations,
+                selectedOperations =
+                    criteria.enabledOperations,
+                matchMode =
+                    criteria.enabledOperationMatchMode
             )
         ) {
             return false
@@ -78,22 +83,32 @@ object RoundHistoryFilter {
 
         if (
             criteria.allowNegatives != null &&
-            round.allowNegatives != criteria.allowNegatives
+            round.allowNegatives !=
+            criteria.allowNegatives
         ) {
             return false
         }
 
         if (
             criteria.allowDecimals != null &&
-            round.allowDecimals != criteria.allowDecimals
+            round.allowDecimals !=
+            criteria.allowDecimals
         ) {
             return false
         }
 
         if (
-            criteria.wholeNumberDigits.isNotEmpty() &&
-            round.wholeNumberDigits !in
-            criteria.wholeNumberDigits
+            criteria.maximumOperands.isNotEmpty() &&
+            round.maximumOperand !in
+            criteria.maximumOperands
+        ) {
+            return false
+        }
+
+        if (
+            criteria.focusNumbers.isNotEmpty() &&
+            round.focusNumber !in
+            criteria.focusNumbers
         ) {
             return false
         }
@@ -107,7 +122,8 @@ object RoundHistoryFilter {
     ): Boolean {
         if (
             criteria.operations.isNotEmpty() &&
-            attempt.operation !in criteria.operations
+            attempt.operation !in
+            criteria.operations
         ) {
             return false
         }
@@ -122,9 +138,12 @@ object RoundHistoryFilter {
 
         if (
             !matchesOperandSelection(
-                operands = attempt.operands,
-                exactOperands = criteria.exactOperands,
-                operandRanges = criteria.operandRanges
+                operands =
+                    attempt.operands,
+                exactOperands =
+                    criteria.exactOperands,
+                operandRanges =
+                    criteria.operandRanges
             )
         ) {
             return false
@@ -176,7 +195,9 @@ object RoundHistoryFilter {
             return true
         }
 
-        if (operands.isEmpty()) {
+        if (
+            operands.isEmpty()
+        ) {
             return false
         }
 
@@ -209,14 +230,19 @@ object RoundHistoryFilter {
         selectedOperations: Set<ArithmeticOperation>,
         matchMode: OperationMatchMode
     ): Boolean {
-        if (selectedOperations.isEmpty()) {
+        if (
+            selectedOperations.isEmpty()
+        ) {
             return true
         }
 
-        return when (matchMode) {
+        return when (
+            matchMode
+        ) {
             OperationMatchMode.Any ->
                 roundOperations.any { operation ->
-                    operation in selectedOperations
+                    operation in
+                            selectedOperations
                 }
 
             OperationMatchMode.All ->

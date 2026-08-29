@@ -26,12 +26,6 @@ class SettingsRepository(
     private val dataStore: DataStore<Preferences>
 ) {
 
-    /**
-     * Continuously observes the complete audio preference snapshot.
-     *
-     * Stored levels are clamped during reading so invalid persisted values
-     * cannot enter the domain model.
-     */
     fun observeAudioSettings(): Flow<AudioSettings> {
         return safePreferencesFlow()
             .map { preferences ->
@@ -102,13 +96,6 @@ class SettingsRepository(
         }
     }
 
-    /**
-     * Observes the most recently confirmed round configuration.
-     *
-     * A null value means no round configuration has been saved yet.
-     * The Round Settings workflow should use [PracticeConfig.Default] in that
-     * case.
-     */
     fun observeLastPracticeConfig():
             Flow<PracticeConfig?> {
         return safePreferencesFlow()
@@ -119,12 +106,6 @@ class SettingsRepository(
             }
     }
 
-    /**
-     * Stores the complete configuration used to begin a round.
-     *
-     * This should be called when the user presses Start rather than after
-     * every intermediate setting change.
-     */
     suspend fun saveLastPracticeConfig(
         config: PracticeConfig
     ) {
@@ -144,20 +125,29 @@ class SettingsRepository(
             preferences[Keys.AllowDecimals] =
                 config.allowDecimals
 
-            preferences[Keys.WholeNumberDigits] =
-                config.wholeNumberDigits
+            preferences[Keys.MaximumOperand] =
+                config.maximumOperand
 
             preferences[Keys.QuestionCount] =
                 config.questionCount
+
+            if (
+                config.focusNumber == null
+            ) {
+                preferences.remove(
+                    Keys.FocusNumber
+                )
+            } else {
+                preferences[Keys.FocusNumber] =
+                    config.focusNumber
+            }
+
+            preferences.remove(
+                Keys.WholeNumberDigits
+            )
         }
     }
 
-    /**
-     * Removes the remembered practice configuration while preserving all
-     * other application settings.
-     *
-     * This is not currently exposed in the version 1.0 Settings UI.
-     */
     suspend fun clearLastPracticeConfig() {
         dataStore.edit { preferences ->
             preferences.remove(
@@ -177,6 +167,14 @@ class SettingsRepository(
             )
 
             preferences.remove(
+                Keys.MaximumOperand
+            )
+
+            preferences.remove(
+                Keys.FocusNumber
+            )
+
+            preferences.remove(
                 Keys.WholeNumberDigits
             )
 
@@ -186,12 +184,6 @@ class SettingsRepository(
         }
     }
 
-    /**
-     * Converts persisted preference values into a valid domain configuration.
-     *
-     * Invalid, incomplete, or obsolete stored configurations return null so
-     * the caller can safely fall back to [PracticeConfig.Default].
-     */
     private fun readPracticeConfig(
         preferences: Preferences
     ): PracticeConfig? {
@@ -199,7 +191,9 @@ class SettingsRepository(
             preferences[Keys.HasSavedPracticeConfig]
                 ?: false
 
-        if (!hasSavedConfig) {
+        if (
+            !hasSavedConfig
+        ) {
             return null
         }
 
@@ -209,22 +203,31 @@ class SettingsRepository(
                     preferences[Keys.EnabledOperations]
             )
 
-        if (operations.isEmpty()) {
+        if (
+            operations.isEmpty()
+        ) {
             return null
         }
 
-        val wholeNumberDigits =
-            preferences[Keys.WholeNumberDigits]
+        val maximumOperand =
+            preferences[Keys.MaximumOperand]
+                ?: preferences[Keys.WholeNumberDigits]
+                    ?.let(
+                        ::maximumOperandFromDigitCount
+                    )
                 ?: return null
 
         val questionCount =
             preferences[Keys.QuestionCount]
                 ?: return null
 
+        val focusNumber =
+            preferences[Keys.FocusNumber]
+
         if (
-            wholeNumberDigits !in
-            PracticeConfig.MIN_WHOLE_NUMBER_DIGITS..
-            PracticeConfig.MAX_WHOLE_NUMBER_DIGITS
+            maximumOperand !in
+            PracticeConfig.MIN_MAXIMUM_OPERAND..
+            PracticeConfig.MAX_MAXIMUM_OPERAND
         ) {
             return null
         }
@@ -233,6 +236,15 @@ class SettingsRepository(
             questionCount !in
             PracticeConfig.MIN_QUESTION_COUNT..
             PracticeConfig.MAX_QUESTION_COUNT
+        ) {
+            return null
+        }
+
+        if (
+            focusNumber != null &&
+            focusNumber !in
+            PracticeConfig.MIN_FOCUS_NUMBER..
+            maximumOperand
         ) {
             return null
         }
@@ -246,20 +258,42 @@ class SettingsRepository(
             allowDecimals =
                 preferences[Keys.AllowDecimals]
                     ?: PracticeConfig.Default.allowDecimals,
-            wholeNumberDigits =
-                wholeNumberDigits,
+            maximumOperand =
+                maximumOperand,
             questionCount =
-                questionCount
+                questionCount,
+            focusNumber =
+                focusNumber
         )
     }
 
-    /**
-     * Serializes enum names rather than display symbols.
-     *
-     * Example:
-     *
-     * Addition,Subtraction,Division
-     */
+    private fun maximumOperandFromDigitCount(
+        digitCount: Int
+    ): Int? {
+        return when (digitCount) {
+            1 ->
+                9
+
+            2 ->
+                99
+
+            3 ->
+                999
+
+            4 ->
+                9_999
+
+            5 ->
+                99_999
+
+            6 ->
+                999_999
+
+            else ->
+                null
+        }
+    }
+
     private fun serializeOperations(
         operations: Set<ArithmeticOperation>
     ): String {
@@ -274,23 +308,23 @@ class SettingsRepository(
             }
     }
 
-    /**
-     * Safely parses stored operation names.
-     *
-     * Unknown names are ignored so future enum changes do not crash
-     * preference loading.
-     */
     private fun parseOperations(
         storedOperations: String?
     ): Set<ArithmeticOperation> {
-        if (storedOperations.isNullOrBlank()) {
+        if (
+            storedOperations.isNullOrBlank()
+        ) {
             return emptySet()
         }
 
         return storedOperations
             .split(",")
-            .map(String::trim)
-            .filter(String::isNotBlank)
+            .map(
+                String::trim
+            )
+            .filter(
+                String::isNotBlank
+            )
             .mapNotNull { storedName ->
                 ArithmeticOperation.entries
                     .firstOrNull { operation ->
@@ -301,15 +335,13 @@ class SettingsRepository(
             .toSet()
     }
 
-    /**
-     * Supplies an empty preference set only for recoverable DataStore read
-     * failures. Other exceptions continue downstream rather than being hidden.
-     */
     private fun safePreferencesFlow():
             Flow<Preferences> {
         return dataStore.data
             .catch { exception ->
-                if (exception is IOException) {
+                if (
+                    exception is IOException
+                ) {
                     emit(
                         emptyPreferences()
                     )
@@ -321,29 +353,29 @@ class SettingsRepository(
 
     private object Keys {
 
-        // Audio
-
         val MusicEnabled =
             booleanPreferencesKey(
-                name = "music_enabled"
+                name =
+                    "music_enabled"
             )
 
         val MusicLevel =
             intPreferencesKey(
-                name = "music_level"
+                name =
+                    "music_level"
             )
 
         val SoundEffectsEnabled =
             booleanPreferencesKey(
-                name = "sound_effects_enabled"
+                name =
+                    "sound_effects_enabled"
             )
 
         val SoundEffectsLevel =
             intPreferencesKey(
-                name = "sound_effects_level"
+                name =
+                    "sound_effects_level"
             )
-
-        // Last confirmed practice configuration
 
         val HasSavedPracticeConfig =
             booleanPreferencesKey(
@@ -369,6 +401,21 @@ class SettingsRepository(
                     "last_practice_allow_decimals"
             )
 
+        val MaximumOperand =
+            intPreferencesKey(
+                name =
+                    "last_practice_maximum_operand"
+            )
+
+        val FocusNumber =
+            intPreferencesKey(
+                name =
+                    "last_practice_focus_number"
+            )
+
+        /**
+         * Legacy key used only to migrate old saved configurations.
+         */
         val WholeNumberDigits =
             intPreferencesKey(
                 name =

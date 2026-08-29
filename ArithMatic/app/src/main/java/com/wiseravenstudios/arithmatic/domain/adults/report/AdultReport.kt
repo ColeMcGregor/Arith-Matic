@@ -3,6 +3,7 @@ package com.wiseravenstudios.arithmatic.domain.adults.report
 import com.wiseravenstudios.arithmatic.domain.adults.AdultHistorySelection
 import com.wiseravenstudios.arithmatic.domain.adults.statistics.AdultStatsSummary
 import com.wiseravenstudios.arithmatic.domain.model.ArithmeticOperation
+import com.wiseravenstudios.arithmatic.domain.model.PracticeConfig
 import java.math.BigDecimal
 
 /**
@@ -79,13 +80,16 @@ data class AdultReport(
 ) {
 
     init {
-        require(generatedAtEpochMillis >= 0L) {
+        require(
+            generatedAtEpochMillis >= 0L
+        ) {
             "Report generation timestamp cannot be negative."
         }
     }
 
     val hasData: Boolean
-        get() = summary.hasData
+        get() =
+            summary.hasData
 
     /**
      * One matching historical round included in the report.
@@ -97,7 +101,8 @@ data class AdultReport(
         val enabledOperations: Set<ArithmeticOperation>,
         val allowNegatives: Boolean,
         val allowDecimals: Boolean,
-        val wholeNumberDigits: Int,
+        val maximumOperand: Int,
+        val focusNumber: Int?,
         val originalQuestionCount: Int,
         val matchingQuestionCount: Int,
         val matchingCorrectCount: Int,
@@ -106,39 +111,72 @@ data class AdultReport(
     ) {
 
         init {
-            require(id > 0L) {
+            require(
+                id > 0L
+            ) {
                 "Report round ID must be greater than zero."
             }
 
-            require(completedAtEpochMillis >= 0L) {
+            require(
+                completedAtEpochMillis >= 0L
+            ) {
                 "Round completion timestamp cannot be negative."
             }
 
-            require(activeRoundDurationMillis >= 0L) {
+            require(
+                activeRoundDurationMillis >= 0L
+            ) {
                 "Round duration cannot be negative."
             }
 
-            require(enabledOperations.isNotEmpty()) {
+            require(
+                enabledOperations.isNotEmpty()
+            ) {
                 "A report round must contain at least one enabled operation."
             }
 
-            require(wholeNumberDigits > 0) {
-                "Whole-number digit count must be greater than zero."
+            require(
+                maximumOperand in
+                        PracticeConfig.MIN_MAXIMUM_OPERAND..
+                        PracticeConfig.MAX_MAXIMUM_OPERAND
+            ) {
+                "Maximum operand must be between " +
+                        "${PracticeConfig.MIN_MAXIMUM_OPERAND} and " +
+                        "${PracticeConfig.MAX_MAXIMUM_OPERAND}."
             }
 
-            require(originalQuestionCount > 0) {
+            require(
+                focusNumber == null ||
+                        focusNumber in
+                        PracticeConfig.MIN_FOCUS_NUMBER..
+                        maximumOperand
+            ) {
+                "Focus number must be between " +
+                        "${PracticeConfig.MIN_FOCUS_NUMBER} and " +
+                        "the maximum operand."
+            }
+
+            require(
+                originalQuestionCount > 0
+            ) {
                 "Original question count must be greater than zero."
             }
 
-            require(matchingQuestionCount > 0) {
+            require(
+                matchingQuestionCount > 0
+            ) {
                 "A report round must contain at least one matching question."
             }
 
-            require(matchingCorrectCount >= 0) {
+            require(
+                matchingCorrectCount >= 0
+            ) {
                 "Matching correct count cannot be negative."
             }
 
-            require(matchingIncorrectCount >= 0) {
+            require(
+                matchingIncorrectCount >= 0
+            ) {
                 "Matching incorrect count cannot be negative."
             }
 
@@ -179,23 +217,33 @@ data class AdultReport(
     ) {
 
         init {
-            require(questionIndex >= 0) {
+            require(
+                questionIndex >= 0
+            ) {
                 "Question index cannot be negative."
             }
 
-            require(questionText.isNotBlank()) {
+            require(
+                questionText.isNotBlank()
+            ) {
                 "Question text cannot be blank."
             }
 
-            require(expectedAnswer.isNotBlank()) {
+            require(
+                expectedAnswer.isNotBlank()
+            ) {
                 "Expected answer cannot be blank."
             }
 
-            require(selectedAnswer.isNotBlank()) {
+            require(
+                selectedAnswer.isNotBlank()
+            ) {
                 "Selected answer cannot be blank."
             }
 
-            require(answerChoices.isNotEmpty()) {
+            require(
+                answerChoices.isNotEmpty()
+            ) {
                 "Answer choices cannot be empty."
             }
 
@@ -213,7 +261,9 @@ data class AdultReport(
                 "Correct choice index must reference an answer choice."
             }
 
-            require(activeDurationMillis >= 0L) {
+            require(
+                activeDurationMillis >= 0L
+            ) {
                 "Attempt duration cannot be negative."
             }
         }
