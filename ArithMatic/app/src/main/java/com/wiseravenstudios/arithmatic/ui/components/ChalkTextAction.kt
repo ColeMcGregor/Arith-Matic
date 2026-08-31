@@ -7,7 +7,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,8 +31,10 @@ import com.wiseravenstudios.arithmatic.ui.theme.Chalktastic
 /**
  * Clickable chalk-styled text action.
  *
- * When responsive metrics are supplied, text size, padding, and minimum
- * touch size are derived from the current writable board area.
+ * When responsive metrics are supplied, text size and padding are derived
+ * from the current writable board area.
+ *
+ * The clickable area is the rendered text plus its padding.
  */
 @Composable
 fun ChalkTextAction(
@@ -167,11 +168,6 @@ fun ChalkTextAction(
         paddingBottom
             ?: resolvedVerticalPadding
 
-    val minimumTouchTarget =
-        metrics
-            ?.minimumTouchTarget
-            ?: DEFAULT_MINIMUM_TOUCH_TARGET
-
     Text(
         text = text,
         color =
@@ -184,38 +180,33 @@ fun ChalkTextAction(
             fontWeight,
         textAlign =
             textAlign,
-        modifier = modifier
-            .scale(
-                displayedScale
-            )
-            .defaultMinSize(
-                minWidth =
-                    minimumTouchTarget,
-                minHeight =
-                    minimumTouchTarget
-            )
-            .clickable(
-                enabled =
-                    enabled,
-                role =
-                    Role.Button,
-                interactionSource =
-                    interactionSource,
-                indication =
-                    null,
-                onClick =
-                    onClick
-            )
-            .padding(
-                start =
-                    resolvedPaddingStart,
-                top =
-                    resolvedPaddingTop,
-                end =
-                    resolvedPaddingEnd,
-                bottom =
-                    resolvedPaddingBottom
-            )
+        modifier =
+            modifier
+                .scale(
+                    displayedScale
+                )
+                .clickable(
+                    enabled =
+                        enabled,
+                    role =
+                        Role.Button,
+                    interactionSource =
+                        interactionSource,
+                    indication =
+                        null,
+                    onClick =
+                        onClick
+                )
+                .padding(
+                    start =
+                        resolvedPaddingStart,
+                    top =
+                        resolvedPaddingTop,
+                    end =
+                        resolvedPaddingEnd,
+                    bottom =
+                        resolvedPaddingBottom
+                )
     )
 }
 
@@ -227,6 +218,3 @@ private val DEFAULT_HORIZONTAL_PADDING =
 
 private val DEFAULT_VERTICAL_PADDING =
     8.dp
-
-private val DEFAULT_MINIMUM_TOUCH_TARGET =
-    48.dp

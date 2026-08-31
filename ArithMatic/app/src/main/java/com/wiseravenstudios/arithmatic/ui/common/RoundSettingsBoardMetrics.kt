@@ -30,16 +30,16 @@ fun calculateRoundSettingsBoardMetrics(
             sizeBand =
                 environment.sizeBand,
             scale =
-                environment.heightScale,
+                environment.widthScale,
 
-            smallMinimum = 0f,
-            smallMaximum = 2f,
+            smallMinimum = 2f,
+            smallMaximum = 5f,
 
-            mediumMinimum = 1f,
-            mediumMaximum = 4f,
+            mediumMinimum = 4f,
+            mediumMaximum = 8f,
 
-            largeMinimum = 3f,
-            largeMaximum = 6f
+            largeMinimum = 6f,
+            largeMaximum = 10f
         )
 
     val smallSpacing =
@@ -47,16 +47,16 @@ fun calculateRoundSettingsBoardMetrics(
             sizeBand =
                 environment.sizeBand,
             scale =
-                environment.heightScale,
+                environment.widthScale,
 
-            smallMinimum = 1f,
-            smallMaximum = 4f,
+            smallMinimum = 3f,
+            smallMaximum = 7f,
 
-            mediumMinimum = 3f,
-            mediumMaximum = 7f,
+            mediumMinimum = 5f,
+            mediumMaximum = 10f,
 
-            largeMinimum = 6f,
-            largeMaximum = 10f
+            largeMinimum = 8f,
+            largeMaximum = 14f
         )
 
     val mediumSpacing =
@@ -64,16 +64,16 @@ fun calculateRoundSettingsBoardMetrics(
             sizeBand =
                 environment.sizeBand,
             scale =
-                environment.heightScale,
+                environment.widthScale,
 
-            smallMinimum = 2f,
-            smallMaximum = 7f,
+            smallMinimum = 5f,
+            smallMaximum = 10f,
 
-            mediumMinimum = 5f,
-            mediumMaximum = 12f,
+            mediumMinimum = 8f,
+            mediumMaximum = 15f,
 
-            largeMinimum = 10f,
-            largeMaximum = 18f
+            largeMinimum = 12f,
+            largeMaximum = 22f
         )
 
     val largeSpacing =
@@ -81,16 +81,16 @@ fun calculateRoundSettingsBoardMetrics(
             sizeBand =
                 environment.sizeBand,
             scale =
-                environment.heightScale,
+                environment.widthScale,
 
-            smallMinimum = 4f,
-            smallMaximum = 12f,
+            smallMinimum = 10f,
+            smallMaximum = 20f,
 
-            mediumMinimum = 10f,
-            mediumMaximum = 20f,
+            mediumMinimum = 16f,
+            mediumMaximum = 30f,
 
-            largeMinimum = 18f,
-            largeMaximum = 30f
+            largeMinimum = 24f,
+            largeMaximum = 42f
         )
 
     val extraLargeSpacing =
@@ -98,16 +98,16 @@ fun calculateRoundSettingsBoardMetrics(
             sizeBand =
                 environment.sizeBand,
             scale =
-                environment.heightScale,
+                environment.widthScale,
 
-            smallMinimum = 8f,
-            smallMaximum = 20f,
+            smallMinimum = 14f,
+            smallMaximum = 26f,
 
-            mediumMinimum = 18f,
-            mediumMaximum = 34f,
+            mediumMinimum = 24f,
+            mediumMaximum = 40f,
 
-            largeMinimum = 30f,
-            largeMaximum = 48f
+            largeMinimum = 36f,
+            largeMaximum = 56f
         )
 
     val actionHorizontalPadding =
@@ -151,14 +151,14 @@ fun calculateRoundSettingsBoardMetrics(
             scale =
                 environment.widthScale,
 
-            smallMinimum = 1f,
-            smallMaximum = 5f,
+            smallMinimum = 2f,
+            smallMaximum = 7f,
 
-            mediumMinimum = 4f,
-            mediumMaximum = 8f,
+            mediumMinimum = 6f,
+            mediumMaximum = 12f,
 
-            largeMinimum = 7f,
-            largeMaximum = 12f
+            largeMinimum = 10f,
+            largeMaximum = 18f
         )
 
     val contentVerticalPadding =
@@ -191,7 +191,7 @@ fun calculateRoundSettingsBoardMetrics(
         }
 
     val singleColumnBaseScale =
-        calculateBasicSettingsBaseScale(
+        calculateSettingsBaseScale(
             width =
                 width,
             height =
@@ -204,14 +204,16 @@ fun calculateRoundSettingsBoardMetrics(
                 contentVerticalPadding,
             tinySpacing =
                 tinySpacing,
+            smallSpacing =
+                smallSpacing,
             mediumSpacing =
                 mediumSpacing,
             largeSpacing =
                 largeSpacing,
             actionHorizontalPadding =
                 actionHorizontalPadding,
-            minimumTouchTarget =
-                minimumTouchTarget
+            actionVerticalPadding =
+                actionVerticalPadding
         )
 
     val doubleColumnBaseScale =
@@ -221,7 +223,7 @@ fun calculateRoundSettingsBoardMetrics(
         ) {
             0f
         } else {
-            calculateBasicSettingsBaseScale(
+            calculateSettingsBaseScale(
                 width =
                     width,
                 height =
@@ -234,14 +236,16 @@ fun calculateRoundSettingsBoardMetrics(
                     contentVerticalPadding,
                 tinySpacing =
                     tinySpacing,
+                smallSpacing =
+                    smallSpacing,
                 mediumSpacing =
                     mediumSpacing,
                 largeSpacing =
                     largeSpacing,
                 actionHorizontalPadding =
                     actionHorizontalPadding,
-                minimumTouchTarget =
-                    minimumTouchTarget
+                actionVerticalPadding =
+                    actionVerticalPadding
             )
         }
 
@@ -376,17 +380,18 @@ fun calculateRoundSettingsBoardMetrics(
     )
 }
 
-private fun calculateBasicSettingsBaseScale(
+private fun calculateSettingsBaseScale(
     width: Dp,
     height: Dp,
     layoutMode: BoardLayoutMode,
     contentHorizontalPadding: Dp,
     contentVerticalPadding: Dp,
     tinySpacing: Dp,
+    smallSpacing: Dp,
     mediumSpacing: Dp,
     largeSpacing: Dp,
     actionHorizontalPadding: Dp,
-    minimumTouchTarget: Dp
+    actionVerticalPadding: Dp
 ): Float {
 
     val contentWidth =
@@ -406,9 +411,6 @@ private fun calculateBasicSettingsBaseScale(
             .coerceAtLeast(
                 1f
             )
-
-    val touchTarget =
-        minimumTouchTarget.value
 
     return calculateLargestFittingBaseScale(
         maximumCandidate =
@@ -463,62 +465,62 @@ private fun calculateBasicSettingsBaseScale(
                     SETTINGS_BODY_TEXT_RATIO *
                     SETTINGS_BIGGEST_NUMBER_WIDTH_EM
 
+        val focusNumberLabelWidth =
+            baseScale *
+                    SETTINGS_BODY_TEXT_RATIO *
+                    SETTINGS_FOCUS_NUMBER_WIDTH_EM
+
+        val booleanLabelWidth =
+            baseScale *
+                    SETTINGS_BODY_TEXT_RATIO *
+                    SETTINGS_NEGATIVES_WIDTH_EM
+
         val maximumOperandWidth =
             baseScale *
                     SETTINGS_HEADING_TEXT_RATIO *
                     SETTINGS_MAXIMUM_OPERAND_WIDTH_EM
 
+        val focusValueWidth =
+            baseScale *
+                    SETTINGS_BODY_TEXT_RATIO *
+                    SETTINGS_FOCUS_VALUE_WIDTH_EM
+
         val tabHeight =
-            maxOf(
-                touchTarget,
-                bodyHeight +
-                        tinySpacing.value * 2f
-            )
+            bodyHeight +
+                    actionVerticalPadding.value * 2f
 
         val headingActionHeight =
-            maxOf(
-                touchTarget,
-                headingHeight +
-                        tinySpacing.value * 2f
-            )
+            headingHeight +
+                    actionVerticalPadding.value * 2f
 
         val primaryActionHeight =
-            maxOf(
-                touchTarget,
-                primaryHeight +
-                        tinySpacing.value * 2f
-            )
+            primaryHeight +
+                    actionVerticalPadding.value * 2f
 
         val bodyActionHeight =
-            maxOf(
-                touchTarget,
-                bodyHeight +
-                        tinySpacing.value * 2f
-            )
+            bodyHeight +
+                    actionVerticalPadding.value * 2f
 
         val compactActionHeight =
-            maxOf(
-                touchTarget,
-                compactHeight
-            )
+            compactHeight
 
         val headingActionWidth =
-            maxOf(
-                touchTarget,
-                baseScale *
-                        SETTINGS_HEADING_TEXT_RATIO *
-                        SETTINGS_CONTROL_SYMBOL_WIDTH_EM +
-                        actionHorizontalPadding.value * 2f
-            )
+            baseScale *
+                    SETTINGS_HEADING_TEXT_RATIO *
+                    SETTINGS_CONTROL_SYMBOL_WIDTH_EM +
+                    actionHorizontalPadding.value * 2f
 
         val primaryActionWidth =
-            maxOf(
-                touchTarget,
-                baseScale *
-                        SETTINGS_PRIMARY_ACTION_TEXT_RATIO *
-                        SETTINGS_CONTROL_SYMBOL_WIDTH_EM +
-                        actionHorizontalPadding.value * 2f
-            )
+            baseScale *
+                    SETTINGS_PRIMARY_ACTION_TEXT_RATIO *
+                    SETTINGS_CONTROL_SYMBOL_WIDTH_EM +
+                    actionHorizontalPadding.value * 2f
+
+        val bodyActionWidth =
+            baseScale *
+                    SETTINGS_BODY_TEXT_RATIO *
+                    SETTINGS_BOOLEAN_VALUE_WIDTH_EM +
+                    actionHorizontalPadding.value * 2f
 
         val operationRowWidth =
             primaryActionWidth *
@@ -562,16 +564,13 @@ private fun calculateBasicSettingsBaseScale(
                     SETTINGS_LARGEST_QUICK_STEP_WIDTH_EM
 
         val quickStepActionWidth =
-            maxOf(
-                touchTarget,
-                quickStepTextWidth +
-                        tinySpacing.value * 2f
-            )
+            quickStepTextWidth +
+                    tinySpacing.value * 2f
 
         val quickStepRowWidth =
             quickStepActionWidth *
                     SETTINGS_QUICK_STEP_COUNT +
-                    tinySpacing.value *
+                    smallSpacing.value *
                     (
                             SETTINGS_QUICK_STEP_COUNT -
                                     1
@@ -584,14 +583,31 @@ private fun calculateBasicSettingsBaseScale(
                 quickStepRowWidth
             )
 
-        val footerActionWidth =
+        val booleanSettingWidth =
+            booleanLabelWidth +
+                    smallSpacing.value +
+                    bodyActionWidth
+
+        val focusActionWidth =
+            focusValueWidth +
+                    actionHorizontalPadding.value * 2f
+
+        val focusControlWidth =
+            headingActionWidth * 2f +
+                    focusActionWidth +
+                    mediumSpacing.value * 2f
+
+        val focusNumberWidth =
             maxOf(
-                touchTarget,
-                baseScale *
-                        SETTINGS_BODY_TEXT_RATIO *
-                        SETTINGS_RESET_WIDTH_EM +
-                        actionHorizontalPadding.value * 2f
+                focusNumberLabelWidth,
+                focusControlWidth
             )
+
+        val footerActionWidth =
+            baseScale *
+                    SETTINGS_BODY_TEXT_RATIO *
+                    SETTINGS_RESET_WIDTH_EM +
+                    actionHorizontalPadding.value * 2f
 
         val footerWidth =
             footerActionWidth *
@@ -611,6 +627,25 @@ private fun calculateBasicSettingsBaseScale(
                     compactActionHeight +
                     tinySpacing.value * 2f
 
+        val booleanSettingHeight =
+            bodyActionHeight
+
+        val focusNumberHeight =
+            bodyHeight +
+                    bodyActionHeight +
+                    tinySpacing.value
+
+        val advancedContentHeight =
+            booleanSettingHeight * 2f +
+                    focusNumberHeight +
+                    smallSpacing.value * 2f
+
+        val advancedContentWidth =
+            maxOf(
+                booleanSettingWidth,
+                focusNumberWidth
+            )
+
         val footerHeight =
             bodyActionHeight
 
@@ -619,7 +654,7 @@ private fun calculateBasicSettingsBaseScale(
                     tabHeight +
                     footerHeight
 
-        val contentFits =
+        val basicContentFits =
             when (layoutMode) {
 
                 BoardLayoutMode.SingleColumn -> {
@@ -663,11 +698,19 @@ private fun calculateBasicSettingsBaseScale(
                 }
             }
 
+        val advancedContentFits =
+            advancedContentWidth <=
+                    contentWidth &&
+                    shellHeight +
+                    advancedContentHeight <=
+                    contentHeight
+
         titleWidth <=
                 contentWidth &&
                 footerWidth <=
                 contentWidth &&
-                contentFits
+                basicContentFits &&
+                advancedContentFits
     }
 }
 
@@ -736,7 +779,7 @@ private const val SETTINGS_PROBLEM_TEXT_RATIO =
     1.05f
 
 private const val SETTINGS_PRIMARY_ACTION_TEXT_RATIO =
-    0.84f
+    1.05f
 
 private const val SETTINGS_HEADING_TEXT_RATIO =
     0.78f
@@ -759,11 +802,20 @@ private const val SETTINGS_OPERATIONS_WIDTH_EM =
 private const val SETTINGS_QUESTIONS_WIDTH_EM =
     6.133f
 
-/*
- * Conservative Chalktastic width estimates for the new controls.
- */
 private const val SETTINGS_BIGGEST_NUMBER_WIDTH_EM =
     9.2f
+
+private const val SETTINGS_FOCUS_NUMBER_WIDTH_EM =
+    7.9f
+
+private const val SETTINGS_NEGATIVES_WIDTH_EM =
+    6.608f
+
+private const val SETTINGS_BOOLEAN_VALUE_WIDTH_EM =
+    2.329f
+
+private const val SETTINGS_FOCUS_VALUE_WIDTH_EM =
+    4.6f
 
 private const val SETTINGS_MAXIMUM_OPERAND_WIDTH_EM =
     4.6f

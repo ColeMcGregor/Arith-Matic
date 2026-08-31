@@ -8,10 +8,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -22,8 +22,6 @@ import com.wiseravenstudios.arithmatic.data.local.database.ArithMaticDatabase
 import com.wiseravenstudios.arithmatic.data.preferences.getArithMaticDataStore
 import com.wiseravenstudios.arithmatic.data.repository.CompletedRoundRepository
 import com.wiseravenstudios.arithmatic.data.repository.SettingsRepository
-import com.wiseravenstudios.arithmatic.domain.model.PracticeConfig
-import com.wiseravenstudios.arithmatic.domain.results.BasicRoundResults
 import com.wiseravenstudios.arithmatic.ui.about.AboutBoard
 import com.wiseravenstudios.arithmatic.ui.adults.AdultAreaViewModel
 import com.wiseravenstudios.arithmatic.ui.adults.AdultAreaViewModelFactory
@@ -35,6 +33,7 @@ import com.wiseravenstudios.arithmatic.ui.game.GameBoard
 import com.wiseravenstudios.arithmatic.ui.game.GameViewModel
 import com.wiseravenstudios.arithmatic.ui.game.GameViewModelFactory
 import com.wiseravenstudios.arithmatic.ui.results.ResultsBoard
+import com.wiseravenstudios.arithmatic.ui.results.ResultsViewModel
 import com.wiseravenstudios.arithmatic.ui.roundsettings.RoundSettingsBoard
 import com.wiseravenstudios.arithmatic.ui.roundsettings.RoundSettingsUiState
 import com.wiseravenstudios.arithmatic.ui.roundsettings.RoundSettingsViewModel
@@ -103,6 +102,9 @@ fun ArithMaticApp(
             factory =
                 gameViewModelFactory
         )
+
+    val resultsViewModel: ResultsViewModel =
+        viewModel()
 
     val myStatsViewModelFactory =
         remember(completedRoundRepository) {
@@ -176,20 +178,13 @@ fun ArithMaticApp(
         )
     }
 
-    var completedResults by remember {
-        mutableStateOf<BasicRoundResults?>(
-            null
-        )
-    }
-
-    var completedConfig by remember {
-        mutableStateOf<PracticeConfig?>(
-            null
-        )
-    }
-
     val gameUiState by
     gameViewModel
+        .uiState
+        .collectAsState()
+
+    val resultsUiState by
+    resultsViewModel
         .uiState
         .collectAsState()
 
@@ -238,11 +233,13 @@ fun ArithMaticApp(
                 roundResults != null &&
                 roundSnapshot != null
             ) {
-                completedResults =
-                    roundResults
-
-                completedConfig =
-                    roundSnapshot.config
+                resultsViewModel
+                    .setCompletedRound(
+                        results =
+                            roundResults,
+                        config =
+                            roundSnapshot.config
+                    )
 
                 currentDestination =
                     AppDestination.Results
@@ -345,11 +342,8 @@ fun ArithMaticApp(
                                             gameViewModel
                                                 .clearRound()
 
-                                            completedResults =
-                                                null
-
-                                            completedConfig =
-                                                null
+                                            resultsViewModel
+                                                .clearResults()
 
                                             gameViewModel
                                                 .startRound(
@@ -378,11 +372,8 @@ fun ArithMaticApp(
                         gameViewModel
                             .clearRound()
 
-                        completedResults =
-                            null
-
-                        completedConfig =
-                            null
+                        resultsViewModel
+                            .clearResults()
 
                         currentDestination =
                             AppDestination
@@ -401,10 +392,10 @@ fun ArithMaticApp(
 
             AppDestination.Results -> {
                 val results =
-                    completedResults
+                    resultsUiState.results
 
                 val config =
-                    completedConfig
+                    resultsUiState.config
 
                 if (
                     results != null &&
@@ -422,8 +413,8 @@ fun ArithMaticApp(
                                     config
                                 )
 
-                            completedResults =
-                                null
+                            resultsViewModel
+                                .clearResults()
 
                             currentDestination =
                                 AppDestination
@@ -433,11 +424,8 @@ fun ArithMaticApp(
                             gameViewModel
                                 .clearRound()
 
-                            completedResults =
-                                null
-
-                            completedConfig =
-                                null
+                            resultsViewModel
+                                .clearResults()
 
                             currentDestination =
                                 AppDestination
@@ -447,11 +435,8 @@ fun ArithMaticApp(
                             gameViewModel
                                 .clearRound()
 
-                            completedResults =
-                                null
-
-                            completedConfig =
-                                null
+                            resultsViewModel
+                                .clearResults()
 
                             currentDestination =
                                 AppDestination
@@ -464,11 +449,8 @@ fun ArithMaticApp(
                             gameViewModel
                                 .clearRound()
 
-                            completedResults =
-                                null
-
-                            completedConfig =
-                                null
+                            resultsViewModel
+                                .clearResults()
 
                             currentDestination =
                                 AppDestination

@@ -2,32 +2,28 @@ package com.wiseravenstudios.arithmatic.ui.results
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.wiseravenstudios.arithmatic.domain.results.BasicRoundResults
+import com.wiseravenstudios.arithmatic.ui.common.BoardLayoutMode
+import com.wiseravenstudios.arithmatic.ui.common.BoardResponsiveMetrics
+import com.wiseravenstudios.arithmatic.ui.common.BoardTextRole
+import com.wiseravenstudios.arithmatic.ui.common.calculateResultsBoardMetrics
 import com.wiseravenstudios.arithmatic.ui.components.ChalkTextAction
 import com.wiseravenstudios.arithmatic.ui.theme.ChalkColors
 import com.wiseravenstudios.arithmatic.ui.theme.Chalktastic
 import java.util.Locale
 import kotlin.math.roundToInt
-
-private val ResultsMaximumWidth = 420.dp
-private val ResultsActionsBottomPadding = 12.dp
-private val ResultsActionsReservedHeight = 72.dp
 
 @Composable
 fun ResultsBoard(
@@ -37,199 +33,556 @@ fun ResultsBoard(
     onReturnHome: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val scrollState = rememberScrollState()
+    BoxWithConstraints(
+        modifier =
+            modifier.fillMaxSize()
+    ) {
+        val metrics =
+            calculateResultsBoardMetrics(
+                width =
+                    maxWidth,
+                height =
+                    maxHeight
+            )
 
+        when (metrics.layoutMode) {
+            BoardLayoutMode.SingleColumn ->
+                TallResultsBoard(
+                    results =
+                        results,
+                    metrics =
+                        metrics,
+                    onPracticeAgain =
+                        onPracticeAgain,
+                    onChangeSettings =
+                        onChangeSettings,
+                    onReturnHome =
+                        onReturnHome
+                )
+
+            BoardLayoutMode.DoubleColumn ->
+                WideResultsBoard(
+                    results =
+                        results,
+                    metrics =
+                        metrics,
+                    onPracticeAgain =
+                        onPracticeAgain,
+                    onChangeSettings =
+                        onChangeSettings,
+                    onReturnHome =
+                        onReturnHome
+                )
+        }
+    }
+}
+
+@Composable
+private fun TallResultsBoard(
+    results: BasicRoundResults,
+    metrics: BoardResponsiveMetrics,
+    onPracticeAgain: () -> Unit,
+    onChangeSettings: () -> Unit,
+    onReturnHome: () -> Unit
+) {
     Box(
-        modifier = modifier.fillMaxSize()
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(
+                    horizontal =
+                        metrics.contentHorizontalPadding,
+                    vertical =
+                        metrics.contentVerticalPadding
+                )
     ) {
         Column(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(
-                    start = 20.dp,
-                    top = 16.dp,
-                    end = 20.dp,
-                    bottom = ResultsActionsReservedHeight
-                ),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier =
+                Modifier
+                    .align(
+                        Alignment.TopCenter
+                    )
+                    .fillMaxWidth(),
+            horizontalAlignment =
+                Alignment.CenterHorizontally,
+            verticalArrangement =
+                Arrangement.spacedBy(
+                    metrics.mediumSpacing
+                )
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .widthIn(max = ResultsMaximumWidth),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
-                Text(
-                    text = "Round\nComplete!",
-                    modifier = Modifier.fillMaxWidth(),
-                    color = ChalkColors.PastelYellow,
-                    fontFamily = Chalktastic,
-                    fontSize = 29.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 25.sp
-                )
+            Text(
+                text =
+                    "Round\nComplete!",
+                modifier =
+                    Modifier.fillMaxWidth(),
+                color =
+                    ChalkColors.PastelYellow,
+                fontFamily =
+                    Chalktastic,
+                fontSize =
+                    metrics.displayTextSize,
+                fontWeight =
+                    FontWeight.Bold,
+                textAlign =
+                    TextAlign.Center
+            )
 
-                Text(
-                    text =
-                        "${results.correctAnswers} / " +
-                                "${results.totalQuestions}\nCorrect",
-                    modifier = Modifier.fillMaxWidth(),
-                    color = ChalkColors.PastelGreen,
-                    fontFamily = Chalktastic,
-                    fontSize = 26.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 24.sp
-                )
+            ResultValueBlock(
+                value =
+                    "${results.correctAnswers} / " +
+                            "${results.totalQuestions}",
+                label =
+                    "Correct",
+                valueColor =
+                    ChalkColors.PastelGreen,
+                valueTextRole =
+                    BoardTextRole.Problem,
+                metrics =
+                    metrics
+            )
 
-                Text(
-                    text =
-                        "${results.accuracyPercent.roundToInt()}% Accuracy",
-                    modifier = Modifier.fillMaxWidth(),
-                    color = ChalkColors.ChalkWhite,
-                    fontFamily = Chalktastic,
-                    fontSize = 22.sp,
-                    textAlign = TextAlign.Center
-                )
+            ResultValueBlock(
+                value =
+                    "${results.accuracyPercent.roundToInt()}%",
+                label =
+                    "Accuracy",
+                valueColor =
+                    ChalkColors.ChalkWhite,
+                valueTextRole =
+                    BoardTextRole.Heading,
+                metrics =
+                    metrics
+            )
 
-                ResultStatBlock(
-                    label = "Total Time",
-                    value = formatTotalDuration(
+            ResultValueBlock(
+                value =
+                    formatTotalDuration(
                         results.totalActiveDurationMillis
-                    )
-                )
+                    ),
+                label =
+                    "Total Time",
+                valueColor =
+                    ChalkColors.PastelBlue,
+                valueTextRole =
+                    BoardTextRole.Heading,
+                metrics =
+                    metrics
+            )
 
-                ResultStatBlock(
-                    label = "Average Time",
-                    value = formatAverageDuration(
+            ResultValueBlock(
+                value =
+                    formatAverageDuration(
                         results.averageQuestionDurationMillis
-                    )
-                )
-            }
+                    ),
+                label =
+                    "Average Time",
+                valueColor =
+                    ChalkColors.PastelBlue,
+                valueTextRole =
+                    BoardTextRole.Heading,
+                metrics =
+                    metrics
+            )
         }
 
-        ResultsActions(
-            onPracticeAgain = onPracticeAgain,
-            onChangeSettings = onChangeSettings,
-            onReturnHome = onReturnHome,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .widthIn(max = ResultsMaximumWidth)
-                .padding(
-                    start = 20.dp,
-                    end = 20.dp,
-                    bottom = ResultsActionsBottomPadding
-                )
+        TallResultsActions(
+            metrics =
+                metrics,
+            onPracticeAgain =
+                onPracticeAgain,
+            onChangeSettings =
+                onChangeSettings,
+            onReturnHome =
+                onReturnHome,
+            modifier =
+                Modifier
+                    .align(
+                        Alignment.BottomCenter
+                    )
+                    .fillMaxWidth()
         )
     }
 }
 
 @Composable
-private fun ResultsActions(
+private fun WideResultsBoard(
+    results: BasicRoundResults,
+    metrics: BoardResponsiveMetrics,
+    onPracticeAgain: () -> Unit,
+    onChangeSettings: () -> Unit,
+    onReturnHome: () -> Unit
+) {
+    Box(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(
+                    horizontal =
+                        metrics.contentHorizontalPadding,
+                    vertical =
+                        metrics.contentVerticalPadding
+                )
+    ) {
+        Column(
+            modifier =
+                Modifier
+                    .align(
+                        Alignment.TopCenter
+                    )
+                    .fillMaxWidth(),
+            horizontalAlignment =
+                Alignment.CenterHorizontally,
+            verticalArrangement =
+                Arrangement.spacedBy(
+                    metrics.largeSpacing
+                )
+        ) {
+            Text(
+                text =
+                    "Round Complete!",
+                modifier =
+                    Modifier.fillMaxWidth(),
+                color =
+                    ChalkColors.PastelYellow,
+                fontFamily =
+                    Chalktastic,
+                fontSize =
+                    metrics.displayTextSize,
+                fontWeight =
+                    FontWeight.Bold,
+                textAlign =
+                    TextAlign.Center
+            )
+
+            Row(
+                modifier =
+                    Modifier.fillMaxWidth(),
+                horizontalArrangement =
+                    Arrangement.spacedBy(
+                        metrics.largeSpacing
+                    ),
+                verticalAlignment =
+                    Alignment.Top
+            ) {
+                WideResultValueBlock(
+                    value =
+                        "${results.correctAnswers} / " +
+                                "${results.totalQuestions}",
+                    label =
+                        "Correct",
+                    valueColor =
+                        ChalkColors.PastelGreen,
+                    valueTextRole =
+                        BoardTextRole.Problem,
+                    metrics =
+                        metrics,
+                    modifier =
+                        Modifier.weight(1f)
+                )
+
+                WideResultValueBlock(
+                    value =
+                        "${results.accuracyPercent.roundToInt()}%",
+                    label =
+                        "Accuracy",
+                    valueColor =
+                        ChalkColors.ChalkWhite,
+                    valueTextRole =
+                        BoardTextRole.Heading,
+                    metrics =
+                        metrics,
+                    modifier =
+                        Modifier.weight(1f)
+                )
+
+                WideResultValueBlock(
+                    value =
+                        formatTotalDuration(
+                            results.totalActiveDurationMillis
+                        ),
+                    label =
+                        "Total Time",
+                    valueColor =
+                        ChalkColors.PastelBlue,
+                    valueTextRole =
+                        BoardTextRole.Heading,
+                    metrics =
+                        metrics,
+                    modifier =
+                        Modifier.weight(1f)
+                )
+
+                WideResultValueBlock(
+                    value =
+                        formatAverageDurationCompact(
+                            results.averageQuestionDurationMillis
+                        ),
+                    label =
+                        "Average",
+                    valueColor =
+                        ChalkColors.PastelBlue,
+                    valueTextRole =
+                        BoardTextRole.Heading,
+                    metrics =
+                        metrics,
+                    modifier =
+                        Modifier.weight(1f)
+                )
+            }
+        }
+
+        WideResultsActions(
+            metrics =
+                metrics,
+            onPracticeAgain =
+                onPracticeAgain,
+            onChangeSettings =
+                onChangeSettings,
+            onReturnHome =
+                onReturnHome,
+            modifier =
+                Modifier
+                    .align(
+                        Alignment.BottomCenter
+                    )
+                    .fillMaxWidth()
+        )
+    }
+}
+
+@Composable
+private fun ResultValueBlock(
+    value: String,
+    label: String,
+    valueColor: androidx.compose.ui.graphics.Color,
+    valueTextRole: BoardTextRole,
+    metrics: BoardResponsiveMetrics
+) {
+    Column(
+        modifier =
+            Modifier.fillMaxWidth(),
+        horizontalAlignment =
+            Alignment.CenterHorizontally,
+        verticalArrangement =
+            Arrangement.spacedBy(
+                metrics.tinySpacing
+            )
+    ) {
+        Text(
+            text =
+                value,
+            modifier =
+                Modifier.fillMaxWidth(),
+            color =
+                valueColor,
+            fontFamily =
+                Chalktastic,
+            fontSize =
+                metrics.textSize(
+                    valueTextRole
+                ),
+            fontWeight =
+                FontWeight.Bold,
+            textAlign =
+                TextAlign.Center
+        )
+
+        Text(
+            text =
+                label,
+            modifier =
+                Modifier.fillMaxWidth(),
+            color =
+                ChalkColors.ChalkWhite,
+            fontFamily =
+                Chalktastic,
+            fontSize =
+                metrics.bodyTextSize,
+            textAlign =
+                TextAlign.Center
+        )
+    }
+}
+
+@Composable
+private fun WideResultValueBlock(
+    value: String,
+    label: String,
+    valueColor: androidx.compose.ui.graphics.Color,
+    valueTextRole: BoardTextRole,
+    metrics: BoardResponsiveMetrics,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier =
+            modifier,
+        horizontalAlignment =
+            Alignment.CenterHorizontally,
+        verticalArrangement =
+            Arrangement.spacedBy(
+                metrics.tinySpacing
+            )
+    ) {
+        Text(
+            text =
+                value,
+            modifier =
+                Modifier.fillMaxWidth(),
+            color =
+                valueColor,
+            fontFamily =
+                Chalktastic,
+            fontSize =
+                metrics.textSize(
+                    valueTextRole
+                ),
+            fontWeight =
+                FontWeight.Bold,
+            textAlign =
+                TextAlign.Center,
+            maxLines =
+                1
+        )
+
+        Text(
+            text =
+                label,
+            modifier =
+                Modifier.fillMaxWidth(),
+            color =
+                ChalkColors.ChalkWhite,
+            fontFamily =
+                Chalktastic,
+            fontSize =
+                metrics.bodyTextSize,
+            textAlign =
+                TextAlign.Center,
+            maxLines =
+                1
+        )
+    }
+}
+
+@Composable
+private fun TallResultsActions(
+    metrics: BoardResponsiveMetrics,
     onPracticeAgain: () -> Unit,
     onChangeSettings: () -> Unit,
     onReturnHome: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        verticalAlignment = Alignment.Bottom
+        modifier =
+            modifier,
+        horizontalArrangement =
+            Arrangement.SpaceEvenly,
+        verticalAlignment =
+            Alignment.Bottom
     ) {
-        ResultsActionSlot(
-            modifier = Modifier.weight(1f)
-        ) {
-            ChalkTextAction(
-                text = "Practice\nAgain",
-                color = ChalkColors.PastelGreen,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold,
-                paddingStart = 1.dp,
-                paddingTop = 2.dp,
-                paddingEnd = 1.dp,
-                paddingBottom = 2.dp,
-                onClick = onPracticeAgain
-            )
-        }
-
-        ResultsActionSlot(
-            modifier = Modifier.weight(1f)
-        ) {
-            ChalkTextAction(
-                text = "Change\nSettings",
-                color = ChalkColors.PastelYellow,
-                fontSize = 13.sp,
-                paddingStart = 1.dp,
-                paddingTop = 2.dp,
-                paddingEnd = 1.dp,
-                paddingBottom = 2.dp,
-                onClick = onChangeSettings
-            )
-        }
-
-        ResultsActionSlot(
-            modifier = Modifier.weight(1f)
-        ) {
-            ChalkTextAction(
-                text = "Return\nHome",
-                color = ChalkColors.PastelPurple,
-                fontSize = 14.sp,
-                paddingStart = 1.dp,
-                paddingTop = 2.dp,
-                paddingEnd = 1.dp,
-                paddingBottom = 2.dp,
-                onClick = onReturnHome
-            )
-        }
-    }
-}
-
-@Composable
-private fun ResultsActionSlot(
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit
-) {
-    Box(
-        modifier = modifier,
-        contentAlignment = Alignment.TopCenter
-    ) {
-        content()
-    }
-}
-
-@Composable
-private fun ResultStatBlock(
-    label: String,
-    value: String
-) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(1.dp)
-    ) {
-        Text(
-            text = label,
-            modifier = Modifier.fillMaxWidth(),
-            color = ChalkColors.ChalkWhite,
-            fontFamily = Chalktastic,
-            fontSize = 18.sp,
-            textAlign = TextAlign.Center
+        ChalkTextAction(
+            text =
+                "Practice\nAgain",
+            color =
+                ChalkColors.PastelGreen,
+            metrics =
+                metrics,
+            textRole =
+                BoardTextRole.PrimaryAction,
+            fontWeight =
+                FontWeight.Bold,
+            textAlign =
+                TextAlign.Center,
+            onClick =
+                onPracticeAgain
         )
 
-        Text(
-            text = value,
-            modifier = Modifier.fillMaxWidth(),
-            color = ChalkColors.PastelBlue,
-            fontFamily = Chalktastic,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-            lineHeight = 21.sp
+        ChalkTextAction(
+            text =
+                "Change\nSettings",
+            color =
+                ChalkColors.PastelYellow,
+            metrics =
+                metrics,
+            textRole =
+                BoardTextRole.PrimaryAction,
+            textAlign =
+                TextAlign.Center,
+            onClick =
+                onChangeSettings
+        )
+
+        ChalkTextAction(
+            text =
+                "Return\nHome",
+            color =
+                ChalkColors.PastelPurple,
+            metrics =
+                metrics,
+            textRole =
+                BoardTextRole.PrimaryAction,
+            textAlign =
+                TextAlign.Center,
+            onClick =
+                onReturnHome
+        )
+    }
+}
+
+@Composable
+private fun WideResultsActions(
+    metrics: BoardResponsiveMetrics,
+    onPracticeAgain: () -> Unit,
+    onChangeSettings: () -> Unit,
+    onReturnHome: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier =
+            modifier,
+        horizontalArrangement =
+            Arrangement.SpaceEvenly,
+        verticalAlignment =
+            Alignment.CenterVertically
+    ) {
+        ChalkTextAction(
+            text =
+                "Practice Again",
+            color =
+                ChalkColors.PastelGreen,
+            metrics =
+                metrics,
+            textRole =
+                BoardTextRole.PrimaryAction,
+            fontWeight =
+                FontWeight.Bold,
+            onClick =
+                onPracticeAgain
+        )
+
+        ChalkTextAction(
+            text =
+                "Change Settings",
+            color =
+                ChalkColors.PastelYellow,
+            metrics =
+                metrics,
+            textRole =
+                BoardTextRole.PrimaryAction,
+            onClick =
+                onChangeSettings
+        )
+
+        ChalkTextAction(
+            text =
+                "Return Home",
+            color =
+                ChalkColors.PastelPurple,
+            metrics =
+                metrics,
+            textRole =
+                BoardTextRole.PrimaryAction,
+            onClick =
+                onReturnHome
         )
     }
 }
@@ -237,9 +590,14 @@ private fun ResultStatBlock(
 private fun formatTotalDuration(
     durationMillis: Long
 ): String {
-    val totalSeconds = durationMillis / 1_000L
-    val minutes = totalSeconds / 60L
-    val seconds = totalSeconds % 60L
+    val totalSeconds =
+        durationMillis / 1_000L
+
+    val minutes =
+        totalSeconds / 60L
+
+    val seconds =
+        totalSeconds % 60L
 
     return String.format(
         Locale.US,
@@ -253,11 +611,26 @@ private fun formatAverageDuration(
     durationMillis: Long
 ): String {
     val seconds =
-        durationMillis.toDouble() / 1_000.0
+        durationMillis.toDouble() /
+                1_000.0
 
     return String.format(
         Locale.US,
         "%.1f seconds",
+        seconds
+    )
+}
+
+private fun formatAverageDurationCompact(
+    durationMillis: Long
+): String {
+    val seconds =
+        durationMillis.toDouble() /
+                1_000.0
+
+    return String.format(
+        Locale.US,
+        "%.1f sec",
         seconds
     )
 }

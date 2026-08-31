@@ -27,6 +27,7 @@ import com.wiseravenstudios.arithmatic.domain.history.query.CorrectnessFilter
 import com.wiseravenstudios.arithmatic.domain.history.query.OperandRange
 import com.wiseravenstudios.arithmatic.domain.history.query.OperationMatchMode
 import com.wiseravenstudios.arithmatic.domain.model.ArithmeticOperation
+import com.wiseravenstudios.arithmatic.domain.model.PracticeConfig
 import com.wiseravenstudios.arithmatic.ui.common.BoardResponsiveMetrics
 import com.wiseravenstudios.arithmatic.ui.components.ChalkTextAction
 import com.wiseravenstudios.arithmatic.ui.theme.ChalkColors
@@ -210,25 +211,47 @@ private fun SingleColumnAdultFilters(
             }
         )
 
-        AdultDigitFilter(
-            selectedDigits =
-                selection.wholeNumberDigits,
-            metrics = metrics,
-            onDigitChanged = {
-                    digitCount,
-                    enabled ->
-
+        AdultIntegerSetFilter(
+            label =
+                "Round Maximum Operand",
+            hint =
+                "Filter by the maximum operand used for the round.",
+            selectedValues =
+                selection.maximumOperands,
+            minimum =
+                PracticeConfig.MIN_MAXIMUM_OPERAND,
+            maximum =
+                PracticeConfig.MAX_MAXIMUM_OPERAND,
+            metrics =
+                metrics,
+            onValuesChanged = { values ->
                 onSelectionChanged(
                     selection.copy(
-                        wholeNumberDigits =
-                            updateDigitSet(
-                                current =
-                                    selection.wholeNumberDigits,
-                                digitCount =
-                                    digitCount,
-                                enabled =
-                                    enabled
-                            )
+                        maximumOperands =
+                            values
+                    )
+                )
+            }
+        )
+
+        AdultIntegerSetFilter(
+            label =
+                "Focus Number",
+            hint =
+                "Filter by the focus number used for the round.",
+            selectedValues =
+                selection.focusNumbers,
+            minimum =
+                PracticeConfig.MIN_FOCUS_NUMBER,
+            maximum =
+                PracticeConfig.MAX_MAXIMUM_OPERAND,
+            metrics =
+                metrics,
+            onValuesChanged = { values ->
+                onSelectionChanged(
+                    selection.copy(
+                        focusNumbers =
+                            values
                     )
                 )
             }
@@ -453,25 +476,24 @@ private fun DoubleColumnAdultFilters(
                 modifier =
                     Modifier.weight(1f)
             ) {
-                AdultDigitFilter(
-                    selectedDigits =
-                        selection.wholeNumberDigits,
-                    metrics = metrics,
-                    onDigitChanged = {
-                            digitCount,
-                            enabled ->
-
+                AdultIntegerSetFilter(
+                    label =
+                        "Round Maximum Operand",
+                    hint =
+                        "Filter by the maximum operand used for the round.",
+                    selectedValues =
+                        selection.maximumOperands,
+                    minimum =
+                        PracticeConfig.MIN_MAXIMUM_OPERAND,
+                    maximum =
+                        PracticeConfig.MAX_MAXIMUM_OPERAND,
+                    metrics =
+                        metrics,
+                    onValuesChanged = { values ->
                         onSelectionChanged(
                             selection.copy(
-                                wholeNumberDigits =
-                                    updateDigitSet(
-                                        current =
-                                            selection.wholeNumberDigits,
-                                        digitCount =
-                                            digitCount,
-                                        enabled =
-                                            enabled
-                                    )
+                                maximumOperands =
+                                    values
                             )
                         )
                     }
@@ -482,41 +504,64 @@ private fun DoubleColumnAdultFilters(
                 modifier =
                     Modifier.weight(1f)
             ) {
-                AdultRoundOperationFilter(
-                    selectedOperations =
-                        selection.enabledRoundOperations,
-                    matchMode =
-                        selection.enabledRoundOperationMatchMode,
-                    metrics = metrics,
-                    onOperationChanged = {
-                            operation,
-                            enabled ->
-
+                AdultIntegerSetFilter(
+                    label =
+                        "Focus Number",
+                    hint =
+                        "Filter by the focus number used for the round.",
+                    selectedValues =
+                        selection.focusNumbers,
+                    minimum =
+                        PracticeConfig.MIN_FOCUS_NUMBER,
+                    maximum =
+                        PracticeConfig.MAX_MAXIMUM_OPERAND,
+                    metrics =
+                        metrics,
+                    onValuesChanged = { values ->
                         onSelectionChanged(
                             selection.copy(
-                                enabledRoundOperations =
-                                    updateOperationSet(
-                                        current =
-                                            selection.enabledRoundOperations,
-                                        operation =
-                                            operation,
-                                        enabled =
-                                            enabled
-                                    )
-                            )
-                        )
-                    },
-                    onMatchModeChanged = { matchMode ->
-                        onSelectionChanged(
-                            selection.copy(
-                                enabledRoundOperationMatchMode =
-                                    matchMode
+                                focusNumbers =
+                                    values
                             )
                         )
                     }
                 )
             }
         }
+
+        AdultRoundOperationFilter(
+            selectedOperations =
+                selection.enabledRoundOperations,
+            matchMode =
+                selection.enabledRoundOperationMatchMode,
+            metrics = metrics,
+            onOperationChanged = {
+                    operation,
+                    enabled ->
+
+                onSelectionChanged(
+                    selection.copy(
+                        enabledRoundOperations =
+                            updateOperationSet(
+                                current =
+                                    selection.enabledRoundOperations,
+                                operation =
+                                    operation,
+                                enabled =
+                                    enabled
+                            )
+                    )
+                )
+            },
+            onMatchModeChanged = { matchMode ->
+                onSelectionChanged(
+                    selection.copy(
+                        enabledRoundOperationMatchMode =
+                            matchMode
+                    )
+                )
+            }
+        )
     }
 }
 
@@ -1305,14 +1350,25 @@ private fun NullableBooleanOption(
 }
 
 @Composable
-private fun AdultDigitFilter(
-    selectedDigits: Set<Int>,
+private fun AdultIntegerSetFilter(
+    label: String,
+    hint: String,
+    selectedValues: Set<Int>,
+    minimum: Int,
+    maximum: Int,
     metrics: BoardResponsiveMetrics,
-    onDigitChanged: (
-        Int,
-        Boolean
-    ) -> Unit
+    onValuesChanged: (Set<Int>) -> Unit
 ) {
+    var valueText by remember(
+        selectedValues
+    ) {
+        mutableStateOf(
+            selectedValues
+                .sorted()
+                .joinToString(", ")
+        )
+    }
+
     Column(
         modifier =
             Modifier.fillMaxWidth(),
@@ -1323,63 +1379,73 @@ private fun AdultDigitFilter(
     ) {
         FilterHeading(
             text =
-                "Round Number Size",
-            metrics = metrics
+                label,
+            metrics =
+                metrics
         )
 
         FilterHint(
             text =
-                "Filter by the digit setting used for the round.",
-            metrics = metrics
+                hint,
+            metrics =
+                metrics
         )
 
-        Row(
+        OutlinedTextField(
+            value =
+                valueText,
+            onValueChange = { updatedText ->
+                valueText =
+                    updatedText
+
+                parseIntegerValues(
+                    text =
+                        updatedText,
+                    minimum =
+                        minimum,
+                    maximum =
+                        maximum
+                )?.let { values ->
+                    onValuesChanged(
+                        values
+                    )
+                }
+            },
             modifier =
                 Modifier.fillMaxWidth(),
-            horizontalArrangement =
-                Arrangement.SpaceEvenly,
-            verticalAlignment =
-                Alignment.CenterVertically
-        ) {
-            for (
-            digitCount in
-            MIN_FILTER_DIGITS..
-                    MAX_FILTER_DIGITS
-            ) {
-                val selected =
-                    digitCount in
-                            selectedDigits
-
-                ChalkTextAction(
-                    text =
-                        digitCount.toString(),
-                    color =
-                        if (selected) {
-                            ChalkColors.PastelGreen
-                        } else {
-                            ChalkColors.ChalkWhite
-                        },
+            textStyle =
+                TextStyle(
+                    fontFamily =
+                        Chalktastic,
                     fontSize =
-                        metrics.compactTextSize,
-                    paddingTop =
-                        metrics.tinySpacing,
-                    paddingBottom =
-                        metrics.tinySpacing,
-                    onClick = {
-                        onDigitChanged(
-                            digitCount,
-                            !selected
-                        )
-                    }
+                        metrics.compactTextSize
+                ),
+            label = {
+                Text(
+                    text =
+                        "Value(s)",
+                    fontSize =
+                        metrics.microTextSize
                 )
-            }
-        }
+            },
+            placeholder = {
+                Text(
+                    text =
+                        "Example: 9, 20, 100",
+                    fontSize =
+                        metrics.microTextSize
+                )
+            },
+            singleLine =
+                true
+        )
 
-        if (selectedDigits.isEmpty()) {
+        if (selectedValues.isEmpty()) {
             FilterHint(
                 text =
-                    "All round sizes included",
-                metrics = metrics
+                    "All values included",
+                metrics =
+                    metrics
             )
         }
     }
@@ -1666,21 +1732,36 @@ private fun updateOperationSet(
         .toSet()
 }
 
-private fun updateDigitSet(
-    current: Set<Int>,
-    digitCount: Int,
-    enabled: Boolean
-): Set<Int> {
-    return current
-        .toMutableSet()
-        .apply {
-            if (enabled) {
-                add(digitCount)
-            } else {
-                remove(digitCount)
+private fun parseIntegerValues(
+    text: String,
+    minimum: Int,
+    maximum: Int
+): Set<Int>? {
+    if (text.isBlank()) {
+        return emptySet()
+    }
+
+    return try {
+        text
+            .split(",")
+            .map(String::trim)
+            .filter(String::isNotBlank)
+            .map(String::toInt)
+            .also { values ->
+                if (
+                    values.any { value ->
+                        value !in
+                                minimum..
+                                maximum
+                    }
+                ) {
+                    return null
+                }
             }
-        }
-        .toSet()
+            .toSet()
+    } catch (_: NumberFormatException) {
+        null
+    }
 }
 
 private fun parseExactOperands(
@@ -1773,9 +1854,3 @@ private val DATE_DISPLAY_FORMAT =
     DateTimeFormatter.ofPattern(
         "MMM d, yyyy"
     )
-
-private const val MIN_FILTER_DIGITS =
-    1
-
-private const val MAX_FILTER_DIGITS =
-    6
