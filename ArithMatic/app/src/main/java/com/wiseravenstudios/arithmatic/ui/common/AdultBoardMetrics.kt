@@ -37,20 +37,20 @@ fun calculateAdultBoardMetrics(
      * LAYOUT
      * ============================================================
      *
-     * NarrowTall and Balanced use the single-column Adult shell.
+     * VerticalRectangle and Square use the single-column Adult shell.
      *
-     * Wide uses the horizontal shell and allows dense Adult content
-     * to use two-column layouts where appropriate.
+     * HorizontalRectangle uses the horizontal shell and allows dense
+     * Adult content to use two-column layouts where appropriate.
      */
     val layoutMode =
         when (environment.shape) {
-            BoardShape.NarrowTall ->
+            BoardShape.VerticalRectangle ->
                 BoardLayoutMode.SingleColumn
 
-            BoardShape.Balanced ->
+            BoardShape.Square ->
                 BoardLayoutMode.SingleColumn
 
-            BoardShape.Wide ->
+            BoardShape.HorizontalRectangle ->
                 BoardLayoutMode.DoubleColumn
         }
 
@@ -59,9 +59,9 @@ fun calculateAdultBoardMetrics(
                 BoardLayoutMode.DoubleColumn
 
     /*
-     * Adult wide mode does not receive an additional general
-     * typography reduction. The size band and responsive scale
-     * already control the final size.
+     * Adult double-column mode does not receive an additional general
+     * typography reduction. The size band and responsive scale already
+     * control the final size.
      */
     val typographyMultiplier =
         if (isDoubleColumn) {

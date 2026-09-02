@@ -38,19 +38,19 @@ fun calculateGameBoardMetrics(
      * ============================================================
      *
      * Game Board uses two columns when the available space has a
-     * strongly wide shape.
+     * strongly horizontal shape.
      *
-     * Balanced and narrow layouts remain single-column.
+     * Square and vertical layouts remain single-column.
      */
     val layoutMode =
         when (environment.shape) {
-            BoardShape.NarrowTall ->
+            BoardShape.VerticalRectangle ->
                 BoardLayoutMode.SingleColumn
 
-            BoardShape.Balanced ->
+            BoardShape.Square ->
                 BoardLayoutMode.SingleColumn
 
-            BoardShape.Wide ->
+            BoardShape.HorizontalRectangle ->
                 BoardLayoutMode.DoubleColumn
         }
 

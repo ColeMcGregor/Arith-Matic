@@ -219,7 +219,7 @@ fun calculateRoundSettingsBoardMetrics(
     val doubleColumnBaseScale =
         if (
             environment.shape ==
-            BoardShape.NarrowTall
+            BoardShape.VerticalRectangle
         ) {
             0f
         } else {
@@ -252,7 +252,7 @@ fun calculateRoundSettingsBoardMetrics(
     val layoutMode =
         if (
             environment.shape ==
-            BoardShape.NarrowTall
+            BoardShape.VerticalRectangle
         ) {
             BoardLayoutMode.SingleColumn
         } else if (

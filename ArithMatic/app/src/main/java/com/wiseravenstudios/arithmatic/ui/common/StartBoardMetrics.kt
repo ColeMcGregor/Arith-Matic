@@ -215,7 +215,7 @@ fun calculateStartBoardMetrics(
             largeMaximum = 60f
         )
 
-    val narrowTallUtilityClearance =
+    val verticalRectangleUtilityClearance =
         bandResponsiveDp(
             sizeBand = environment.sizeBand,
             scale = heightScale,
@@ -297,9 +297,9 @@ fun calculateStartBoardMetrics(
         preferredSingleColumnTitleTopSpacing +
                 if (
                     environment.shape ==
-                    BoardShape.NarrowTall
+                    BoardShape.VerticalRectangle
                 ) {
-                    narrowTallUtilityClearance
+                    verticalRectangleUtilityClearance
                 } else {
                     0.dp
                 }
@@ -332,7 +332,7 @@ fun calculateStartBoardMetrics(
     val doubleColumnBaseScale =
         if (
             environment.shape ==
-            BoardShape.NarrowTall
+            BoardShape.VerticalRectangle
         ) {
             0f
         } else {
@@ -370,7 +370,7 @@ fun calculateStartBoardMetrics(
     val layoutMode =
         if (
             environment.shape ==
-            BoardShape.NarrowTall
+            BoardShape.VerticalRectangle
         ) {
             BoardLayoutMode.SingleColumn
         } else if (
@@ -797,7 +797,7 @@ private fun calculateStartLayoutBaseScale(
         val titleFitsHorizontally =
             if (
                 shape ==
-                BoardShape.NarrowTall
+                BoardShape.VerticalRectangle
             ) {
                 titleTextWidth <=
                         contentWidth

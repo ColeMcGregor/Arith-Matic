@@ -47,16 +47,16 @@ fun calculateResultsBoardMetrics(
             sizeBand =
                 environment.sizeBand,
             scale =
-                environment.widthScale,
+                environment.heightScale,
 
-            smallMinimum = 3f,
-            smallMaximum = 7f,
+            smallMinimum = 2f,
+            smallMaximum = 6f,
 
-            mediumMinimum = 5f,
-            mediumMaximum = 10f,
+            mediumMinimum = 4f,
+            mediumMaximum = 9f,
 
-            largeMinimum = 8f,
-            largeMaximum = 14f
+            largeMinimum = 6f,
+            largeMaximum = 12f
         )
 
     val mediumSpacing =
@@ -190,14 +190,14 @@ fun calculateResultsBoardMetrics(
                 RESULTS_LARGE_MINIMUM_TOUCH_TARGET_DP.dp
         }
 
-    val singleColumnBaseScale =
+    val baseScale =
         calculateResultsBaseScale(
             width =
                 width,
             height =
                 height,
-            layoutMode =
-                BoardLayoutMode.SingleColumn,
+            shape =
+                environment.shape,
             contentHorizontalPadding =
                 contentHorizontalPadding,
             contentVerticalPadding =
@@ -216,63 +216,14 @@ fun calculateResultsBoardMetrics(
                 actionVerticalPadding
         )
 
-    val doubleColumnBaseScale =
-        if (
-            environment.shape ==
-            BoardShape.NarrowTall
-        ) {
-            0f
-        } else {
-            calculateResultsBaseScale(
-                width =
-                    width,
-                height =
-                    height,
-                layoutMode =
-                    BoardLayoutMode.DoubleColumn,
-                contentHorizontalPadding =
-                    contentHorizontalPadding,
-                contentVerticalPadding =
-                    contentVerticalPadding,
-                tinySpacing =
-                    tinySpacing,
-                smallSpacing =
-                    smallSpacing,
-                mediumSpacing =
-                    mediumSpacing,
-                largeSpacing =
-                    largeSpacing,
-                actionHorizontalPadding =
-                    actionHorizontalPadding,
-                actionVerticalPadding =
-                    actionVerticalPadding
-            )
-        }
-
     val layoutMode =
-        if (
-            environment.shape ==
-            BoardShape.NarrowTall
-        ) {
-            BoardLayoutMode.SingleColumn
-        } else if (
-            doubleColumnBaseScale >
-            singleColumnBaseScale *
-            RESULTS_WIDE_LAYOUT_SELECTION_ADVANTAGE
-        ) {
-            BoardLayoutMode.DoubleColumn
-        } else {
-            BoardLayoutMode.SingleColumn
-        }
+        when (environment.shape) {
+            BoardShape.VerticalRectangle ->
+                BoardLayoutMode.SingleColumn
 
-    val baseScale =
-        if (
-            layoutMode ==
-            BoardLayoutMode.DoubleColumn
-        ) {
-            doubleColumnBaseScale
-        } else {
-            singleColumnBaseScale
+            BoardShape.Square,
+            BoardShape.HorizontalRectangle ->
+                BoardLayoutMode.DoubleColumn
         }
 
     return BoardResponsiveMetrics(
@@ -323,7 +274,7 @@ fun calculateResultsBoardMetrics(
         widePrimaryActionTextSize =
             (
                     baseScale *
-                            RESULTS_PRIMARY_ACTION_TEXT_RATIO
+                            RESULTS_HORIZONTAL_PRIMARY_ACTION_TEXT_RATIO
                     ).sp,
 
         compactTextSize =
@@ -390,7 +341,7 @@ fun calculateResultsBoardMetrics(
 private fun calculateResultsBaseScale(
     width: Dp,
     height: Dp,
-    layoutMode: BoardLayoutMode,
+    shape: BoardShape,
     contentHorizontalPadding: Dp,
     contentVerticalPadding: Dp,
     tinySpacing: Dp,
@@ -447,6 +398,10 @@ private fun calculateResultsBaseScale(
             baseScale *
                     RESULTS_PRIMARY_ACTION_TEXT_RATIO
 
+        val horizontalActionFontSize =
+            baseScale *
+                    RESULTS_HORIZONTAL_PRIMARY_ACTION_TEXT_RATIO
+
         val displayHeight =
             displayFontSize *
                     RESULTS_CHALKTASTIC_LINE_HEIGHT_FACTOR
@@ -463,29 +418,76 @@ private fun calculateResultsBaseScale(
             bodyFontSize *
                     RESULTS_CHALKTASTIC_LINE_HEIGHT_FACTOR
 
-        val actionHeight =
+        val actionTextHeight =
             actionFontSize *
-                    RESULTS_CHALKTASTIC_LINE_HEIGHT_FACTOR +
+                    RESULTS_CHALKTASTIC_LINE_HEIGHT_FACTOR
+
+        val horizontalActionTextHeight =
+            horizontalActionFontSize *
+                    RESULTS_CHALKTASTIC_LINE_HEIGHT_FACTOR
+
+        val horizontalPaddedActionHeight =
+            horizontalActionTextHeight +
                     actionVerticalPadding.value * 2f
 
-        val titleFits =
-            when (layoutMode) {
-                BoardLayoutMode.SingleColumn ->
-                    displayFontSize *
-                            RESULTS_TALL_TITLE_WIDTH_EM <=
-                            contentWidth
+        val scoreItemWidth =
+            maxOf(
+                problemFontSize *
+                        RESULTS_SCORE_VALUE_WIDTH_EM,
+                bodyFontSize *
+                        RESULTS_CORRECT_LABEL_WIDTH_EM
+            )
 
-                BoardLayoutMode.DoubleColumn ->
-                    displayFontSize *
-                            RESULTS_WIDE_TITLE_WIDTH_EM <=
-                            contentWidth
-            }
+        val accuracyItemWidth =
+            maxOf(
+                headingFontSize *
+                        RESULTS_ACCURACY_VALUE_WIDTH_EM,
+                bodyFontSize *
+                        RESULTS_ACCURACY_LABEL_WIDTH_EM
+            )
 
-        val singleColumnFits =
-            if (
-                layoutMode ==
-                BoardLayoutMode.SingleColumn
-            ) {
+        val totalTimeItemWidth =
+            maxOf(
+                headingFontSize *
+                        RESULTS_TOTAL_TIME_VALUE_WIDTH_EM,
+                bodyFontSize *
+                        RESULTS_TOTAL_TIME_LABEL_WIDTH_EM
+            )
+
+        val averageItemWidth =
+            maxOf(
+                headingFontSize *
+                        RESULTS_WIDE_AVERAGE_TIME_VALUE_WIDTH_EM,
+                bodyFontSize *
+                        RESULTS_AVERAGE_LABEL_WIDTH_EM
+            )
+
+        val tallPracticeWidth =
+            actionFontSize *
+                    RESULTS_TALL_PRACTICE_WIDTH_EM +
+                    actionHorizontalPadding.value * 2f
+
+        val tallChangeWidth =
+            actionFontSize *
+                    RESULTS_TALL_CHANGE_WIDTH_EM +
+                    actionHorizontalPadding.value * 2f
+
+        val tallReturnWidth =
+            actionFontSize *
+                    RESULTS_TALL_RETURN_WIDTH_EM +
+                    actionHorizontalPadding.value * 2f
+
+        val tallFooterWidth =
+            tallPracticeWidth +
+                    tallChangeWidth +
+                    tallReturnWidth
+
+        when (shape) {
+            BoardShape.VerticalRectangle -> {
+                val titleWidth =
+                    displayFontSize *
+                            RESULTS_TALL_TITLE_WIDTH_EM
+
                 val titleHeight =
                     displayHeight * 2f
 
@@ -503,73 +505,47 @@ private fun calculateResultsBaseScale(
                     titleHeight +
                             scoreBlockHeight +
                             standardBlockHeight * 3f +
-                            mediumSpacing.value * 4f
+                            smallSpacing.value * 4f
 
                 val footerHeight =
-                    actionHeight * 2f
+                    actionTextHeight * 2f
 
                 val requiredHeight =
                     mainContentHeight +
                             largeSpacing.value +
                             footerHeight
 
-                val scoreWidth =
-                    problemFontSize *
-                            RESULTS_SCORE_VALUE_WIDTH_EM
-
-                val accuracyWidth =
-                    headingFontSize *
-                            RESULTS_ACCURACY_VALUE_WIDTH_EM
-
-                val totalTimeWidth =
-                    headingFontSize *
-                            RESULTS_TOTAL_TIME_VALUE_WIDTH_EM
-
                 val averageTimeWidth =
                     headingFontSize *
                             RESULTS_TALL_AVERAGE_TIME_VALUE_WIDTH_EM
 
-                val practiceAgainWidth =
-                    actionFontSize *
-                            RESULTS_TALL_PRACTICE_WIDTH_EM +
-                            actionHorizontalPadding.value * 2f
-
-                val changeSettingsWidth =
-                    actionFontSize *
-                            RESULTS_TALL_CHANGE_WIDTH_EM +
-                            actionHorizontalPadding.value * 2f
-
-                val returnHomeWidth =
-                    actionFontSize *
-                            RESULTS_TALL_RETURN_WIDTH_EM +
-                            actionHorizontalPadding.value * 2f
-
-                val footerWidth =
-                    practiceAgainWidth +
-                            changeSettingsWidth +
-                            returnHomeWidth
-
-                scoreWidth <=
+                titleWidth <=
                         contentWidth &&
-                        accuracyWidth <=
+                        scoreItemWidth <=
                         contentWidth &&
-                        totalTimeWidth <=
+                        accuracyItemWidth <=
+                        contentWidth &&
+                        totalTimeItemWidth <=
                         contentWidth &&
                         averageTimeWidth <=
                         contentWidth &&
-                        footerWidth <=
+                        tallFooterWidth <=
                         contentWidth &&
                         requiredHeight <=
                         contentHeight
-            } else {
-                true
             }
 
-        val doubleColumnFits =
-            if (
-                layoutMode ==
-                BoardLayoutMode.DoubleColumn
-            ) {
+            BoardShape.Square -> {
+                val titleWidth =
+                    displayFontSize *
+                            RESULTS_WIDE_TITLE_WIDTH_EM
+
+                val gridColumnWidth =
+                    (
+                            contentWidth -
+                                    largeSpacing.value
+                            ) / 2f
+
                 val summaryItemHeight =
                     maxOf(
                         problemHeight,
@@ -578,47 +554,40 @@ private fun calculateResultsBaseScale(
                             tinySpacing.value +
                             bodyHeight
 
+                val gridHeight =
+                    summaryItemHeight * 2f +
+                            smallSpacing.value
+
                 val footerHeight =
-                    actionHeight
+                    actionTextHeight * 2f
 
                 val requiredHeight =
                     displayHeight +
-                            largeSpacing.value +
-                            summaryItemHeight +
+                            mediumSpacing.value +
+                            gridHeight +
                             largeSpacing.value +
                             footerHeight
 
-                val scoreItemWidth =
-                    maxOf(
-                        problemFontSize *
-                                RESULTS_SCORE_VALUE_WIDTH_EM,
-                        bodyFontSize *
-                                RESULTS_CORRECT_LABEL_WIDTH_EM
-                    )
+                titleWidth <=
+                        contentWidth &&
+                        scoreItemWidth <=
+                        gridColumnWidth &&
+                        accuracyItemWidth <=
+                        gridColumnWidth &&
+                        totalTimeItemWidth <=
+                        gridColumnWidth &&
+                        averageItemWidth <=
+                        gridColumnWidth &&
+                        tallFooterWidth <=
+                        contentWidth &&
+                        requiredHeight <=
+                        contentHeight
+            }
 
-                val accuracyItemWidth =
-                    maxOf(
-                        headingFontSize *
-                                RESULTS_ACCURACY_VALUE_WIDTH_EM,
-                        bodyFontSize *
-                                RESULTS_ACCURACY_LABEL_WIDTH_EM
-                    )
-
-                val totalTimeItemWidth =
-                    maxOf(
-                        headingFontSize *
-                                RESULTS_TOTAL_TIME_VALUE_WIDTH_EM,
-                        bodyFontSize *
-                                RESULTS_TOTAL_TIME_LABEL_WIDTH_EM
-                    )
-
-                val averageItemWidth =
-                    maxOf(
-                        headingFontSize *
-                                RESULTS_WIDE_AVERAGE_TIME_VALUE_WIDTH_EM,
-                        bodyFontSize *
-                                RESULTS_AVERAGE_LABEL_WIDTH_EM
-                    )
+            BoardShape.HorizontalRectangle -> {
+                val titleWidth =
+                    displayFontSize *
+                            RESULTS_WIDE_TITLE_WIDTH_EM
 
                 val summaryWidth =
                     scoreItemWidth +
@@ -627,40 +596,52 @@ private fun calculateResultsBaseScale(
                             averageItemWidth +
                             largeSpacing.value * 3f
 
-                val practiceAgainWidth =
-                    actionFontSize *
+                val summaryItemHeight =
+                    maxOf(
+                        problemHeight,
+                        headingHeight
+                    ) +
+                            tinySpacing.value +
+                            bodyHeight
+
+                val widePracticeWidth =
+                    horizontalActionFontSize *
                             RESULTS_WIDE_PRACTICE_AGAIN_WIDTH_EM +
                             actionHorizontalPadding.value * 2f
 
-                val changeSettingsWidth =
-                    actionFontSize *
+                val wideChangeWidth =
+                    horizontalActionFontSize *
                             RESULTS_WIDE_CHANGE_SETTINGS_WIDTH_EM +
                             actionHorizontalPadding.value * 2f
 
-                val returnHomeWidth =
-                    actionFontSize *
+                val wideReturnWidth =
+                    horizontalActionFontSize *
                             RESULTS_WIDE_RETURN_HOME_WIDTH_EM +
                             actionHorizontalPadding.value * 2f
 
                 val footerWidth =
-                    practiceAgainWidth +
-                            changeSettingsWidth +
-                            returnHomeWidth +
+                    widePracticeWidth +
+                            wideChangeWidth +
+                            wideReturnWidth +
                             largeSpacing.value * 2f
 
-                summaryWidth <=
+                val requiredHeight =
+                    displayHeight +
+                            largeSpacing.value +
+                            summaryItemHeight +
+                            largeSpacing.value +
+                            horizontalPaddedActionHeight
+
+                titleWidth <=
+                        contentWidth &&
+                        summaryWidth <=
                         contentWidth &&
                         footerWidth <=
                         contentWidth &&
                         requiredHeight <=
                         contentHeight
-            } else {
-                true
             }
-
-        titleFits &&
-                singleColumnFits &&
-                doubleColumnFits
+        }
     }
 }
 
@@ -737,6 +718,9 @@ private const val RESULTS_BODY_TEXT_RATIO =
 private const val RESULTS_PRIMARY_ACTION_TEXT_RATIO =
     0.42f
 
+private const val RESULTS_HORIZONTAL_PRIMARY_ACTION_TEXT_RATIO =
+    0.56f
+
 private const val RESULTS_COMPACT_TEXT_RATIO =
     0.45f
 
@@ -796,9 +780,6 @@ private const val RESULTS_WIDE_CHANGE_SETTINGS_WIDTH_EM =
 
 private const val RESULTS_WIDE_RETURN_HOME_WIDTH_EM =
     7.5f
-
-private const val RESULTS_WIDE_LAYOUT_SELECTION_ADVANTAGE =
-    1.05f
 
 private const val RESULTS_SMALL_MINIMUM_TOUCH_TARGET_DP =
     40f

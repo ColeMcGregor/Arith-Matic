@@ -14,9 +14,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import com.wiseravenstudios.arithmatic.domain.results.BasicRoundResults
-import com.wiseravenstudios.arithmatic.ui.common.BoardLayoutMode
 import com.wiseravenstudios.arithmatic.ui.common.BoardResponsiveMetrics
+import com.wiseravenstudios.arithmatic.ui.common.BoardShape
 import com.wiseravenstudios.arithmatic.ui.common.BoardTextRole
 import com.wiseravenstudios.arithmatic.ui.common.calculateResultsBoardMetrics
 import com.wiseravenstudios.arithmatic.ui.components.ChalkTextAction
@@ -45,8 +46,8 @@ fun ResultsBoard(
                     maxHeight
             )
 
-        when (metrics.layoutMode) {
-            BoardLayoutMode.SingleColumn ->
+        when (metrics.shape) {
+            BoardShape.VerticalRectangle ->
                 TallResultsBoard(
                     results =
                         results,
@@ -60,7 +61,21 @@ fun ResultsBoard(
                         onReturnHome
                 )
 
-            BoardLayoutMode.DoubleColumn ->
+            BoardShape.Square ->
+                SquareResultsBoard(
+                    results =
+                        results,
+                    metrics =
+                        metrics,
+                    onPracticeAgain =
+                        onPracticeAgain,
+                    onChangeSettings =
+                        onChangeSettings,
+                    onReturnHome =
+                        onReturnHome
+                )
+
+            BoardShape.HorizontalRectangle ->
                 WideResultsBoard(
                     results =
                         results,
@@ -107,7 +122,7 @@ private fun TallResultsBoard(
                 Alignment.CenterHorizontally,
             verticalArrangement =
                 Arrangement.spacedBy(
-                    metrics.mediumSpacing
+                    metrics.smallSpacing
                 )
         ) {
             Text(
@@ -205,6 +220,174 @@ private fun TallResultsBoard(
 }
 
 @Composable
+private fun SquareResultsBoard(
+    results: BasicRoundResults,
+    metrics: BoardResponsiveMetrics,
+    onPracticeAgain: () -> Unit,
+    onChangeSettings: () -> Unit,
+    onReturnHome: () -> Unit
+) {
+    Box(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(
+                    horizontal =
+                        metrics.contentHorizontalPadding,
+                    vertical =
+                        metrics.contentVerticalPadding
+                )
+    ) {
+        Column(
+            modifier =
+                Modifier
+                    .align(
+                        Alignment.TopCenter
+                    )
+                    .fillMaxWidth(),
+            horizontalAlignment =
+                Alignment.CenterHorizontally,
+            verticalArrangement =
+                Arrangement.spacedBy(
+                    metrics.mediumSpacing
+                )
+        ) {
+            Text(
+                text =
+                    "Round Complete!",
+                modifier =
+                    Modifier.fillMaxWidth(),
+                color =
+                    ChalkColors.PastelYellow,
+                fontFamily =
+                    Chalktastic,
+                fontSize =
+                    metrics.displayTextSize,
+                fontWeight =
+                    FontWeight.Bold,
+                textAlign =
+                    TextAlign.Center,
+                maxLines =
+                    1
+            )
+
+            Column(
+                modifier =
+                    Modifier.fillMaxWidth(),
+                verticalArrangement =
+                    Arrangement.spacedBy(
+                        metrics.smallSpacing
+                    )
+            ) {
+                Row(
+                    modifier =
+                        Modifier.fillMaxWidth(),
+                    horizontalArrangement =
+                        Arrangement.spacedBy(
+                            metrics.largeSpacing
+                        ),
+                    verticalAlignment =
+                        Alignment.Top
+                ) {
+                    WideResultValueBlock(
+                        value =
+                            "${results.correctAnswers} / " +
+                                    "${results.totalQuestions}",
+                        label =
+                            "Correct",
+                        valueColor =
+                            ChalkColors.PastelGreen,
+                        valueTextRole =
+                            BoardTextRole.Problem,
+                        metrics =
+                            metrics,
+                        modifier =
+                            Modifier.weight(1f)
+                    )
+
+                    WideResultValueBlock(
+                        value =
+                            "${results.accuracyPercent.roundToInt()}%",
+                        label =
+                            "Accuracy",
+                        valueColor =
+                            ChalkColors.ChalkWhite,
+                        valueTextRole =
+                            BoardTextRole.Heading,
+                        metrics =
+                            metrics,
+                        modifier =
+                            Modifier.weight(1f)
+                    )
+                }
+
+                Row(
+                    modifier =
+                        Modifier.fillMaxWidth(),
+                    horizontalArrangement =
+                        Arrangement.spacedBy(
+                            metrics.largeSpacing
+                        ),
+                    verticalAlignment =
+                        Alignment.Top
+                ) {
+                    WideResultValueBlock(
+                        value =
+                            formatTotalDuration(
+                                results.totalActiveDurationMillis
+                            ),
+                        label =
+                            "Total Time",
+                        valueColor =
+                            ChalkColors.PastelBlue,
+                        valueTextRole =
+                            BoardTextRole.Heading,
+                        metrics =
+                            metrics,
+                        modifier =
+                            Modifier.weight(1f)
+                    )
+
+                    WideResultValueBlock(
+                        value =
+                            formatAverageDurationCompact(
+                                results.averageQuestionDurationMillis
+                            ),
+                        label =
+                            "Average",
+                        valueColor =
+                            ChalkColors.PastelBlue,
+                        valueTextRole =
+                            BoardTextRole.Heading,
+                        metrics =
+                            metrics,
+                        modifier =
+                            Modifier.weight(1f)
+                    )
+                }
+            }
+        }
+
+        TallResultsActions(
+            metrics =
+                metrics,
+            onPracticeAgain =
+                onPracticeAgain,
+            onChangeSettings =
+                onChangeSettings,
+            onReturnHome =
+                onReturnHome,
+            modifier =
+                Modifier
+                    .align(
+                        Alignment.BottomCenter
+                    )
+                    .fillMaxWidth()
+        )
+    }
+}
+
+@Composable
 private fun WideResultsBoard(
     results: BasicRoundResults,
     metrics: BoardResponsiveMetrics,
@@ -251,7 +434,9 @@ private fun WideResultsBoard(
                 fontWeight =
                     FontWeight.Bold,
                 textAlign =
-                    TextAlign.Center
+                    TextAlign.Center,
+                maxLines =
+                    1
             )
 
             Row(
@@ -492,6 +677,10 @@ private fun TallResultsActions(
                 FontWeight.Bold,
             textAlign =
                 TextAlign.Center,
+            paddingTop =
+                0.dp,
+            paddingBottom =
+                0.dp,
             onClick =
                 onPracticeAgain
         )
@@ -507,6 +696,10 @@ private fun TallResultsActions(
                 BoardTextRole.PrimaryAction,
             textAlign =
                 TextAlign.Center,
+            paddingTop =
+                0.dp,
+            paddingBottom =
+                0.dp,
             onClick =
                 onChangeSettings
         )
@@ -522,6 +715,10 @@ private fun TallResultsActions(
                 BoardTextRole.PrimaryAction,
             textAlign =
                 TextAlign.Center,
+            paddingTop =
+                0.dp,
+            paddingBottom =
+                0.dp,
             onClick =
                 onReturnHome
         )
@@ -551,8 +748,8 @@ private fun WideResultsActions(
                 ChalkColors.PastelGreen,
             metrics =
                 metrics,
-            textRole =
-                BoardTextRole.PrimaryAction,
+            fontSize =
+                metrics.widePrimaryActionTextSize,
             fontWeight =
                 FontWeight.Bold,
             onClick =
@@ -566,8 +763,8 @@ private fun WideResultsActions(
                 ChalkColors.PastelYellow,
             metrics =
                 metrics,
-            textRole =
-                BoardTextRole.PrimaryAction,
+            fontSize =
+                metrics.widePrimaryActionTextSize,
             onClick =
                 onChangeSettings
         )
@@ -579,8 +776,8 @@ private fun WideResultsActions(
                 ChalkColors.PastelPurple,
             metrics =
                 metrics,
-            textRole =
-                BoardTextRole.PrimaryAction,
+            fontSize =
+                metrics.widePrimaryActionTextSize,
             onClick =
                 onReturnHome
         )

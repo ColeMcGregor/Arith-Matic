@@ -168,6 +168,16 @@ internal fun calculateBoardSizeBand(
 /**
  * Describes the physical shape of the available board space.
  *
+ * VerticalRectangle:
+ * Height is substantially greater than width.
+ *
+ * Square:
+ * Width and height are close enough that neither dimension strongly
+ * dominates the other.
+ *
+ * HorizontalRectangle:
+ * Width is substantially greater than height.
+ *
  * Shape does not decide the board's column count.
  * The board-specific calculator makes that decision.
  */
@@ -180,17 +190,17 @@ internal fun calculateBoardShape(
 
     return when {
         aspectRatio <
-                NARROW_TALL_MAXIMUM_ASPECT_RATIO -> {
-            BoardShape.NarrowTall
+                SQUARE_MINIMUM_ASPECT_RATIO -> {
+            BoardShape.VerticalRectangle
         }
 
         aspectRatio <
-                WIDE_MINIMUM_ASPECT_RATIO -> {
-            BoardShape.Balanced
+                SQUARE_MAXIMUM_ASPECT_RATIO -> {
+            BoardShape.Square
         }
 
         else -> {
-            BoardShape.Wide
+            BoardShape.HorizontalRectangle
         }
     }
 }
@@ -480,13 +490,24 @@ private const val MEDIUM_TO_LARGE_EFFECTIVE_SIZE_DP =
  * ============================================================
  * SHAPE CLASSIFICATION
  * ============================================================
+ *
+ * VerticalRectangle:
+ * aspect ratio < 0.80
+ *
+ * Square:
+ * aspect ratio >= 0.80 and < 1.25
+ *
+ * HorizontalRectangle:
+ * aspect ratio >= 1.25
+ *
+ * The two square boundaries are reciprocal values around 1.0.
  */
 
-private const val NARROW_TALL_MAXIMUM_ASPECT_RATIO =
-    0.80f
+private const val SQUARE_MINIMUM_ASPECT_RATIO =
+    0.78f
 
-private const val WIDE_MINIMUM_ASPECT_RATIO =
-    1.35f
+private const val SQUARE_MAXIMUM_ASPECT_RATIO =
+    1.8f
 
 /*
  * ============================================================

@@ -19,8 +19,8 @@ enum class BoardTextRole {
  *
  * This is separate from BoardShape.
  *
- * A board can use DoubleColumn in a Balanced shape if enough
- * usable space exists.
+ * A board can use DoubleColumn in a Square shape if its
+ * own content benefits from two columns.
  */
 enum class BoardLayoutMode {
     SingleColumn,
@@ -39,15 +39,29 @@ enum class BoardSizeBand {
 }
 
 /**
- * Describes the shape of the available board space.
+ * Describes the physical shape of the available board space.
  *
  * This does not directly decide how a board must arrange content.
- * Each board can choose its own layout from this information.
+ *
+ * Together with BoardSizeBand, these values create nine broad
+ * responsive environments:
+ *
+ * Small VerticalRectangle
+ * Small Square
+ * Small HorizontalRectangle
+ *
+ * Medium VerticalRectangle
+ * Medium Square
+ * Medium HorizontalRectangle
+ *
+ * Large VerticalRectangle
+ * Large Square
+ * Large HorizontalRectangle
  */
 enum class BoardShape {
-    NarrowTall,
-    Balanced,
-    Wide
+    VerticalRectangle,
+    Square,
+    HorizontalRectangle
 }
 
 /**
@@ -172,18 +186,18 @@ data class BoardResponsiveMetrics(
             sizeBand ==
                     BoardSizeBand.Large
 
-    val isNarrowTall: Boolean
+    val isVerticalRectangle: Boolean
         get() =
             shape ==
-                    BoardShape.NarrowTall
+                    BoardShape.VerticalRectangle
 
-    val isBalanced: Boolean
+    val isSquare: Boolean
         get() =
             shape ==
-                    BoardShape.Balanced
+                    BoardShape.Square
 
-    val isWide: Boolean
+    val isHorizontalRectangle: Boolean
         get() =
             shape ==
-                    BoardShape.Wide
+                    BoardShape.HorizontalRectangle
 }
