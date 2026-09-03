@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import com.wiseravenstudios.arithmatic.R
@@ -40,19 +41,26 @@ private const val WINDOW_WIDTH_FRACTION = 0.06f
 private const val WINDOW_HEIGHT_FRACTION = 0.27f
 
 /*
- * Foreground objects are anchored to the side walls but raised above
- * the bottom of the screen so they rest within the visible floor.
+ * These values define the reference box used to establish the intended
+ * relative size of both foreground furniture pieces.
+ *
+ * Each drawable keeps its own intrinsic aspect ratio inside this box.
+ * Both pieces then use one shared scale factor.
  */
+private const val FOREGROUND_REFERENCE_WIDTH_FRACTION = 0.33f
+private const val FOREGROUND_REFERENCE_HEIGHT_FRACTION = 0.22f
 
 /* Teacher desk */
-private const val TEACHER_DESK_WIDTH_FRACTION = 0.33f
-private const val TEACHER_DESK_HEIGHT_FRACTION = 0.22f
 private const val TEACHER_DESK_BOTTOM_INSET_FRACTION = 0.055f
 
 /* Student desk and chair */
-private const val STUDENT_AREA_WIDTH_FRACTION = 0.33f
-private const val STUDENT_AREA_HEIGHT_FRACTION = 0.22f
 private const val STUDENT_AREA_BOTTOM_INSET_FRACTION = 0.055f
+
+/*
+ * Keeps foreground artwork clear of the outer board frame.
+ */
+private val FOREGROUND_BOARD_CLEARANCE =
+    4.dp
 
 /**
  * Padding encoded into a NinePatch drawable's content region.
@@ -64,6 +72,14 @@ private data class NinePatchContentInsets(
     val bottom: Dp
 )
 
+/**
+ * Width and height of a foreground object.
+ */
+private data class ForegroundSize(
+    val width: Dp,
+    val height: Dp
+)
+
 @Composable
 fun ClassroomScene(
     modifier: Modifier = Modifier,
@@ -73,6 +89,18 @@ fun ClassroomScene(
         rememberNinePatchContentInsets(
             drawableRes =
                 R.drawable.arithmatic_ui_board
+        )
+
+    val teacherDeskAspectRatio =
+        rememberDrawableAspectRatio(
+            drawableRes =
+                R.drawable.arithmatic_ui_teacher_desk
+        )
+
+    val studentAreaAspectRatio =
+        rememberDrawableAspectRatio(
+            drawableRes =
+                R.drawable.arithmatic_ui_student_desk_and_chair
         )
 
     BoxWithConstraints(
@@ -94,6 +122,179 @@ fun ClassroomScene(
         val boardTop =
             maxHeight *
                     BOARD_TOP_FRACTION
+
+        val boardRight =
+            boardLeft +
+                    boardWidth
+
+        val boardBottom =
+            boardTop +
+                    boardHeight
+
+        /*
+         * This is the original reference area that used 0.33 of the
+         * scene width and 0.22 of the scene height.
+         *
+         * Each image is fitted into this box without changing its
+         * intrinsic aspect ratio.
+         */
+        val foregroundReferenceWidth =
+            maxWidth *
+                    FOREGROUND_REFERENCE_WIDTH_FRACTION
+
+        val foregroundReferenceHeight =
+            maxHeight *
+                    FOREGROUND_REFERENCE_HEIGHT_FRACTION
+
+        val teacherDeskBaseSize =
+            calculateAspectFitSize(
+                maximumWidth =
+                    foregroundReferenceWidth,
+                maximumHeight =
+                    foregroundReferenceHeight,
+                aspectRatio =
+                    teacherDeskAspectRatio
+            )
+
+        val studentAreaBaseSize =
+            calculateAspectFitSize(
+                maximumWidth =
+                    foregroundReferenceWidth,
+                maximumHeight =
+                    foregroundReferenceHeight,
+                aspectRatio =
+                    studentAreaAspectRatio
+            )
+
+        val teacherDeskBottomInset =
+            maxHeight *
+                    TEACHER_DESK_BOTTOM_INSET_FRACTION
+
+        val studentAreaBottomInset =
+            maxHeight *
+                    STUDENT_AREA_BOTTOM_INSET_FRACTION
+
+        val teacherDeskBottom =
+            maxHeight -
+                    teacherDeskBottomInset
+
+        val studentAreaBottom =
+            maxHeight -
+                    studentAreaBottomInset
+
+        /*
+         * The teacher desk is safe while either condition is true:
+         *
+         * - its right edge stays left of the board;
+         * - its top edge stays below the board.
+         *
+         * It overlaps the board only after both limits are crossed.
+         */
+        val teacherDeskHorizontalGap =
+            (
+                    boardLeft -
+                            FOREGROUND_BOARD_CLEARANCE
+                    )
+                .coerceAtLeast(
+                    0.dp
+                )
+
+        val teacherDeskVerticalGap =
+            (
+                    teacherDeskBottom -
+                            boardBottom -
+                            FOREGROUND_BOARD_CLEARANCE
+                    )
+                .coerceAtLeast(
+                    0.dp
+                )
+
+        val teacherDeskMaximumScale =
+            calculateMaximumForegroundScale(
+                sceneWidth =
+                    maxWidth,
+                objectBottom =
+                    teacherDeskBottom,
+                baseSize =
+                    teacherDeskBaseSize,
+                horizontalGap =
+                    teacherDeskHorizontalGap,
+                verticalGap =
+                    teacherDeskVerticalGap
+            )
+
+        /*
+         * The student desk and chair use the mirrored rule on the
+         * right side of the board.
+         */
+        val studentAreaHorizontalGap =
+            (
+                    maxWidth -
+                            boardRight -
+                            FOREGROUND_BOARD_CLEARANCE
+                    )
+                .coerceAtLeast(
+                    0.dp
+                )
+
+        val studentAreaVerticalGap =
+            (
+                    studentAreaBottom -
+                            boardBottom -
+                            FOREGROUND_BOARD_CLEARANCE
+                    )
+                .coerceAtLeast(
+                    0.dp
+                )
+
+        val studentAreaMaximumScale =
+            calculateMaximumForegroundScale(
+                sceneWidth =
+                    maxWidth,
+                objectBottom =
+                    studentAreaBottom,
+                baseSize =
+                    studentAreaBaseSize,
+                horizontalGap =
+                    studentAreaHorizontalGap,
+                verticalGap =
+                    studentAreaVerticalGap
+            )
+
+        /*
+         * Both foreground pieces use the smaller maximum scale.
+         *
+         * If either piece reaches its board or scene limit first,
+         * both pieces stop growing. This preserves their relative size.
+         */
+        val sharedForegroundScale =
+            minOf(
+                teacherDeskMaximumScale,
+                studentAreaMaximumScale
+            )
+                .coerceAtLeast(
+                    0f
+                )
+
+        val teacherDeskSize =
+            ForegroundSize(
+                width =
+                    teacherDeskBaseSize.width *
+                            sharedForegroundScale,
+                height =
+                    teacherDeskBaseSize.height *
+                            sharedForegroundScale
+            )
+
+        val studentAreaSize =
+            ForegroundSize(
+                width =
+                    studentAreaBaseSize.width *
+                            sharedForegroundScale,
+                height =
+                    studentAreaBaseSize.height *
+                            sharedForegroundScale
+            )
 
         /*
          * Layer 1: Stretchable classroom background.
@@ -218,18 +419,13 @@ fun ClassroomScene(
                 )
                 .offset(
                     y =
-                        -(
-                                maxHeight *
-                                        TEACHER_DESK_BOTTOM_INSET_FRACTION
-                                )
+                        -teacherDeskBottomInset
                 )
                 .size(
                     width =
-                        maxWidth *
-                                TEACHER_DESK_WIDTH_FRACTION,
+                        teacherDeskSize.width,
                     height =
-                        maxHeight *
-                                TEACHER_DESK_HEIGHT_FRACTION
+                        teacherDeskSize.height
                 ),
             contentScale =
                 ContentScale.Fit,
@@ -254,24 +450,184 @@ fun ClassroomScene(
                 )
                 .offset(
                     y =
-                        -(
-                                maxHeight *
-                                        STUDENT_AREA_BOTTOM_INSET_FRACTION
-                                )
+                        -studentAreaBottomInset
                 )
                 .size(
                     width =
-                        maxWidth *
-                                STUDENT_AREA_WIDTH_FRACTION,
+                        studentAreaSize.width,
                     height =
-                        maxHeight *
-                                STUDENT_AREA_HEIGHT_FRACTION
+                        studentAreaSize.height
                 ),
             contentScale =
                 ContentScale.Fit,
             alignment =
                 Alignment.BottomEnd
         )
+    }
+}
+
+/**
+ * Fits a rectangle inside the supplied bounds while preserving the
+ * drawable's intrinsic aspect ratio.
+ */
+private fun calculateAspectFitSize(
+    maximumWidth: Dp,
+    maximumHeight: Dp,
+    aspectRatio: Float
+): ForegroundSize {
+    if (
+        maximumWidth <= 0.dp ||
+        maximumHeight <= 0.dp ||
+        aspectRatio <= 0f
+    ) {
+        return ForegroundSize(
+            width =
+                0.dp,
+            height =
+                0.dp
+        )
+    }
+
+    val widthFromMaximumHeight =
+        maximumHeight *
+                aspectRatio
+
+    return if (
+        widthFromMaximumHeight <= maximumWidth
+    ) {
+        ForegroundSize(
+            width =
+                widthFromMaximumHeight,
+            height =
+                maximumHeight
+        )
+    } else {
+        ForegroundSize(
+            width =
+                maximumWidth,
+            height =
+                maximumWidth /
+                        aspectRatio
+        )
+    }
+}
+
+/**
+ * Finds the largest safe scale for one foreground object.
+ *
+ * Board overlap happens only when the object crosses both the board's
+ * bottom edge and the relevant vertical side edge.
+ */
+private fun calculateMaximumForegroundScale(
+    sceneWidth: Dp,
+    objectBottom: Dp,
+    baseSize: ForegroundSize,
+    horizontalGap: Dp,
+    verticalGap: Dp
+): Float {
+    if (
+        sceneWidth <= 0.dp ||
+        objectBottom <= 0.dp ||
+        baseSize.width <= 0.dp ||
+        baseSize.height <= 0.dp
+    ) {
+        return 0f
+    }
+
+    /*
+     * The object cannot grow past the horizontal scene bounds.
+     */
+    val sceneWidthScale =
+        sceneWidth.value /
+                baseSize.width.value
+
+    /*
+     * The object cannot grow above the top of the scene.
+     */
+    val sceneHeightScale =
+        objectBottom.value /
+                baseSize.height.value
+
+    /*
+     * At this scale, the object's inner side reaches the board side.
+     */
+    val sideScale =
+        horizontalGap.value /
+                baseSize.width.value
+
+    /*
+     * At this scale, the object's top reaches the board bottom.
+     */
+    val bottomScale =
+        verticalGap.value /
+                baseSize.height.value
+
+    /*
+     * Board overlap requires:
+     *
+     * crosses side
+     * AND
+     * crosses bottom
+     *
+     * Therefore the larger of these two thresholds is the last safe
+     * board-related scale.
+     */
+    val boardCollisionScale =
+        maxOf(
+            sideScale,
+            bottomScale
+        )
+
+    return minOf(
+        sceneWidthScale,
+        sceneHeightScale,
+        boardCollisionScale
+    )
+        .coerceAtLeast(
+            0f
+        )
+}
+
+/**
+ * Reads the drawable's intrinsic dimensions and returns its width-to-height
+ * aspect ratio.
+ */
+@Composable
+private fun rememberDrawableAspectRatio(
+    @DrawableRes drawableRes: Int
+): Float {
+    val context =
+        LocalContext.current
+
+    return remember(
+        context,
+        drawableRes
+    ) {
+        val drawable =
+            requireNotNull(
+                ContextCompat.getDrawable(
+                    context,
+                    drawableRes
+                )
+            ) {
+                "Unable to load drawable: $drawableRes"
+            }
+
+        val width =
+            drawable.intrinsicWidth
+
+        val height =
+            drawable.intrinsicHeight
+
+        require(
+            width > 0 &&
+                    height > 0
+        ) {
+            "Drawable must have valid intrinsic dimensions: $drawableRes"
+        }
+
+        width.toFloat() /
+                height.toFloat()
     }
 }
 
@@ -336,6 +692,10 @@ private fun rememberNinePatchContentInsets(
 /**
  * Displays an Android NinePatch drawable as the background of a standard
  * Android View.
+ *
+ * The drawable is assigned once when the View is created. The existing
+ * NinePatch drawable automatically redraws itself when the View bounds
+ * change, so it does not need to be recreated during Compose updates.
  */
 @Composable
 private fun NinePatchLayer(
@@ -353,13 +713,6 @@ private fun NinePatchLayer(
                         drawableRes
                     )
             }
-        },
-        update = { view ->
-            view.background =
-                ContextCompat.getDrawable(
-                    view.context,
-                    drawableRes
-                )
         }
     )
 }
