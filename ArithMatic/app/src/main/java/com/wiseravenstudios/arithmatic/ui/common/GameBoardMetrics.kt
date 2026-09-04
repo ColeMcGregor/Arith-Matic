@@ -1,8 +1,8 @@
 package com.wiseravenstudios.arithmatic.ui.common
 
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 fun calculateGameBoardMetrics(
     width: Dp,
@@ -29,19 +29,12 @@ fun calculateGameBoardMetrics(
     val heightScale =
         environment.heightScale
 
-    val typographyScale =
-        environment.typographyScale
-
     /*
      * ============================================================
      * LAYOUT
      * ============================================================
-     *
-     * Game Board uses two columns when the available space has a
-     * strongly horizontal shape.
-     *
-     * Square and vertical layouts remain single-column.
      */
+
     val layoutMode =
         when (environment.shape) {
             BoardShape.VerticalRectangle ->
@@ -57,89 +50,6 @@ fun calculateGameBoardMetrics(
     val isDoubleColumn =
         layoutMode ==
                 BoardLayoutMode.DoubleColumn
-
-    val typographyMultiplier =
-        if (isDoubleColumn) {
-            GAME_DOUBLE_COLUMN_TYPOGRAPHY_SCALE
-        } else {
-            1f
-        }
-
-    /*
-     * ============================================================
-     * TYPOGRAPHY
-     * ============================================================
-     */
-
-    val problemTextSize =
-        gameProblemTextSize(
-            sizeBand =
-                environment.sizeBand,
-            scale =
-                typographyScale,
-            multiplier =
-                typographyMultiplier
-        )
-
-    val displayTextSize =
-        gameDisplayTextSize(
-            sizeBand =
-                environment.sizeBand,
-            scale =
-                typographyScale,
-            multiplier =
-                typographyMultiplier
-        )
-
-    val primaryActionTextSize =
-        gamePrimaryActionTextSize(
-            sizeBand =
-                environment.sizeBand,
-            scale =
-                typographyScale,
-            multiplier =
-                typographyMultiplier
-        )
-
-    val headingTextSize =
-        gameHeadingTextSize(
-            sizeBand =
-                environment.sizeBand,
-            scale =
-                typographyScale,
-            multiplier =
-                typographyMultiplier
-        )
-
-    val bodyTextSize =
-        gameBodyTextSize(
-            sizeBand =
-                environment.sizeBand,
-            scale =
-                typographyScale,
-            multiplier =
-                typographyMultiplier
-        )
-
-    val compactTextSize =
-        gameCompactTextSize(
-            sizeBand =
-                environment.sizeBand,
-            scale =
-                typographyScale,
-            multiplier =
-                typographyMultiplier
-        )
-
-    val microTextSize =
-        gameMicroTextSize(
-            sizeBand =
-                environment.sizeBand,
-            scale =
-                typographyScale,
-            multiplier =
-                typographyMultiplier
-        )
 
     /*
      * ============================================================
@@ -308,6 +218,72 @@ fun calculateGameBoardMetrics(
 
     /*
      * ============================================================
+     * TYPOGRAPHY
+     * ============================================================
+     *
+     * Typography is based directly on the usable board dimensions.
+     *
+     * The shorter usable dimension is the limiting dimension for
+     * broad typography growth.
+     *
+     * Exact equation and answer fitting is handled later by the
+     * GameBoard using its actual Compose constraints.
+     */
+
+    val baseScale =
+        calculateGameBaseScale(
+            width = width,
+            height = height,
+            contentHorizontalPadding =
+                contentHorizontalPadding,
+            contentVerticalPadding =
+                contentVerticalPadding
+        )
+
+    val problemTextSize =
+        (
+                baseScale *
+                        GAME_PROBLEM_TEXT_RATIO
+                ).sp
+
+    val displayTextSize =
+        (
+                baseScale *
+                        GAME_DISPLAY_TEXT_RATIO
+                ).sp
+
+    val primaryActionTextSize =
+        (
+                baseScale *
+                        GAME_PRIMARY_ACTION_TEXT_RATIO
+                ).sp
+
+    val headingTextSize =
+        (
+                baseScale *
+                        GAME_HEADING_TEXT_RATIO
+                ).sp
+
+    val bodyTextSize =
+        (
+                baseScale *
+                        GAME_BODY_TEXT_RATIO
+                ).sp
+
+    val compactTextSize =
+        (
+                baseScale *
+                        GAME_COMPACT_TEXT_RATIO
+                ).sp
+
+    val microTextSize =
+        (
+                baseScale *
+                        GAME_MICRO_TEXT_RATIO
+                ).sp
+
+    /*
+     * ============================================================
      * GAME-SPECIFIC GEOMETRY
      * ============================================================
      */
@@ -315,157 +291,35 @@ fun calculateGameBoardMetrics(
     val minimumTouchTarget =
         GAME_MINIMUM_TOUCH_TARGET_DP.dp
 
+    val problemLineHeight =
+        baseScale *
+                GAME_PROBLEM_TEXT_RATIO *
+                GAME_CHALKTASTIC_LINE_HEIGHT_FACTOR
+
+    val answerLineHeight =
+        baseScale *
+                GAME_HEADING_TEXT_RATIO *
+                GAME_CHALKTASTIC_LINE_HEIGHT_FACTOR
+
     val gameQuestionAreaHeight =
-        when (environment.sizeBand) {
-            BoardSizeBand.Small -> {
-                if (isDoubleColumn) {
-                    responsiveDp(
-                        scale = heightScale,
-                        minimum = 48f,
-                        maximum = 72f
-                    )
-                } else {
-                    responsiveDp(
-                        scale = heightScale,
-                        minimum = 58f,
-                        maximum = 88f
-                    )
-                }
-            }
-
-            BoardSizeBand.Medium -> {
-                if (isDoubleColumn) {
-                    responsiveDp(
-                        scale = heightScale,
-                        minimum = 64f,
-                        maximum = 92f
-                    )
-                } else {
-                    responsiveDp(
-                        scale = heightScale,
-                        minimum = 78f,
-                        maximum = 108f
-                    )
-                }
-            }
-
-            BoardSizeBand.Large -> {
-                if (isDoubleColumn) {
-                    responsiveDp(
-                        scale = heightScale,
-                        minimum = 82f,
-                        maximum = 116f
-                    )
-                } else {
-                    responsiveDp(
-                        scale = heightScale,
-                        minimum = 96f,
-                        maximum = 136f
-                    )
-                }
-            }
-        }
+        maxOf(
+            GAME_MINIMUM_TOUCH_TARGET_DP,
+            problemLineHeight +
+                    GAME_QUESTION_VERTICAL_CLEARANCE_DP
+        ).dp
 
     val gameAnswerButtonHeight =
-        when (environment.sizeBand) {
-            BoardSizeBand.Small -> {
-                if (isDoubleColumn) {
-                    responsiveDp(
-                        scale = heightScale,
-                        minimum = 44f,
-                        maximum = 60f
-                    )
-                } else {
-                    responsiveDp(
-                        scale = heightScale,
-                        minimum = 48f,
-                        maximum = 66f
-                    )
-                }
-            }
-
-            BoardSizeBand.Medium -> {
-                if (isDoubleColumn) {
-                    responsiveDp(
-                        scale = heightScale,
-                        minimum = 56f,
-                        maximum = 74f
-                    )
-                } else {
-                    responsiveDp(
-                        scale = heightScale,
-                        minimum = 60f,
-                        maximum = 80f
-                    )
-                }
-            }
-
-            BoardSizeBand.Large -> {
-                if (isDoubleColumn) {
-                    responsiveDp(
-                        scale = heightScale,
-                        minimum = 68f,
-                        maximum = 88f
-                    )
-                } else {
-                    responsiveDp(
-                        scale = heightScale,
-                        minimum = 72f,
-                        maximum = 96f
-                    )
-                }
-            }
-        }
+        maxOf(
+            GAME_MINIMUM_TOUCH_TARGET_DP,
+            answerLineHeight +
+                    actionVerticalPadding.value * 2f
+        ).dp
 
     val gameSectionSpacing =
-        when (environment.sizeBand) {
-            BoardSizeBand.Small -> {
-                if (isDoubleColumn) {
-                    responsiveDp(
-                        scale = heightScale,
-                        minimum = 1f,
-                        maximum = 6f
-                    )
-                } else {
-                    responsiveDp(
-                        scale = heightScale,
-                        minimum = 3f,
-                        maximum = 9f
-                    )
-                }
-            }
-
-            BoardSizeBand.Medium -> {
-                if (isDoubleColumn) {
-                    responsiveDp(
-                        scale = heightScale,
-                        minimum = 4f,
-                        maximum = 12f
-                    )
-                } else {
-                    responsiveDp(
-                        scale = heightScale,
-                        minimum = 6f,
-                        maximum = 15f
-                    )
-                }
-            }
-
-            BoardSizeBand.Large -> {
-                if (isDoubleColumn) {
-                    responsiveDp(
-                        scale = heightScale,
-                        minimum = 8f,
-                        maximum = 18f
-                    )
-                } else {
-                    responsiveDp(
-                        scale = heightScale,
-                        minimum = 10f,
-                        maximum = 22f
-                    )
-                }
-            }
+        if (isDoubleColumn) {
+            smallSpacing
+        } else {
+            mediumSpacing
         }
 
     return BoardResponsiveMetrics(
@@ -542,232 +396,43 @@ fun calculateGameBoardMetrics(
 
 /*
  * ============================================================
- * GAME BOARD TEXT RANGES
+ * GAME BOARD BASE SCALE
  * ============================================================
  */
 
-private fun gameProblemTextSize(
-    sizeBand: BoardSizeBand,
-    scale: Float,
-    multiplier: Float = 1f
-): TextUnit {
-    return when (sizeBand) {
-        BoardSizeBand.Small ->
-            responsiveSp(
-                scale = scale,
-                minimum = 30f,
-                maximum = 44f,
-                multiplier = multiplier
+private fun calculateGameBaseScale(
+    width: Dp,
+    height: Dp,
+    contentHorizontalPadding: Dp,
+    contentVerticalPadding: Dp
+): Float {
+
+    val usableWidth =
+        (
+                width.value -
+                        contentHorizontalPadding.value * 2f
+                )
+            .coerceAtLeast(
+                1f
             )
 
-        BoardSizeBand.Medium ->
-            responsiveSp(
-                scale = scale,
-                minimum = 42f,
-                maximum = 60f,
-                multiplier = multiplier
+    val usableHeight =
+        (
+                height.value -
+                        contentVerticalPadding.value * 2f
+                )
+            .coerceAtLeast(
+                1f
             )
 
-        BoardSizeBand.Large ->
-            responsiveSp(
-                scale = scale,
-                minimum = 58f,
-                maximum = 82f,
-                multiplier = multiplier
-            )
-    }
-}
+    val limitingDimension =
+        minOf(
+            usableWidth,
+            usableHeight
+        )
 
-private fun gameDisplayTextSize(
-    sizeBand: BoardSizeBand,
-    scale: Float,
-    multiplier: Float = 1f
-): TextUnit {
-    return when (sizeBand) {
-        BoardSizeBand.Small ->
-            responsiveSp(
-                scale = scale,
-                minimum = 22f,
-                maximum = 34f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Medium ->
-            responsiveSp(
-                scale = scale,
-                minimum = 32f,
-                maximum = 46f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Large ->
-            responsiveSp(
-                scale = scale,
-                minimum = 44f,
-                maximum = 64f,
-                multiplier = multiplier
-            )
-    }
-}
-
-private fun gamePrimaryActionTextSize(
-    sizeBand: BoardSizeBand,
-    scale: Float,
-    multiplier: Float = 1f
-): TextUnit {
-    return when (sizeBand) {
-        BoardSizeBand.Small ->
-            responsiveSp(
-                scale = scale,
-                minimum = 20f,
-                maximum = 30f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Medium ->
-            responsiveSp(
-                scale = scale,
-                minimum = 28f,
-                maximum = 40f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Large ->
-            responsiveSp(
-                scale = scale,
-                minimum = 38f,
-                maximum = 52f,
-                multiplier = multiplier
-            )
-    }
-}
-
-private fun gameHeadingTextSize(
-    sizeBand: BoardSizeBand,
-    scale: Float,
-    multiplier: Float = 1f
-): TextUnit {
-    return when (sizeBand) {
-        BoardSizeBand.Small ->
-            responsiveSp(
-                scale = scale,
-                minimum = 16f,
-                maximum = 23f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Medium ->
-            responsiveSp(
-                scale = scale,
-                minimum = 22f,
-                maximum = 32f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Large ->
-            responsiveSp(
-                scale = scale,
-                minimum = 30f,
-                maximum = 46f,
-                multiplier = multiplier
-            )
-    }
-}
-
-private fun gameBodyTextSize(
-    sizeBand: BoardSizeBand,
-    scale: Float,
-    multiplier: Float = 1f
-): TextUnit {
-    return when (sizeBand) {
-        BoardSizeBand.Small ->
-            responsiveSp(
-                scale = scale,
-                minimum = 14f,
-                maximum = 20f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Medium ->
-            responsiveSp(
-                scale = scale,
-                minimum = 19f,
-                maximum = 25f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Large ->
-            responsiveSp(
-                scale = scale,
-                minimum = 24f,
-                maximum = 30f,
-                multiplier = multiplier
-            )
-    }
-}
-
-private fun gameCompactTextSize(
-    sizeBand: BoardSizeBand,
-    scale: Float,
-    multiplier: Float = 1f
-): TextUnit {
-    return when (sizeBand) {
-        BoardSizeBand.Small ->
-            responsiveSp(
-                scale = scale,
-                minimum = 12f,
-                maximum = 18f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Medium ->
-            responsiveSp(
-                scale = scale,
-                minimum = 17f,
-                maximum = 25f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Large ->
-            responsiveSp(
-                scale = scale,
-                minimum = 24f,
-                maximum = 34f,
-                multiplier = multiplier
-            )
-    }
-}
-
-private fun gameMicroTextSize(
-    sizeBand: BoardSizeBand,
-    scale: Float,
-    multiplier: Float = 1f
-): TextUnit {
-    return when (sizeBand) {
-        BoardSizeBand.Small ->
-            responsiveSp(
-                scale = scale,
-                minimum = 10f,
-                maximum = 13f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Medium ->
-            responsiveSp(
-                scale = scale,
-                minimum = 12f,
-                maximum = 16f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Large ->
-            responsiveSp(
-                scale = scale,
-                minimum = 15f,
-                maximum = 19f,
-                multiplier = multiplier
-            )
-    }
+    return limitingDimension *
+            GAME_BASE_SCALE_RATIO
 }
 
 /*
@@ -833,12 +498,51 @@ private const val GAME_MAXIMUM_REFERENCE_HEIGHT_DP =
 
 /*
  * ============================================================
- * GAME BOARD LAYOUT
+ * TYPOGRAPHY
  * ============================================================
  */
 
-private const val GAME_DOUBLE_COLUMN_TYPOGRAPHY_SCALE =
-    0.92f
+private const val GAME_BASE_SCALE_RATIO =
+    0.20f
+
+private const val GAME_PROBLEM_TEXT_RATIO =
+    1.00f
+
+private const val GAME_DISPLAY_TEXT_RATIO =
+    0.78f
+
+private const val GAME_PRIMARY_ACTION_TEXT_RATIO =
+    0.66f
+
+private const val GAME_HEADING_TEXT_RATIO =
+    0.58f
+
+private const val GAME_BODY_TEXT_RATIO =
+    0.44f
+
+private const val GAME_COMPACT_TEXT_RATIO =
+    0.38f
+
+private const val GAME_MICRO_TEXT_RATIO =
+    0.26f
+
+/*
+ * ============================================================
+ * FONT GEOMETRY
+ * ============================================================
+ */
+
+private const val GAME_CHALKTASTIC_LINE_HEIGHT_FACTOR =
+    1.29f
+
+/*
+ * ============================================================
+ * GAME BOARD MINIMUM GEOMETRY
+ * ============================================================
+ */
 
 private const val GAME_MINIMUM_TOUCH_TARGET_DP =
     48f
+
+private const val GAME_QUESTION_VERTICAL_CLEARANCE_DP =
+    8f

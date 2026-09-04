@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import com.wiseravenstudios.arithmatic.ui.common.BoardResponsiveMetrics
 import com.wiseravenstudios.arithmatic.ui.common.BoardTextRole
 import com.wiseravenstudios.arithmatic.ui.common.calculateGameBoardMetrics
+import com.wiseravenstudios.arithmatic.ui.common.findLargestFittingInt
 import com.wiseravenstudios.arithmatic.ui.components.ChalkButton
 import com.wiseravenstudios.arithmatic.ui.components.ChalkButtonState
 import com.wiseravenstudios.arithmatic.ui.components.ChalkTextAction
@@ -472,98 +473,237 @@ private fun AnswerChoiceGrid(
         longestAnswerLength >
                 SingleColumnAnswerLengthThreshold
 
-    val sharedAnswerFontSize =
-        answerFontSizeForLength(
-            answerLength =
-                longestAnswerLength,
-            useSingleColumn =
-                useSingleColumn,
-            metrics =
-                metrics
-        )
-
-    Column(
+    BoxWithConstraints(
         modifier =
-            modifier,
-        verticalArrangement =
-            Arrangement.spacedBy(
-                metrics.gameSectionSpacing
-            )
+            modifier
     ) {
-        if (useSingleColumn) {
-            formattedChoices.forEachIndexed {
-                    choiceIndex,
-                    answerText ->
+        val textMeasurer =
+            rememberTextMeasurer()
 
-                AnswerChoiceButton(
-                    answerText =
-                        answerText,
-                    answerFontSize =
-                        sharedAnswerFontSize,
-                    choiceIndex =
-                        choiceIndex,
-                    uiState =
-                        uiState,
-                    metrics =
-                        metrics,
-                    onAnswerSelected =
-                        onAnswerSelected,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(
-                            answerButtonHeight
-                        )
-                )
+        val density =
+            LocalDensity.current
+
+        val columnSpacingPx =
+            with(density) {
+                metrics.tinySpacing
+                    .roundToPx()
             }
-        } else {
-            repeat(2) { rowIndex ->
-                Row(
-                    modifier =
-                        Modifier.fillMaxWidth(),
-                    horizontalArrangement =
-                        Arrangement.spacedBy(
-                            metrics.tinySpacing
+
+        val answerButtonHeightPx =
+            with(density) {
+                answerButtonHeight
+                    .roundToPx()
+            }
+
+        val contentPaddingPx =
+            with(density) {
+                metrics.tinySpacing
+                    .roundToPx()
+            }
+
+        val answerButtonWidthPx =
+            if (useSingleColumn) {
+                constraints.maxWidth
+            } else {
+                (
+                        constraints.maxWidth -
+                                columnSpacingPx
                         )
-                ) {
-                    repeat(2) { columnIndex ->
-                        val choiceIndex =
-                            rowIndex * 2 +
-                                    columnIndex
+                    .coerceAtLeast(
+                        1
+                    ) / 2
+            }
 
-                        val answerText =
-                            formattedChoices
-                                .getOrNull(
-                                    choiceIndex
+        /*
+         * ChalkButton applies tinySpacing once on each side through
+         * contentPadding, and AnswerText applies it once more through
+         * its own horizontal padding.
+         */
+        val availableTextWidthPx =
+            (
+                    answerButtonWidthPx -
+                            contentPaddingPx * 4
+                    )
+                .coerceAtLeast(
+                    1
+                )
+
+        val availableTextHeightPx =
+            (
+                    answerButtonHeightPx -
+                            contentPaddingPx * 2
+                    )
+                .coerceAtLeast(
+                    1
+                )
+
+        val maximumFontSize =
+            metrics.textSize(
+                BoardTextRole.Heading
+            )
+
+        val minimumFontSize =
+            metrics.textSize(
+                BoardTextRole.Micro
+            )
+
+        val baseStyle =
+            TextStyle(
+                fontFamily =
+                    Chalktastic,
+                fontWeight =
+                    FontWeight.Bold,
+                textAlign =
+                    TextAlign.Center
+            )
+
+        val annotatedChoices =
+            remember(formattedChoices) {
+                formattedChoices.map { answer ->
+                    AnnotatedString(
+                        answer
+                    )
+                }
+            }
+
+        val sharedAnswerFontSize =
+            remember(
+                annotatedChoices,
+                availableTextWidthPx,
+                availableTextHeightPx,
+                maximumFontSize,
+                minimumFontSize
+            ) {
+                val minimumSize =
+                    minimumFontSize.value
+                        .toInt()
+
+                val maximumSize =
+                    maximumFontSize.value
+                        .toInt()
+                        .coerceAtLeast(
+                            minimumSize
+                        )
+
+                findLargestFittingInt(
+                    minimum =
+                        minimumSize,
+                    maximum =
+                        maximumSize
+                ) { candidateSize ->
+                    annotatedChoices.all { answer ->
+
+                        val result =
+                            textMeasurer.measure(
+                                text =
+                                    answer,
+                                style =
+                                    baseStyle.copy(
+                                        fontSize =
+                                            candidateSize.sp
+                                    ),
+                                maxLines =
+                                    1,
+                                softWrap =
+                                    false,
+                                constraints =
+                                    Constraints(
+                                        maxWidth =
+                                            availableTextWidthPx,
+                                        maxHeight =
+                                            availableTextHeightPx
+                                    )
+                            )
+
+                        !result.didOverflowWidth &&
+                                !result.didOverflowHeight
+                    }
+                }.sp
+            }
+
+        Column(
+            modifier =
+                Modifier.fillMaxWidth(),
+            verticalArrangement =
+                Arrangement.spacedBy(
+                    metrics.gameSectionSpacing
+                )
+        ) {
+            if (useSingleColumn) {
+                formattedChoices.forEachIndexed {
+                        choiceIndex,
+                        answerText ->
+
+                    AnswerChoiceButton(
+                        answerText =
+                            answerText,
+                        answerFontSize =
+                            sharedAnswerFontSize,
+                        choiceIndex =
+                            choiceIndex,
+                        uiState =
+                            uiState,
+                        metrics =
+                            metrics,
+                        onAnswerSelected =
+                            onAnswerSelected,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(
+                                answerButtonHeight
+                            )
+                    )
+                }
+            } else {
+                repeat(2) { rowIndex ->
+                    Row(
+                        modifier =
+                            Modifier.fillMaxWidth(),
+                        horizontalArrangement =
+                            Arrangement.spacedBy(
+                                metrics.tinySpacing
+                            )
+                    ) {
+                        repeat(2) { columnIndex ->
+                            val choiceIndex =
+                                rowIndex * 2 +
+                                        columnIndex
+
+                            val answerText =
+                                formattedChoices
+                                    .getOrNull(
+                                        choiceIndex
+                                    )
+
+                            if (answerText != null) {
+                                AnswerChoiceButton(
+                                    answerText =
+                                        answerText,
+                                    answerFontSize =
+                                        sharedAnswerFontSize,
+                                    choiceIndex =
+                                        choiceIndex,
+                                    uiState =
+                                        uiState,
+                                    metrics =
+                                        metrics,
+                                    onAnswerSelected =
+                                        onAnswerSelected,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(
+                                            answerButtonHeight
+                                        )
                                 )
-
-                        if (answerText != null) {
-                            AnswerChoiceButton(
-                                answerText =
-                                    answerText,
-                                answerFontSize =
-                                    sharedAnswerFontSize,
-                                choiceIndex =
-                                    choiceIndex,
-                                uiState =
-                                    uiState,
-                                metrics =
-                                    metrics,
-                                onAnswerSelected =
-                                    onAnswerSelected,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(
-                                        answerButtonHeight
-                                    )
-                            )
-                        } else {
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(
-                                        answerButtonHeight
-                                    )
-                            )
+                            } else {
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(
+                                            answerButtonHeight
+                                        )
+                                )
+                            }
                         }
                     }
                 }
@@ -665,76 +805,6 @@ private fun AnswerText(
     }
 }
 
-private fun answerFontSizeForLength(
-    answerLength: Int,
-    useSingleColumn: Boolean,
-    metrics: BoardResponsiveMetrics
-): TextUnit {
-    val baseSize =
-        metrics.textSize(
-            BoardTextRole.Heading
-        ).value
-
-    val minimumSize =
-        metrics.textSize(
-            BoardTextRole.Micro
-        ).value
-
-    val scale =
-        if (useSingleColumn) {
-            when (answerLength) {
-                in 0..12 ->
-                    1.00f
-
-                13 ->
-                    0.95f
-
-                14 ->
-                    0.90f
-
-                15 ->
-                    0.85f
-
-                16 ->
-                    0.80f
-
-                else ->
-                    0.75f
-            }
-        } else {
-            when (answerLength) {
-                in 0..5 ->
-                    1.00f
-
-                6 ->
-                    0.95f
-
-                7 ->
-                    0.90f
-
-                8 ->
-                    0.80f
-
-                9 ->
-                    0.70f
-
-                10 ->
-                    0.65f
-
-                else ->
-                    0.60f
-            }
-        }
-
-    return (
-            baseSize * scale
-            )
-        .coerceAtLeast(
-            minimumSize
-        )
-        .sp
-}
-
 @Composable
 private fun FittedSingleLineText(
     text: String,
@@ -784,46 +854,64 @@ private fun FittedSingleLineText(
                     TextAlign.Center
             )
 
+        val annotatedText =
+            remember(text) {
+                AnnotatedString(
+                    text
+                )
+            }
+
         val resolvedFontSize =
             remember(
-                text,
+                annotatedText,
                 safeMaximumWidth,
                 maximumHeight,
                 maximumFontSize,
                 minimumFontSize
             ) {
-                findLargestFittingFontSize(
-                    text =
-                        text,
-                    style =
-                        baseStyle,
-                    maximumFontSize =
-                        maximumFontSize,
-                    minimumFontSize =
-                        minimumFontSize,
-                    maximumWidth =
-                        safeMaximumWidth,
-                    maximumHeight =
-                        maximumHeight,
-                    measureText = {
-                            annotatedText,
-                            style,
-                            constraints ->
+                val minimumSize =
+                    minimumFontSize.value
+                        .toInt()
 
+                val maximumSize =
+                    maximumFontSize.value
+                        .toInt()
+                        .coerceAtLeast(
+                            minimumSize
+                        )
+
+                findLargestFittingInt(
+                    minimum =
+                        minimumSize,
+                    maximum =
+                        maximumSize
+                ) { candidateSize ->
+
+                    val result =
                         textMeasurer.measure(
                             text =
                                 annotatedText,
                             style =
-                                style,
+                                baseStyle.copy(
+                                    fontSize =
+                                        candidateSize.sp
+                                ),
                             maxLines =
                                 1,
                             softWrap =
                                 false,
                             constraints =
-                                constraints
+                                Constraints(
+                                    maxWidth =
+                                        safeMaximumWidth,
+                                    maxHeight =
+                                        maximumHeight
+                                )
                         )
-                    }
-                )
+
+                    !result.didOverflowWidth &&
+                            !result.didOverflowHeight
+                }.sp
             }
 
         Text(
@@ -853,61 +941,6 @@ private fun FittedSingleLineText(
                 TextOverflow.Visible
         )
     }
-}
-
-private fun findLargestFittingFontSize(
-    text: String,
-    style: TextStyle,
-    maximumFontSize: TextUnit,
-    minimumFontSize: TextUnit,
-    maximumWidth: Int,
-    maximumHeight: Int,
-    measureText: (
-        AnnotatedString,
-        TextStyle,
-        Constraints
-    ) -> androidx.compose.ui.text.TextLayoutResult
-): TextUnit {
-    var candidateSize =
-        maximumFontSize.value
-            .toInt()
-
-    val minimumSize =
-        minimumFontSize.value
-            .toInt()
-
-    while (
-        candidateSize >=
-        minimumSize
-    ) {
-        val result =
-            measureText(
-                AnnotatedString(
-                    text
-                ),
-                style.copy(
-                    fontSize =
-                        candidateSize.sp
-                ),
-                Constraints(
-                    maxWidth =
-                        maximumWidth,
-                    maxHeight =
-                        maximumHeight
-                )
-            )
-
-        if (
-            !result.didOverflowWidth &&
-            !result.didOverflowHeight
-        ) {
-            return candidateSize.sp
-        }
-
-        candidateSize--
-    }
-
-    return minimumFontSize
 }
 
 private fun answerButtonState(

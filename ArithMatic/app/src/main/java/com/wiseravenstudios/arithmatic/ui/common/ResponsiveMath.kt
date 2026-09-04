@@ -228,6 +228,102 @@ internal fun normalize(
 }
 
 /**
+ * Finds the largest integer value accepted by the fit predicate.
+ *
+ * This is intended for discrete ranges such as whole-number font
+ * sizes. The search stops when the integer bounds meet.
+ */
+internal fun findLargestFittingInt(
+    minimum: Int,
+    maximum: Int,
+    fits: (Int) -> Boolean
+): Int {
+    require(maximum >= minimum) {
+        "Maximum fit value must not be less than minimum."
+    }
+
+    var lowerBound =
+        minimum
+
+    var upperBound =
+        maximum
+
+    var bestFit =
+        minimum
+
+    while (
+        lowerBound <=
+        upperBound
+    ) {
+        val candidate =
+            lowerBound +
+                    (
+                            upperBound -
+                                    lowerBound
+                            ) / 2
+
+        if (fits(candidate)) {
+            bestFit =
+                candidate
+
+            lowerBound =
+                candidate + 1
+        } else {
+            upperBound =
+                candidate - 1
+        }
+    }
+
+    return bestFit
+}
+
+/**
+ * Finds the largest floating-point value accepted by the fit
+ * predicate.
+ *
+ * Floating-point fit searches cannot terminate by waiting for the
+ * bounds to meet exactly. A small fixed number of binary-search
+ * passes gives more precision than the UI can display while avoiding
+ * excessive repeated layout calculations.
+ */
+internal fun findLargestFittingFloat(
+    minimum: Float,
+    maximum: Float,
+    fits: (Float) -> Boolean
+): Float {
+    require(maximum >= minimum) {
+        "Maximum fit value must not be less than minimum."
+    }
+
+    var lowerBound =
+        minimum
+
+    var upperBound =
+        maximum
+
+    repeat(
+        FITTING_SCALE_SEARCH_ITERATIONS
+    ) {
+        val candidate =
+            lowerBound +
+                    (
+                            upperBound -
+                                    lowerBound
+                            ) / 2f
+
+        if (fits(candidate)) {
+            lowerBound =
+                candidate
+        } else {
+            upperBound =
+                candidate
+        }
+    }
+
+    return lowerBound
+}
+
+/**
  * Finds the largest common typography base scale for which the
  * supplied layout constraints still fit.
  *
@@ -247,31 +343,11 @@ internal fun calculateLargestFittingBaseScale(
         "Maximum typography candidate must be greater than zero."
     }
 
-    var lowerBound =
-        0f
-
-    var upperBound =
-        maximumCandidate
-
-    repeat(
-        FITTING_SCALE_SEARCH_ITERATIONS
-    ) {
-        val candidate =
-            (
-                    lowerBound +
-                            upperBound
-                    ) / 2f
-
-        if (fits(candidate)) {
-            lowerBound =
-                candidate
-        } else {
-            upperBound =
-                candidate
-        }
-    }
-
-    return lowerBound
+    return findLargestFittingFloat(
+        minimum = 1f,
+        maximum = maximumCandidate,
+        fits = fits
+    )
 }
 
 /**
@@ -543,4 +619,4 @@ private const val MINIMUM_SCALE_DIVISOR =
  */
 
 private const val FITTING_SCALE_SEARCH_ITERATIONS =
-    24
+    8
