@@ -43,27 +43,37 @@ private const val ARITH_MATIC_WEBSITE =
 private const val WISE_RAVEN_PATREON =
     "https://www.patreon.com/cw/WiseRavenStudios"
 
-private enum class AdultTab(
-    val title: String,
-    val color: Color
-) {
-    Privacy(
-        title = "Privacy",
-        color = ChalkColors.PastelPurple
-    ),
-    Support(
-        title = "Support",
-        color = ChalkColors.PastelPink
-    ),
-    Statistics(
-        title = "Stats",
-        color = ChalkColors.PastelBlue
-    ),
-    Report(
-        title = "Report",
-        color = ChalkColors.PastelGreen
-    )
-}
+private val AdultTab.title: String
+    get() =
+        when (this) {
+            AdultTab.Privacy ->
+                "Privacy"
+
+            AdultTab.Support ->
+                "Support"
+
+            AdultTab.Statistics ->
+                "Stats"
+
+            AdultTab.Report ->
+                "Report"
+        }
+
+private val AdultTab.color: Color
+    get() =
+        when (this) {
+            AdultTab.Privacy ->
+                ChalkColors.PastelPurple
+
+            AdultTab.Support ->
+                ChalkColors.PastelPink
+
+            AdultTab.Statistics ->
+                ChalkColors.PastelBlue
+
+            AdultTab.Report ->
+                ChalkColors.PastelGreen
+        }
 
 @Composable
 fun AdultBoard(
@@ -75,11 +85,8 @@ fun AdultBoard(
     val uiState by
     viewModel.uiState.collectAsState()
 
-    var currentTab by remember {
-        mutableStateOf(
-            AdultTab.Statistics
-        )
-    }
+    val currentTab by
+    viewModel.currentTab.collectAsState()
 
     var reportOptions by remember {
         mutableStateOf(
@@ -102,8 +109,9 @@ fun AdultBoard(
                 currentTab = currentTab,
                 metrics = metrics,
                 onTabSelected = { selectedTab ->
-                    currentTab =
+                    viewModel.setCurrentTab(
                         selectedTab
+                    )
                 },
                 onBack = onBack,
                 content = {
@@ -129,8 +137,9 @@ fun AdultBoard(
                 currentTab = currentTab,
                 metrics = metrics,
                 onTabSelected = { selectedTab ->
-                    currentTab =
+                    viewModel.setCurrentTab(
                         selectedTab
+                    )
                 },
                 onBack = onBack,
                 content = {

@@ -12,9 +12,20 @@ import com.wiseravenstudios.arithmatic.domain.history.query.RoundHistoryFilter
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+
+/**
+ * Tabs available in the Adult area.
+ */
+enum class AdultTab {
+    Privacy,
+    Support,
+    Statistics,
+    Report
+}
 
 /**
  * Represents the shared state for the Adult area.
@@ -53,17 +64,17 @@ sealed interface AdultAreaUiState {
 }
 
 /**
- * Coordinates the shared history selection used by Adult Statistics and
- * Reports.
+ * Coordinates the shared state for the Adult area.
  *
  * Responsibilities:
  *
  * 1. Observe completed round history from the repository.
- * 2. Own the adult-facing history filter selection.
- * 3. Convert that selection into a HistoryQuery.
- * 4. Apply the shared RoundHistoryFilter.
- * 5. Calculate Adult Statistics from the filtered history.
- * 6. Expose immutable state for both Adult tabs.
+ * 2. Own the currently selected Adult tab.
+ * 3. Own the adult-facing history filter selection.
+ * 4. Convert that selection into a HistoryQuery.
+ * 5. Apply the shared RoundHistoryFilter.
+ * 6. Calculate Adult Statistics from the filtered history.
+ * 7. Expose immutable state for the Adult UI.
  *
  * This ViewModel does not contain statistics calculation logic itself and
  * does not export files.
@@ -71,6 +82,14 @@ sealed interface AdultAreaUiState {
 class AdultAreaViewModel(
     completedRoundRepository: CompletedRoundRepository
 ) : ViewModel() {
+
+    private val _currentTab =
+        MutableStateFlow(
+            AdultTab.Privacy
+        )
+
+    val currentTab: StateFlow<AdultTab> =
+        _currentTab.asStateFlow()
 
     private val selection =
         MutableStateFlow(
@@ -141,6 +160,16 @@ class AdultAreaViewModel(
                 initialValue =
                     AdultAreaUiState.Loading
             )
+
+    /**
+     * Changes the active Adult tab.
+     */
+    fun setCurrentTab(
+        tab: AdultTab
+    ) {
+        _currentTab.value =
+            tab
+    }
 
     /**
      * Replaces the complete Adult history selection.

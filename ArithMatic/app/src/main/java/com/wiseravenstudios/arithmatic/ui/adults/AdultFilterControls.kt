@@ -8,6 +8,7 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDateRangePickerState
@@ -1030,16 +1031,15 @@ private fun AdultOperandFilter(
                 modifier =
                     Modifier.fillMaxWidth(),
                 textStyle =
-                    TextStyle(
-                        fontFamily =
-                            Chalktastic,
-                        fontSize =
-                            metrics.compactTextSize
+                    adultFilterTextStyle(
+                        metrics = metrics
                     ),
                 label = {
                     Text(
                         text =
                             "Exact Operand(s)",
+                        fontFamily =
+                            Chalktastic,
                         fontSize =
                             metrics.microTextSize
                     )
@@ -1048,10 +1048,14 @@ private fun AdultOperandFilter(
                     Text(
                         text =
                             "Example: 7, 12, 17",
+                        fontFamily =
+                            Chalktastic,
                         fontSize =
                             metrics.microTextSize
                     )
                 },
+                colors =
+                    adultFilterFieldColors(),
                 singleLine = true
             )
         }
@@ -1090,19 +1094,20 @@ private fun AdultOperandFilter(
                     modifier =
                         Modifier.weight(1f),
                     textStyle =
-                        TextStyle(
-                            fontFamily =
-                                Chalktastic,
-                            fontSize =
-                                metrics.compactTextSize
+                        adultFilterTextStyle(
+                            metrics = metrics
                         ),
                     label = {
                         Text(
                             text = "Minimum",
+                            fontFamily =
+                                Chalktastic,
                             fontSize =
                                 metrics.microTextSize
                         )
                     },
+                    colors =
+                        adultFilterFieldColors(),
                     singleLine = true
                 )
 
@@ -1139,19 +1144,20 @@ private fun AdultOperandFilter(
                     modifier =
                         Modifier.weight(1f),
                     textStyle =
-                        TextStyle(
-                            fontFamily =
-                                Chalktastic,
-                            fontSize =
-                                metrics.compactTextSize
+                        adultFilterTextStyle(
+                            metrics = metrics
                         ),
                     label = {
                         Text(
                             text = "Maximum",
+                            fontFamily =
+                                Chalktastic,
                             fontSize =
                                 metrics.microTextSize
                         )
                     },
+                    colors =
+                        adultFilterFieldColors(),
                     singleLine = true
                 )
             }
@@ -1414,16 +1420,15 @@ private fun AdultIntegerSetFilter(
             modifier =
                 Modifier.fillMaxWidth(),
             textStyle =
-                TextStyle(
-                    fontFamily =
-                        Chalktastic,
-                    fontSize =
-                        metrics.compactTextSize
+                adultFilterTextStyle(
+                    metrics = metrics
                 ),
             label = {
                 Text(
                     text =
                         "Value(s)",
+                    fontFamily =
+                        Chalktastic,
                     fontSize =
                         metrics.microTextSize
                 )
@@ -1432,10 +1437,14 @@ private fun AdultIntegerSetFilter(
                 Text(
                     text =
                         "Example: 9, 20, 100",
+                    fontFamily =
+                        Chalktastic,
                     fontSize =
                         metrics.microTextSize
                 )
             },
+            colors =
+                adultFilterFieldColors(),
             singleLine =
                 true
         )
@@ -1622,6 +1631,61 @@ private fun FilterHint(
             metrics.microTextSize,
         textAlign =
             TextAlign.Start
+    )
+}
+
+@Composable
+private fun adultFilterFieldColors() =
+    OutlinedTextFieldDefaults.colors(
+        focusedTextColor =
+            ChalkColors.ChalkWhite,
+        unfocusedTextColor =
+            ChalkColors.ChalkWhite,
+
+        focusedBorderColor =
+            ChalkColors.PastelYellow,
+        unfocusedBorderColor =
+            ChalkColors.ChalkWhite.copy(
+                alpha = 0.75f
+            ),
+
+        focusedLabelColor =
+            ChalkColors.PastelYellow,
+        unfocusedLabelColor =
+            ChalkColors.ChalkWhite,
+
+        focusedPlaceholderColor =
+            ChalkColors.ChalkWhite.copy(
+                alpha = 0.75f
+            ),
+        unfocusedPlaceholderColor =
+            ChalkColors.ChalkWhite.copy(
+                alpha = 0.65f
+            ),
+
+        cursorColor =
+            ChalkColors.PastelYellow,
+
+        focusedContainerColor =
+            ChalkColors.ChalkWhite.copy(
+                alpha = 0.08f
+            ),
+        unfocusedContainerColor =
+            ChalkColors.ChalkWhite.copy(
+                alpha = 0.04f
+            )
+    )
+
+private fun adultFilterTextStyle(
+    metrics: BoardResponsiveMetrics
+): TextStyle {
+    return TextStyle(
+        color =
+            ChalkColors.ChalkWhite,
+        fontFamily =
+            Chalktastic,
+        fontSize =
+            metrics.compactTextSize
     )
 }
 

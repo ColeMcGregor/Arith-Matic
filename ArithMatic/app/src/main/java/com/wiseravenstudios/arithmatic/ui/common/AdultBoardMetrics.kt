@@ -1,8 +1,8 @@
 package com.wiseravenstudios.arithmatic.ui.common
 
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 fun calculateAdultBoardMetrics(
     width: Dp,
@@ -29,19 +29,12 @@ fun calculateAdultBoardMetrics(
     val heightScale =
         environment.heightScale
 
-    val typographyScale =
-        environment.typographyScale
-
     /*
      * ============================================================
      * LAYOUT
      * ============================================================
-     *
-     * VerticalRectangle and Square use the single-column Adult shell.
-     *
-     * HorizontalRectangle uses the horizontal shell and allows dense
-     * Adult content to use two-column layouts where appropriate.
      */
+
     val layoutMode =
         when (environment.shape) {
             BoardShape.VerticalRectangle ->
@@ -53,98 +46,6 @@ fun calculateAdultBoardMetrics(
             BoardShape.HorizontalRectangle ->
                 BoardLayoutMode.DoubleColumn
         }
-
-    val isDoubleColumn =
-        layoutMode ==
-                BoardLayoutMode.DoubleColumn
-
-    /*
-     * Adult double-column mode does not receive an additional general
-     * typography reduction. The size band and responsive scale already
-     * control the final size.
-     */
-    val typographyMultiplier =
-        if (isDoubleColumn) {
-            ADULT_DOUBLE_COLUMN_TYPOGRAPHY_SCALE
-        } else {
-            1f
-        }
-
-    /*
-     * ============================================================
-     * TYPOGRAPHY
-     * ============================================================
-     */
-
-    val problemTextSize =
-        adultProblemTextSize(
-            sizeBand =
-                environment.sizeBand,
-            scale =
-                typographyScale,
-            multiplier =
-                typographyMultiplier
-        )
-
-    val displayTextSize =
-        adultDisplayTextSize(
-            sizeBand =
-                environment.sizeBand,
-            scale =
-                typographyScale,
-            multiplier =
-                typographyMultiplier
-        )
-
-    val primaryActionTextSize =
-        adultPrimaryActionTextSize(
-            sizeBand =
-                environment.sizeBand,
-            scale =
-                typographyScale,
-            multiplier =
-                typographyMultiplier
-        )
-
-    val headingTextSize =
-        adultHeadingTextSize(
-            sizeBand =
-                environment.sizeBand,
-            scale =
-                typographyScale,
-            multiplier =
-                typographyMultiplier
-        )
-
-    val bodyTextSize =
-        adultBodyTextSize(
-            sizeBand =
-                environment.sizeBand,
-            scale =
-                typographyScale,
-            multiplier =
-                typographyMultiplier
-        )
-
-    val compactTextSize =
-        adultCompactTextSize(
-            sizeBand =
-                environment.sizeBand,
-            scale =
-                typographyScale,
-            multiplier =
-                typographyMultiplier
-        )
-
-    val microTextSize =
-        adultMicroTextSize(
-            sizeBand =
-                environment.sizeBand,
-            scale =
-                typographyScale,
-            multiplier =
-                typographyMultiplier
-        )
 
     /*
      * ============================================================
@@ -313,6 +214,70 @@ fun calculateAdultBoardMetrics(
 
     /*
      * ============================================================
+     * TYPOGRAPHY
+     * ============================================================
+     *
+     * AdultBoard only establishes a broad typography scale.
+     *
+     * It does not attempt to reconstruct the height of Statistics,
+     * Reports, or other Adult content. Those screens own their real
+     * layout constraints and scrolling.
+     */
+
+    val baseScale =
+        calculateAdultBaseScale(
+            width = width,
+            height = height,
+            contentHorizontalPadding =
+                contentHorizontalPadding,
+            contentVerticalPadding =
+                contentVerticalPadding
+        )
+
+    val problemTextSize =
+        (
+                baseScale *
+                        ADULT_PROBLEM_TEXT_RATIO
+                ).sp
+
+    val displayTextSize =
+        (
+                baseScale *
+                        ADULT_DISPLAY_TEXT_RATIO
+                ).sp
+
+    val primaryActionTextSize =
+        (
+                baseScale *
+                        ADULT_PRIMARY_ACTION_TEXT_RATIO
+                ).sp
+
+    val headingTextSize =
+        (
+                baseScale *
+                        ADULT_HEADING_TEXT_RATIO
+                ).sp
+
+    val bodyTextSize =
+        (
+                baseScale *
+                        ADULT_BODY_TEXT_RATIO
+                ).sp
+
+    val compactTextSize =
+        (
+                baseScale *
+                        ADULT_COMPACT_TEXT_RATIO
+                ).sp
+
+    val microTextSize =
+        (
+                baseScale *
+                        ADULT_MICRO_TEXT_RATIO
+                ).sp
+
+    /*
+     * ============================================================
      * ADULT-SPECIFIC SPACING
      * ============================================================
      */
@@ -442,232 +407,43 @@ fun calculateAdultBoardMetrics(
 
 /*
  * ============================================================
- * ADULT BOARD TEXT RANGES
+ * ADULT BOARD BASE SCALE
  * ============================================================
  */
 
-private fun adultProblemTextSize(
-    sizeBand: BoardSizeBand,
-    scale: Float,
-    multiplier: Float = 1f
-): TextUnit {
-    return when (sizeBand) {
-        BoardSizeBand.Small ->
-            responsiveSp(
-                scale = scale,
-                minimum = 24f,
-                maximum = 32f,
-                multiplier = multiplier
+private fun calculateAdultBaseScale(
+    width: Dp,
+    height: Dp,
+    contentHorizontalPadding: Dp,
+    contentVerticalPadding: Dp
+): Float {
+
+    val usableWidth =
+        (
+                width.value -
+                        contentHorizontalPadding.value * 2f
+                )
+            .coerceAtLeast(
+                1f
             )
 
-        BoardSizeBand.Medium ->
-            responsiveSp(
-                scale = scale,
-                minimum = 30f,
-                maximum = 40f,
-                multiplier = multiplier
+    val usableHeight =
+        (
+                height.value -
+                        contentVerticalPadding.value * 2f
+                )
+            .coerceAtLeast(
+                1f
             )
 
-        BoardSizeBand.Large ->
-            responsiveSp(
-                scale = scale,
-                minimum = 38f,
-                maximum = 50f,
-                multiplier = multiplier
-            )
-    }
-}
+    val limitingDimension =
+        minOf(
+            usableWidth,
+            usableHeight
+        )
 
-private fun adultDisplayTextSize(
-    sizeBand: BoardSizeBand,
-    scale: Float,
-    multiplier: Float = 1f
-): TextUnit {
-    return when (sizeBand) {
-        BoardSizeBand.Small ->
-            responsiveSp(
-                scale = scale,
-                minimum = 22f,
-                maximum = 30f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Medium ->
-            responsiveSp(
-                scale = scale,
-                minimum = 28f,
-                maximum = 38f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Large ->
-            responsiveSp(
-                scale = scale,
-                minimum = 36f,
-                maximum = 48f,
-                multiplier = multiplier
-            )
-    }
-}
-
-private fun adultPrimaryActionTextSize(
-    sizeBand: BoardSizeBand,
-    scale: Float,
-    multiplier: Float = 1f
-): TextUnit {
-    return when (sizeBand) {
-        BoardSizeBand.Small ->
-            responsiveSp(
-                scale = scale,
-                minimum = 18f,
-                maximum = 24f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Medium ->
-            responsiveSp(
-                scale = scale,
-                minimum = 23f,
-                maximum = 30f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Large ->
-            responsiveSp(
-                scale = scale,
-                minimum = 29f,
-                maximum = 38f,
-                multiplier = multiplier
-            )
-    }
-}
-
-private fun adultHeadingTextSize(
-    sizeBand: BoardSizeBand,
-    scale: Float,
-    multiplier: Float = 1f
-): TextUnit {
-    return when (sizeBand) {
-        BoardSizeBand.Small ->
-            responsiveSp(
-                scale = scale,
-                minimum = 16f,
-                maximum = 21f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Medium ->
-            responsiveSp(
-                scale = scale,
-                minimum = 20f,
-                maximum = 27f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Large ->
-            responsiveSp(
-                scale = scale,
-                minimum = 26f,
-                maximum = 34f,
-                multiplier = multiplier
-            )
-    }
-}
-
-private fun adultBodyTextSize(
-    sizeBand: BoardSizeBand,
-    scale: Float,
-    multiplier: Float = 1f
-): TextUnit {
-    return when (sizeBand) {
-        BoardSizeBand.Small ->
-            responsiveSp(
-                scale = scale,
-                minimum = 11f,
-                maximum = 15f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Medium ->
-            responsiveSp(
-                scale = scale,
-                minimum = 15f,
-                maximum = 20f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Large ->
-            responsiveSp(
-                scale = scale,
-                minimum = 19f,
-                maximum = 26f,
-                multiplier = multiplier
-            )
-    }
-}
-
-private fun adultCompactTextSize(
-    sizeBand: BoardSizeBand,
-    scale: Float,
-    multiplier: Float = 1f
-): TextUnit {
-    return when (sizeBand) {
-        BoardSizeBand.Small ->
-            responsiveSp(
-                scale = scale,
-                minimum = 9f,
-                maximum = 13f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Medium ->
-            responsiveSp(
-                scale = scale,
-                minimum = 13f,
-                maximum = 17f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Large ->
-            responsiveSp(
-                scale = scale,
-                minimum = 17f,
-                maximum = 22f,
-                multiplier = multiplier
-            )
-    }
-}
-
-private fun adultMicroTextSize(
-    sizeBand: BoardSizeBand,
-    scale: Float,
-    multiplier: Float = 1f
-): TextUnit {
-    return when (sizeBand) {
-        BoardSizeBand.Small ->
-            responsiveSp(
-                scale = scale,
-                minimum = 8f,
-                maximum = 11f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Medium ->
-            responsiveSp(
-                scale = scale,
-                minimum = 11f,
-                maximum = 14f,
-                multiplier = multiplier
-            )
-
-        BoardSizeBand.Large ->
-            responsiveSp(
-                scale = scale,
-                minimum = 14f,
-                maximum = 17f,
-                multiplier = multiplier
-            )
-    }
+    return limitingDimension *
+            ADULT_BASE_SCALE_RATIO
 }
 
 /*
@@ -733,12 +509,39 @@ private const val ADULT_MAXIMUM_REFERENCE_HEIGHT_DP =
 
 /*
  * ============================================================
- * ADULT BOARD LAYOUT
+ * TYPOGRAPHY
  * ============================================================
  */
 
-private const val ADULT_DOUBLE_COLUMN_TYPOGRAPHY_SCALE =
-    1.0f
+private const val ADULT_BASE_SCALE_RATIO =
+    0.12f
+
+private const val ADULT_PROBLEM_TEXT_RATIO =
+    1.00f
+
+private const val ADULT_DISPLAY_TEXT_RATIO =
+    0.94f
+
+private const val ADULT_PRIMARY_ACTION_TEXT_RATIO =
+    0.74f
+
+private const val ADULT_HEADING_TEXT_RATIO =
+    0.66f
+
+private const val ADULT_BODY_TEXT_RATIO =
+    0.50f
+
+private const val ADULT_COMPACT_TEXT_RATIO =
+    0.42f
+
+private const val ADULT_MICRO_TEXT_RATIO =
+    0.34f
+
+/*
+ * ============================================================
+ * ADULT BOARD MINIMUM GEOMETRY
+ * ============================================================
+ */
 
 private const val ADULT_MINIMUM_TOUCH_TARGET_DP =
     48f
