@@ -173,19 +173,21 @@ private fun SingleColumnAdultLayout(
     content: @Composable () -> Unit
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(
-                horizontal =
-                    metrics.contentHorizontalPadding,
-                vertical =
-                    metrics.contentVerticalPadding
-            ),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(
+                    horizontal =
+                        metrics.contentHorizontalPadding,
+                    vertical =
+                        metrics.contentVerticalPadding
+                ),
         horizontalAlignment =
             Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Adults",
+            text =
+                "Adults",
             color =
                 ChalkColors.PastelOrange,
             fontFamily =
@@ -206,8 +208,10 @@ private fun SingleColumnAdultLayout(
         )
 
         AdultTabBar(
-            currentTab = currentTab,
-            metrics = metrics,
+            currentTab =
+                currentTab,
+            metrics =
+                metrics,
             onTabSelected =
                 onTabSelected
         )
@@ -220,15 +224,17 @@ private fun SingleColumnAdultLayout(
         )
 
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
         ) {
             content()
         }
 
         ChalkTextAction(
-            text = "Back",
+            text =
+                "Back",
             color =
                 ChalkColors.PastelYellow,
             fontSize =
@@ -237,7 +243,8 @@ private fun SingleColumnAdultLayout(
                 metrics.actionVerticalPadding,
             paddingBottom =
                 metrics.actionVerticalPadding,
-            onClick = onBack
+            onClick =
+                onBack
         )
     }
 }
@@ -251,14 +258,15 @@ private fun DoubleColumnAdultLayout(
     content: @Composable () -> Unit
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(
-                horizontal =
-                    metrics.contentHorizontalPadding,
-                vertical =
-                    metrics.contentVerticalPadding
-            )
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(
+                    horizontal =
+                        metrics.contentHorizontalPadding,
+                    vertical =
+                        metrics.contentVerticalPadding
+                )
     ) {
         Row(
             modifier =
@@ -271,7 +279,8 @@ private fun DoubleColumnAdultLayout(
                 )
         ) {
             Text(
-                text = "Adults",
+                text =
+                    "Adults",
                 color =
                     ChalkColors.PastelOrange,
                 fontFamily =
@@ -280,12 +289,15 @@ private fun DoubleColumnAdultLayout(
                     metrics.displayTextSize,
                 fontWeight =
                     FontWeight.Bold,
-                maxLines = 1
+                maxLines =
+                    1
             )
 
             AdultTabBar(
-                currentTab = currentTab,
-                metrics = metrics,
+                currentTab =
+                    currentTab,
+                metrics =
+                    metrics,
                 onTabSelected =
                     onTabSelected,
                 modifier =
@@ -293,7 +305,8 @@ private fun DoubleColumnAdultLayout(
             )
 
             ChalkTextAction(
-                text = "Back",
+                text =
+                    "Back",
                 color =
                     ChalkColors.PastelYellow,
                 fontSize =
@@ -302,7 +315,8 @@ private fun DoubleColumnAdultLayout(
                     metrics.tinySpacing,
                 paddingBottom =
                     metrics.tinySpacing,
-                onClick = onBack
+                onClick =
+                    onBack
             )
         }
 
@@ -314,9 +328,10 @@ private fun DoubleColumnAdultLayout(
         )
 
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
         ) {
             content()
         }
@@ -336,29 +351,37 @@ private fun AdultTabContent(
     when (currentTab) {
         AdultTab.Privacy -> {
             PrivacyTab(
-                metrics = metrics
+                metrics =
+                    metrics
             )
         }
 
         AdultTab.Support -> {
             SupportTab(
-                metrics = metrics
+                metrics =
+                    metrics
             )
         }
 
         AdultTab.Statistics -> {
             StatisticsTab(
-                uiState = uiState,
-                viewModel = viewModel,
-                metrics = metrics
+                uiState =
+                    uiState,
+                viewModel =
+                    viewModel,
+                metrics =
+                    metrics
             )
         }
 
         AdultTab.Report -> {
             ReportTab(
-                uiState = uiState,
-                viewModel = viewModel,
-                metrics = metrics,
+                uiState =
+                    uiState,
+                viewModel =
+                    viewModel,
+                metrics =
+                    metrics,
                 options =
                     reportOptions,
                 onOptionsChanged =
@@ -379,7 +402,8 @@ private fun StatisticsTab(
     when (uiState) {
         AdultAreaUiState.Loading -> {
             AdultLoadingContent(
-                metrics = metrics
+                metrics =
+                    metrics
             )
         }
 
@@ -387,7 +411,8 @@ private fun StatisticsTab(
             AdultErrorContent(
                 message =
                     uiState.message,
-                metrics = metrics
+                metrics =
+                    metrics
             )
         }
 
@@ -444,7 +469,8 @@ private fun ReportTab(
     when (uiState) {
         AdultAreaUiState.Loading -> {
             AdultLoadingContent(
-                metrics = metrics
+                metrics =
+                    metrics
             )
         }
 
@@ -452,7 +478,8 @@ private fun ReportTab(
             AdultErrorContent(
                 message =
                     uiState.message,
-                metrics = metrics
+                metrics =
+                    metrics
             )
         }
 
@@ -529,7 +556,7 @@ private fun AdultTabBar(
         horizontalArrangement =
             Arrangement.spacedBy(
                 space =
-                    metrics.tinySpacing,
+                    metrics.smallSpacing,
                 alignment =
                     Alignment.CenterHorizontally
             ),
@@ -548,47 +575,44 @@ private fun AdultTabBar(
                 }
 
             Box(
-                modifier = tabModifier
-                    .clip(
-                        RoundedCornerShape(
-                            topStart =
-                                metrics.smallSpacing,
-                            topEnd =
-                                metrics.smallSpacing,
-                            bottomStart =
+                modifier =
+                    tabModifier
+                        .clip(
+                            RoundedCornerShape(
+                                metrics.mediumSpacing
+                            )
+                        )
+                        .background(
+                            color =
+                                if (isSelected) {
+                                    tab.color.copy(
+                                        alpha =
+                                            0.9f
+                                    )
+                                } else {
+                                    tab.color.copy(
+                                        alpha =
+                                            0.35f
+                                    )
+                                }
+                        )
+                        .clickable {
+                            onTabSelected(
+                                tab
+                            )
+                        }
+                        .padding(
+                            horizontal =
                                 metrics.tinySpacing,
-                            bottomEnd =
+                            vertical =
                                 metrics.tinySpacing
-                        )
-                    )
-                    .background(
-                        color =
-                            if (isSelected) {
-                                tab.color.copy(
-                                    alpha = 0.9f
-                                )
-                            } else {
-                                tab.color.copy(
-                                    alpha = 0.35f
-                                )
-                            }
-                    )
-                    .clickable {
-                        onTabSelected(
-                            tab
-                        )
-                    }
-                    .padding(
-                        horizontal =
-                            metrics.tinySpacing,
-                        vertical =
-                            metrics.tinySpacing
-                    ),
+                        ),
                 contentAlignment =
                     Alignment.Center
             ) {
                 Text(
-                    text = tab.title,
+                    text =
+                        tab.title,
                     color =
                         if (isSelected) {
                             Color(
@@ -609,8 +633,10 @@ private fun AdultTabBar(
                         },
                     textAlign =
                         TextAlign.Center,
-                    maxLines = 1,
-                    softWrap = false
+                    maxLines =
+                        1,
+                    softWrap =
+                        false
                 )
             }
         }
@@ -654,7 +680,8 @@ private fun AdultErrorContent(
             Alignment.Center
     ) {
         Text(
-            text = message,
+            text =
+                message,
             color =
                 ChalkColors.PastelPink,
             fontFamily =
@@ -673,11 +700,13 @@ private fun PrivacyTab(
 ) {
     if (metrics.isDoubleColumn) {
         DoubleColumnPrivacyTab(
-            metrics = metrics
+            metrics =
+                metrics
         )
     } else {
         SingleColumnPrivacyTab(
-            metrics = metrics
+            metrics =
+                metrics
         )
     }
 }
@@ -693,7 +722,8 @@ private fun SingleColumnPrivacyTab(
             Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Privacy",
+            text =
+                "Privacy",
             color =
                 ChalkColors.PastelPurple,
             fontFamily =
@@ -785,7 +815,8 @@ private fun DoubleColumnPrivacyTab(
             Arrangement.Center
     ) {
         Text(
-            text = "Privacy",
+            text =
+                "Privacy",
             color =
                 ChalkColors.PastelPurple,
             fontFamily =
@@ -884,11 +915,13 @@ private fun SupportTab(
 ) {
     if (metrics.isDoubleColumn) {
         DoubleColumnSupportTab(
-            metrics = metrics
+            metrics =
+                metrics
         )
     } else {
         SingleColumnSupportTab(
-            metrics = metrics
+            metrics =
+                metrics
         )
     }
 }

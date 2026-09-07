@@ -2,8 +2,10 @@ package com.wiseravenstudios.arithmatic.ui.statistics
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,8 +13,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -22,11 +22,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.wiseravenstudios.arithmatic.domain.model.ArithmeticOperation
 import com.wiseravenstudios.arithmatic.domain.statistics.model.OperationPerformanceSummary
 import com.wiseravenstudios.arithmatic.domain.statistics.model.PerformanceSummary
@@ -43,80 +42,330 @@ fun MyStatsBoard(
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    BoxWithConstraints(
+        modifier =
+            modifier.fillMaxSize()
+    ) {
+        val metrics =
+            calculateMyStatsBoardMetrics(
+                width =
+                    maxWidth,
+                height =
+                    maxHeight
+            )
+
+        when (metrics.layoutMode) {
+            MyStatsLayoutMode.Vertical -> {
+                VerticalMyStatsLayout(
+                    uiState =
+                        uiState,
+                    onPeriodSelected =
+                        onPeriodSelected,
+                    onBack =
+                        onBack,
+                    metrics =
+                        metrics
+                )
+            }
+
+            MyStatsLayoutMode.Horizontal -> {
+                HorizontalMyStatsLayout(
+                    uiState =
+                        uiState,
+                    onPeriodSelected =
+                        onPeriodSelected,
+                    onBack =
+                        onBack,
+                    metrics =
+                        metrics
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun VerticalMyStatsLayout(
+    uiState: MyStatsUiState,
+    onPeriodSelected: (StatsPeriod) -> Unit,
+    onBack: () -> Unit,
+    metrics: MyStatsBoardMetrics
+) {
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(
-                horizontal = 10.dp,
-                vertical = 8.dp
-            ),
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(
+                    horizontal =
+                        metrics.horizontalPadding,
+                    vertical =
+                        metrics.verticalPadding
+                ),
+        horizontalAlignment =
+            Alignment.CenterHorizontally
     ) {
         Text(
-            text = "My Stats",
-            color = ChalkColors.PastelOrange,
-            fontFamily = Chalktastic,
-            fontSize = 31.sp,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
+            text =
+                "My Stats",
+            color =
+                ChalkColors.PastelOrange,
+            fontFamily =
+                Chalktastic,
+            fontSize =
+                metrics.titleSize,
+            fontWeight =
+                FontWeight.Bold,
+            textAlign =
+                TextAlign.Center
         )
 
         Spacer(
-            modifier = Modifier.height(14.dp)
+            modifier =
+                Modifier.height(
+                    metrics.titleSpacing
+                )
         )
 
         when (uiState) {
             MyStatsUiState.Loading -> {
                 StatusMessage(
-                    text = "Loading statistics...",
-                    color = ChalkColors.ChalkWhite,
-                    modifier = Modifier.weight(1f)
+                    text =
+                        "Loading statistics...",
+                    color =
+                        ChalkColors.ChalkWhite,
+                    metrics =
+                        metrics,
+                    modifier =
+                        Modifier.weight(1f)
                 )
             }
 
             is MyStatsUiState.Error -> {
                 StatusMessage(
-                    text = uiState.message,
-                    color = ChalkColors.PastelPink,
-                    modifier = Modifier.weight(1f)
+                    text =
+                        uiState.message,
+                    color =
+                        ChalkColors.PastelPink,
+                    metrics =
+                        metrics,
+                    modifier =
+                        Modifier.weight(1f)
                 )
             }
 
             is MyStatsUiState.Success -> {
                 StatsPeriodTabBar(
-                    currentPeriod = uiState.selectedPeriod,
-                    onPeriodSelected = onPeriodSelected
+                    currentPeriod =
+                        uiState.selectedPeriod,
+                    onPeriodSelected =
+                        onPeriodSelected,
+                    metrics =
+                        metrics
                 )
 
                 Spacer(
-                    modifier = Modifier.height(10.dp)
+                    modifier =
+                        Modifier.height(
+                            metrics.contentSpacing
+                        )
                 )
 
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
                 ) {
-                    if (uiState.summary.isEmpty) {
-                        EmptyStatsContent(
-                            period = uiState.selectedPeriod
-                        )
-                    } else {
-                        StatsContent(
-                            overall = uiState.summary.overall,
-                            byOperation = uiState.summary.byOperation
-                        )
-                    }
+                    StatsStateContent(
+                        uiState =
+                            uiState,
+                        layoutMode =
+                            MyStatsLayoutMode.Vertical,
+                        metrics =
+                            metrics
+                    )
                 }
             }
         }
 
         ChalkTextAction(
-            text = "Back",
-            color = ChalkColors.PastelYellow,
-            fontSize = 29.sp,
-            paddingTop = 4.dp,
-            onClick = onBack
+            text =
+                "Back",
+            color =
+                ChalkColors.PastelYellow,
+            fontSize =
+                metrics.backSize,
+            paddingTop =
+                metrics.backTopPadding,
+            paddingBottom =
+                metrics.backBottomPadding,
+            onClick =
+                onBack
+        )
+    }
+}
+
+@Composable
+private fun HorizontalMyStatsLayout(
+    uiState: MyStatsUiState,
+    onPeriodSelected: (StatsPeriod) -> Unit,
+    onBack: () -> Unit,
+    metrics: MyStatsBoardMetrics
+) {
+    Column(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(
+                    horizontal =
+                        metrics.horizontalPadding,
+                    vertical =
+                        metrics.verticalPadding
+                )
+    ) {
+        Row(
+            modifier =
+                Modifier.fillMaxWidth(),
+            horizontalArrangement =
+                Arrangement.spacedBy(
+                    metrics.headerSpacing
+                ),
+            verticalAlignment =
+                Alignment.CenterVertically
+        ) {
+            Text(
+                text =
+                    "My Stats",
+                color =
+                    ChalkColors.PastelOrange,
+                fontFamily =
+                    Chalktastic,
+                fontSize =
+                    metrics.titleSize,
+                fontWeight =
+                    FontWeight.Bold,
+                maxLines =
+                    1
+            )
+
+            when (uiState) {
+                is MyStatsUiState.Success -> {
+                    StatsPeriodTabBar(
+                        currentPeriod =
+                            uiState.selectedPeriod,
+                        onPeriodSelected =
+                            onPeriodSelected,
+                        metrics =
+                            metrics,
+                        modifier =
+                            Modifier.weight(1f)
+                    )
+                }
+
+                else -> {
+                    Spacer(
+                        modifier =
+                            Modifier.weight(1f)
+                    )
+                }
+            }
+
+            ChalkTextAction(
+                text =
+                    "Back",
+                color =
+                    ChalkColors.PastelYellow,
+                fontSize =
+                    metrics.backSize,
+                paddingTop =
+                    metrics.backTopPadding,
+                paddingBottom =
+                    metrics.backBottomPadding,
+                onClick =
+                    onBack
+            )
+        }
+
+        Spacer(
+            modifier =
+                Modifier.height(
+                    metrics.contentSpacing
+                )
+        )
+
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+        ) {
+            when (uiState) {
+                MyStatsUiState.Loading -> {
+                    StatusMessage(
+                        text =
+                            "Loading statistics...",
+                        color =
+                            ChalkColors.ChalkWhite,
+                        metrics =
+                            metrics,
+                        modifier =
+                            Modifier.fillMaxSize()
+                    )
+                }
+
+                is MyStatsUiState.Error -> {
+                    StatusMessage(
+                        text =
+                            uiState.message,
+                        color =
+                            ChalkColors.PastelPink,
+                        metrics =
+                            metrics,
+                        modifier =
+                            Modifier.fillMaxSize()
+                    )
+                }
+
+                is MyStatsUiState.Success -> {
+                    StatsStateContent(
+                        uiState =
+                            uiState,
+                        layoutMode =
+                            MyStatsLayoutMode.Horizontal,
+                        metrics =
+                            metrics
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StatsStateContent(
+    uiState: MyStatsUiState.Success,
+    layoutMode: MyStatsLayoutMode,
+    metrics: MyStatsBoardMetrics
+) {
+    if (
+        uiState.summary.isEmpty
+    ) {
+        EmptyStatsContent(
+            period =
+                uiState.selectedPeriod,
+            metrics =
+                metrics
+        )
+    } else {
+        StatsContent(
+            overall =
+                uiState.summary.overall,
+            byOperation =
+                uiState.summary.byOperation,
+            layoutMode =
+                layoutMode,
+            metrics =
+                metrics
         )
     }
 }
@@ -124,67 +373,96 @@ fun MyStatsBoard(
 @Composable
 private fun StatsPeriodTabBar(
     currentPeriod: StatsPeriod,
-    onPeriodSelected: (StatsPeriod) -> Unit
+    onPeriodSelected: (StatsPeriod) -> Unit,
+    metrics: MyStatsBoardMetrics,
+    modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
+        modifier =
+            modifier.fillMaxWidth(),
+        horizontalArrangement =
+            Arrangement.spacedBy(
+                metrics.tabSpacing
+            ),
+        verticalAlignment =
+            Alignment.CenterVertically
     ) {
         StatsPeriod.entries.forEach { period ->
             val isSelected =
-                period == currentPeriod
+                period ==
+                        currentPeriod
 
             val tabColor =
                 period.tabColor()
 
             Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .clip(
-                        RoundedCornerShape(
-                            topStart = 8.dp,
-                            topEnd = 8.dp,
-                            bottomStart = 3.dp,
-                            bottomEnd = 3.dp
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .clip(
+                            RoundedCornerShape(
+                                metrics.tabCornerRadius
+                            )
                         )
-                    )
-                    .background(
-                        color = if (isSelected) {
-                            tabColor.copy(alpha = 0.9f)
-                        } else {
-                            tabColor.copy(alpha = 0.35f)
+                        .background(
+                            color =
+                                if (isSelected) {
+                                    tabColor.copy(
+                                        alpha =
+                                            0.9f
+                                    )
+                                } else {
+                                    tabColor.copy(
+                                        alpha =
+                                            0.35f
+                                    )
+                                }
+                        )
+                        .clickable {
+                            onPeriodSelected(
+                                period
+                            )
                         }
-                    )
-                    .clickable {
-                        onPeriodSelected(period)
-                    }
-                    .padding(
-                        horizontal = 1.dp,
-                        vertical = if (isSelected) {
-                            6.dp
-                        } else {
-                            4.dp
-                        }
-                    ),
-                contentAlignment = Alignment.Center
+                        .padding(
+                            horizontal =
+                                metrics.tabHorizontalPadding,
+                            vertical =
+                                if (isSelected) {
+                                    metrics.selectedTabVerticalPadding
+                                } else {
+                                    metrics.tabVerticalPadding
+                                }
+                        ),
+                contentAlignment =
+                    Alignment.Center
             ) {
                 Text(
-                    text = period.shortTitle(),
-                    color = if (isSelected) {
-                        Color(0xFF24313F)
-                    } else {
-                        ChalkColors.ChalkWhite
-                    },
-                    fontFamily = Chalktastic,
-                    fontSize = 10.sp,
-                    fontWeight = if (isSelected) {
-                        FontWeight.Bold
-                    } else {
-                        FontWeight.Normal
-                    },
-                    textAlign = TextAlign.Center,
-                    maxLines = 1,
-                    overflow = TextOverflow.Clip
+                    text =
+                        period.shortTitle(),
+                    color =
+                        if (isSelected) {
+                            Color(
+                                0xFF24313F
+                            )
+                        } else {
+                            ChalkColors.ChalkWhite
+                        },
+                    fontFamily =
+                        Chalktastic,
+                    fontSize =
+                        metrics.tabFontSize,
+                    fontWeight =
+                        if (isSelected) {
+                            FontWeight.Bold
+                        } else {
+                            FontWeight.Normal
+                        },
+                    textAlign =
+                        TextAlign.Center,
+                    maxLines =
+                        1,
+                    overflow =
+                        TextOverflow.Clip
                 )
             }
         }
@@ -194,101 +472,262 @@ private fun StatsPeriodTabBar(
 @Composable
 private fun StatsContent(
     overall: PerformanceSummary,
-    byOperation: List<OperationPerformanceSummary>
+    byOperation: List<OperationPerformanceSummary>,
+    layoutMode: MyStatsLayoutMode,
+    metrics: MyStatsBoardMetrics
 ) {
     val scrollState =
         rememberScrollState()
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(
-                state = scrollState
-            )
-            .pointerInput(scrollState) {
-                detectVerticalDragGestures { change, dragAmount ->
-                    change.consume()
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .verticalScroll(
+                    state =
+                        scrollState
+                )
+                .pointerInput(
+                    scrollState
+                ) {
+                    detectVerticalDragGestures {
+                            change,
+                            dragAmount ->
 
-                    scrollState.dispatchRawDelta(
-                        delta = -dragAmount
+                        change.consume()
+
+                        scrollState.dispatchRawDelta(
+                            delta =
+                                -dragAmount
+                        )
+                    }
+                }
+                .padding(
+                    bottom =
+                        metrics.contentBottomPadding
+                ),
+        verticalArrangement =
+            Arrangement.spacedBy(
+                metrics.contentSpacing
+            )
+    ) {
+        when (layoutMode) {
+            MyStatsLayoutMode.Vertical -> {
+                VerticalStatsContent(
+                    overall =
+                        overall,
+                    byOperation =
+                        byOperation,
+                    metrics =
+                        metrics
+                )
+            }
+
+            MyStatsLayoutMode.Horizontal -> {
+                HorizontalStatsContent(
+                    overall =
+                        overall,
+                    byOperation =
+                        byOperation,
+                    metrics =
+                        metrics
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun VerticalStatsContent(
+    overall: PerformanceSummary,
+    byOperation: List<OperationPerformanceSummary>,
+    metrics: MyStatsBoardMetrics
+) {
+    PerformanceCard(
+        title =
+            "All Operations",
+        titleColor =
+            ChalkColors.PastelOrange,
+        performance =
+            overall,
+        metrics =
+            metrics
+    )
+
+    byOperation.forEach { operationSummary ->
+        PerformanceCard(
+            title =
+                operationSummary
+                    .operation
+                    .displayName(),
+            titleColor =
+                operationSummary
+                    .operation
+                    .displayColor(),
+            performance =
+                operationSummary.performance,
+            metrics =
+                metrics
+        )
+    }
+}
+
+@Composable
+private fun HorizontalStatsContent(
+    overall: PerformanceSummary,
+    byOperation: List<OperationPerformanceSummary>,
+    metrics: MyStatsBoardMetrics
+) {
+    val cards =
+        buildList {
+            add(
+                StatsCardData(
+                    title =
+                        "All Operations",
+                    titleColor =
+                        ChalkColors.PastelOrange,
+                    performance =
+                        overall
+                )
+            )
+
+            byOperation.forEach { operationSummary ->
+                add(
+                    StatsCardData(
+                        title =
+                            operationSummary
+                                .operation
+                                .displayName(),
+                        titleColor =
+                            operationSummary
+                                .operation
+                                .displayColor(),
+                        performance =
+                            operationSummary.performance
+                    )
+                )
+            }
+        }
+
+    cards
+        .chunked(2)
+        .forEach { rowCards ->
+            Row(
+                modifier =
+                    Modifier.fillMaxWidth(),
+                horizontalArrangement =
+                    Arrangement.spacedBy(
+                        metrics.contentSpacing
+                    )
+            ) {
+                rowCards.forEach { card ->
+                    PerformanceCard(
+                        title =
+                            card.title,
+                        titleColor =
+                            card.titleColor,
+                        performance =
+                            card.performance,
+                        metrics =
+                            metrics,
+                        modifier =
+                            Modifier.weight(1f)
+                    )
+                }
+
+                if (
+                    rowCards.size == 1
+                ) {
+                    Spacer(
+                        modifier =
+                            Modifier.weight(1f)
                     )
                 }
             }
-            .padding(
-                bottom = 8.dp
-            ),
-        verticalArrangement =
-            Arrangement.spacedBy(12.dp)
-    ) {
-        PerformanceCard(
-            title = "All Operations",
-            titleColor = ChalkColors.PastelOrange,
-            performance = overall
-        )
-
-        byOperation.forEach { operationSummary ->
-            PerformanceCard(
-                title =
-                    operationSummary.operation.displayName(),
-                titleColor =
-                    operationSummary.operation.displayColor(),
-                performance =
-                    operationSummary.performance
-            )
         }
-    }
 }
 
 @Composable
 private fun PerformanceCard(
     title: String,
     titleColor: Color,
-    performance: PerformanceSummary
+    performance: PerformanceSummary,
+    metrics: MyStatsBoardMetrics,
+    modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(
-                RoundedCornerShape(9.dp)
-            )
-            .background(
-                color = titleColor.copy(
-                    alpha = 0.13f
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .clip(
+                    RoundedCornerShape(
+                        metrics.cardCornerRadius
+                    )
                 )
-            )
-            .padding(
-                horizontal = 12.dp,
-                vertical = 9.dp
-            )
+                .background(
+                    color =
+                        titleColor.copy(
+                            alpha =
+                                0.13f
+                        )
+                )
+                .padding(
+                    horizontal =
+                        metrics.cardHorizontalPadding,
+                    vertical =
+                        metrics.cardVerticalPadding
+                )
     ) {
         Text(
-            text = title,
-            color = titleColor,
-            fontFamily = Chalktastic,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            maxLines = 1
+            text =
+                title,
+            color =
+                titleColor,
+            fontFamily =
+                Chalktastic,
+            fontSize =
+                metrics.cardTitleSize,
+            fontWeight =
+                FontWeight.Bold,
+            maxLines =
+                1,
+            overflow =
+                TextOverflow.Clip
         )
 
         Spacer(
-            modifier = Modifier.height(6.dp)
+            modifier =
+                Modifier.height(
+                    metrics.cardTitleSpacing
+                )
         )
 
         StatisticRow(
-            label = "Correct",
+            label =
+                "Correct",
             value =
                 "${performance.correctCount} / " +
-                        "${performance.totalCount}"
+                        "${performance.totalCount}",
+            metrics =
+                metrics
         )
 
         StatisticRow(
-            label = "Percent",
-            value = performance.formattedPercent()
+            label =
+                "Percent",
+            value =
+                performance.formattedPercent(),
+            metrics =
+                metrics
         )
 
         StatisticRow(
-            label = "Average Time",
-            value = performance.formattedAverageTime()
+            label =
+                "Average Time",
+            value =
+                performance.formattedAverageTime(),
+            metrics =
+                metrics
         )
     }
 }
@@ -296,35 +735,56 @@ private fun PerformanceCard(
 @Composable
 private fun StatisticRow(
     label: String,
-    value: String
+    value: String,
+    metrics: MyStatsBoardMetrics
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(
-                vertical = 1.dp
-            ),
-        verticalAlignment = Alignment.CenterVertically
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(
+                    vertical =
+                        metrics.statisticRowVerticalPadding
+                ),
+        verticalAlignment =
+            Alignment.CenterVertically
     ) {
         Text(
-            text = label,
-            modifier = Modifier.weight(1f),
-            color = ChalkColors.ChalkWhite,
-            fontFamily = Chalktastic,
-            fontSize = 17.sp,
-            maxLines = 1
+            text =
+                label,
+            modifier =
+                Modifier.weight(1f),
+            color =
+                ChalkColors.ChalkWhite,
+            fontFamily =
+                Chalktastic,
+            fontSize =
+                metrics.statisticTextSize,
+            maxLines =
+                1,
+            overflow =
+                TextOverflow.Clip
         )
 
         Text(
-            text = value,
-            modifier = Modifier.weight(0.8f),
-            color = ChalkColors.PastelYellow,
-            fontFamily = Chalktastic,
-            fontSize = 17.sp,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.End,
-            maxLines = 1,
-            overflow = TextOverflow.Clip
+            text =
+                value,
+            modifier =
+                Modifier.weight(0.8f),
+            color =
+                ChalkColors.PastelYellow,
+            fontFamily =
+                Chalktastic,
+            fontSize =
+                metrics.statisticTextSize,
+            fontWeight =
+                FontWeight.Bold,
+            textAlign =
+                TextAlign.End,
+            maxLines =
+                1,
+            overflow =
+                TextOverflow.Clip
         )
     }
 }
@@ -333,57 +793,90 @@ private fun StatisticRow(
 private fun StatusMessage(
     text: String,
     color: Color,
+    metrics: MyStatsBoardMetrics,
     modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = modifier.fillMaxWidth(),
-        contentAlignment = Alignment.Center
+        modifier =
+            modifier.fillMaxWidth(),
+        contentAlignment =
+            Alignment.Center
     ) {
         Text(
-            text = text,
-            color = color,
-            fontFamily = Chalktastic,
-            fontSize = 21.sp,
-            lineHeight = 27.sp,
-            textAlign = TextAlign.Center
+            text =
+                text,
+            color =
+                color,
+            fontFamily =
+                Chalktastic,
+            fontSize =
+                metrics.statusTextSize,
+            lineHeight =
+                metrics.statusLineHeight,
+            textAlign =
+                TextAlign.Center
         )
     }
 }
 
 @Composable
 private fun EmptyStatsContent(
-    period: StatsPeriod
+    period: StatsPeriod,
+    metrics: MyStatsBoardMetrics
 ) {
     Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier =
+            Modifier.fillMaxSize(),
+        verticalArrangement =
+            Arrangement.Center,
+        horizontalAlignment =
+            Alignment.CenterHorizontally
     ) {
         Text(
-            text = "No practice yet",
-            color = ChalkColors.PastelBlue,
-            fontFamily = Chalktastic,
-            fontSize = 27.sp,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
+            text =
+                "No practice yet",
+            color =
+                ChalkColors.PastelBlue,
+            fontFamily =
+                Chalktastic,
+            fontSize =
+                metrics.emptyTitleSize,
+            fontWeight =
+                FontWeight.Bold,
+            textAlign =
+                TextAlign.Center
         )
 
         Spacer(
-            modifier = Modifier.height(12.dp)
+            modifier =
+                Modifier.height(
+                    metrics.emptySpacing
+                )
         )
 
         Text(
             text =
                 "Complete some questions to see your " +
                         "${period.emptyMessageTitle()} statistics.",
-            color = ChalkColors.ChalkWhite,
-            fontFamily = Chalktastic,
-            fontSize = 18.sp,
-            lineHeight = 24.sp,
-            textAlign = TextAlign.Center
+            color =
+                ChalkColors.ChalkWhite,
+            fontFamily =
+                Chalktastic,
+            fontSize =
+                metrics.emptyBodySize,
+            lineHeight =
+                metrics.emptyBodyLineHeight,
+            textAlign =
+                TextAlign.Center
         )
     }
 }
+
+private data class StatsCardData(
+    val title: String,
+    val titleColor: Color,
+    val performance: PerformanceSummary
+)
 
 private fun StatsPeriod.shortTitle(): String {
     return when (this) {
@@ -445,10 +938,12 @@ private fun StatsPeriod.tabColor(): Color {
 private fun ArithmeticOperation.displayName(): String {
     return name
         .replace(
-            regex = Regex(
-                "([a-z])([A-Z])"
-            ),
-            replacement = "$1 $2"
+            regex =
+                Regex(
+                    "([a-z])([A-Z])"
+                ),
+            replacement =
+                "$1 $2"
         )
         .replaceFirstChar { character ->
             character.uppercase()
@@ -456,7 +951,9 @@ private fun ArithmeticOperation.displayName(): String {
 }
 
 private fun ArithmeticOperation.displayColor(): Color {
-    return when (name.lowercase()) {
+    return when (
+        name.lowercase()
+    ) {
         "addition" ->
             ChalkColors.PastelGreen
 
@@ -480,7 +977,9 @@ private fun PerformanceSummary.formattedPercent(): String {
             Locale.US,
             "%.1f",
             percentCorrect
-        ).removeSuffix(".0")
+        ).removeSuffix(
+            ".0"
+        )
 
     return "$formatted%"
 }
@@ -499,7 +998,9 @@ private fun PerformanceSummary.formattedAverageTime(): String {
             Locale.US,
             "%.1f",
             seconds
-        ).removeSuffix(".0")
+        ).removeSuffix(
+            ".0"
+        )
 
     return "$formatted sec"
 }
