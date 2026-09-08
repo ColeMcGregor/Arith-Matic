@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -96,22 +97,24 @@ private fun StartBoardMainContent(
     onOpenAdultArea: () -> Unit
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(
-                start =
-                    metrics.contentHorizontalPadding,
-                top =
-                    metrics.contentVerticalPadding +
-                            metrics.titleTopSpacing,
-                end =
-                    metrics.contentHorizontalPadding
-            ),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(
+                    start =
+                        metrics.contentHorizontalPadding,
+                    top =
+                        metrics.contentVerticalPadding +
+                                metrics.titleTopSpacing,
+                    end =
+                        metrics.contentHorizontalPadding
+                ),
         horizontalAlignment =
             Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Arith-Matic",
+            text =
+                "Arith-Matic",
             color =
                 ChalkColors.PastelOrange,
             fontFamily =
@@ -124,8 +127,10 @@ private fun StartBoardMainContent(
                 FontWeight.Bold,
             textAlign =
                 TextAlign.Center,
-            maxLines = 1,
-            softWrap = false,
+            maxLines =
+                1,
+            softWrap =
+                false,
             overflow =
                 TextOverflow.Clip
         )
@@ -181,7 +186,8 @@ private fun StartBoardUtilityActions(
             Modifier.fillMaxSize()
     ) {
         ChalkTextAction(
-            text = "?",
+            text =
+                "?",
             color =
                 ChalkColors.PastelYellow,
             metrics =
@@ -196,22 +202,24 @@ private fun StartBoardUtilityActions(
                 metrics.tinySpacing,
             paddingBottom =
                 metrics.tinySpacing,
-            modifier = Modifier
-                .align(
-                    Alignment.TopStart
-                )
-                .padding(
-                    start =
-                        metrics.tinySpacing,
-                    top =
-                        metrics.mediumSpacing
-                ),
+            modifier =
+                Modifier
+                    .align(
+                        Alignment.TopStart
+                    )
+                    .padding(
+                        start =
+                            metrics.tinySpacing,
+                        top =
+                            metrics.mediumSpacing
+                    ),
             onClick =
                 onOpenAbout
         )
 
         ChalkTextAction(
-            text = "Exit",
+            text =
+                "Exit",
             color =
                 ChalkColors.PastelPink,
             metrics =
@@ -226,16 +234,17 @@ private fun StartBoardUtilityActions(
                 metrics.tinySpacing,
             paddingBottom =
                 metrics.tinySpacing,
-            modifier = Modifier
-                .align(
-                    Alignment.TopEnd
-                )
-                .padding(
-                    top =
-                        metrics.mediumSpacing,
-                    end =
-                        metrics.tinySpacing
-                ),
+            modifier =
+                Modifier
+                    .align(
+                        Alignment.TopEnd
+                    )
+                    .padding(
+                        top =
+                            metrics.mediumSpacing,
+                        end =
+                            metrics.tinySpacing
+                    ),
             onClick =
                 onExit
         )
@@ -255,19 +264,21 @@ private fun SingleColumnStartActions(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(
-                top =
-                    metrics.tallActionTopSpacing
-            ),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(
+                    top =
+                        metrics.tallActionTopSpacing
+                ),
         verticalArrangement =
             Arrangement.SpaceEvenly,
         horizontalAlignment =
             Alignment.CenterHorizontally
     ) {
         StartAction(
-            text = "Start",
+            text =
+                "Start",
             color =
                 ChalkColors.PastelGreen,
             metrics =
@@ -277,7 +288,8 @@ private fun SingleColumnStartActions(
         )
 
         StartAction(
-            text = "Settings",
+            text =
+                "Settings",
             color =
                 ChalkColors.PastelPink,
             metrics =
@@ -287,7 +299,8 @@ private fun SingleColumnStartActions(
         )
 
         StartAction(
-            text = "My Stats",
+            text =
+                "My Stats",
             color =
                 ChalkColors.PastelBlue,
             metrics =
@@ -297,7 +310,8 @@ private fun SingleColumnStartActions(
         )
 
         StartAction(
-            text = "Adults",
+            text =
+                "Adults",
             color =
                 ChalkColors.PastelPurple,
             metrics =
@@ -311,9 +325,9 @@ private fun SingleColumnStartActions(
 /**
  * Displays the main actions in two columns.
  *
- * The double-column layout uses extra horizontal outer padding so
- * the action groups retain breathing room on wide boards without
- * affecting the single-column layout.
+ * The action area fills all remaining vertical space beneath the title.
+ * Each column distributes its two actions evenly through that space
+ * rather than clustering both rows near the top.
  */
 @Composable
 private fun DoubleColumnStartActions(
@@ -325,16 +339,17 @@ private fun DoubleColumnStartActions(
     modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(
-                start =
-                    metrics.extraLargeSpacing,
-                top =
-                    metrics.titleToActionsSpacing,
-                end =
-                    metrics.extraLargeSpacing
-            ),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(
+                    start =
+                        metrics.extraLargeSpacing,
+                    top =
+                        metrics.titleToActionsSpacing,
+                    end =
+                        metrics.extraLargeSpacing
+                ),
         horizontalArrangement =
             Arrangement.spacedBy(
                 metrics.largeSpacing,
@@ -346,16 +361,17 @@ private fun DoubleColumnStartActions(
     ) {
         Column(
             modifier =
-                Modifier.weight(1f),
+                Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
             verticalArrangement =
-                Arrangement.spacedBy(
-                    metrics.actionGroupSpacing
-                ),
+                Arrangement.SpaceEvenly,
             horizontalAlignment =
                 Alignment.CenterHorizontally
         ) {
             StartAction(
-                text = "Start",
+                text =
+                    "Start",
                 color =
                     ChalkColors.PastelGreen,
                 metrics =
@@ -365,7 +381,8 @@ private fun DoubleColumnStartActions(
             )
 
             StartAction(
-                text = "My Stats",
+                text =
+                    "My Stats",
                 color =
                     ChalkColors.PastelBlue,
                 metrics =
@@ -377,16 +394,17 @@ private fun DoubleColumnStartActions(
 
         Column(
             modifier =
-                Modifier.weight(1f),
+                Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
             verticalArrangement =
-                Arrangement.spacedBy(
-                    metrics.actionGroupSpacing
-                ),
+                Arrangement.SpaceEvenly,
             horizontalAlignment =
                 Alignment.CenterHorizontally
         ) {
             StartAction(
-                text = "Settings",
+                text =
+                    "Settings",
                 color =
                     ChalkColors.PastelPink,
                 metrics =
@@ -396,7 +414,8 @@ private fun DoubleColumnStartActions(
             )
 
             StartAction(
-                text = "Adults",
+                text =
+                    "Adults",
                 color =
                     ChalkColors.PastelPurple,
                 metrics =
@@ -420,9 +439,12 @@ private fun StartAction(
     onClick: () -> Unit
 ) {
     ChalkTextAction(
-        text = text,
-        color = color,
-        metrics = metrics,
+        text =
+            text,
+        color =
+            color,
+        metrics =
+            metrics,
         textRole =
             BoardTextRole.PrimaryAction,
         fontSize =

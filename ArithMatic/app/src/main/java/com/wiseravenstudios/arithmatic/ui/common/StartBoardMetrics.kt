@@ -3,16 +3,51 @@ package com.wiseravenstudios.arithmatic.ui.common
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlin.math.roundToInt
 
 fun calculateStartBoardMetrics(
     width: Dp,
     height: Dp
 ): BoardResponsiveMetrics {
 
+    /*
+     * ============================================================
+     * STABLE RESPONSIVE GEOMETRY
+     * ============================================================
+     *
+     * Window dimensions can arrive with very small floating-point
+     * differences during live resizing.
+     *
+     * Start Board decisions do not need sub-tenth-dp precision, so
+     * dimensions are stabilized to the nearest 0.1dp before any
+     * shape classification, layout comparison, or fit calculation.
+     *
+     * This prevents meaningless float noise from changing responsive
+     * decisions while remaining visually continuous during resizing.
+     */
+
+    val stableWidth =
+        (
+                (
+                        width.value *
+                                START_GEOMETRY_PRECISION
+                        ).roundToInt() /
+                        START_GEOMETRY_PRECISION
+                ).dp
+
+    val stableHeight =
+        (
+                (
+                        height.value *
+                                START_GEOMETRY_PRECISION
+                        ).roundToInt() /
+                        START_GEOMETRY_PRECISION
+                ).dp
+
     val environment =
         createBoardEnvironment(
-            width = width,
-            height = height,
+            width = stableWidth,
+            height = stableHeight,
             minimumReferenceWidth =
                 START_MINIMUM_REFERENCE_WIDTH_DP,
             maximumReferenceWidth =
@@ -306,8 +341,8 @@ fun calculateStartBoardMetrics(
 
     val singleColumnBaseScale =
         calculateStartLayoutBaseScale(
-            width = width,
-            height = height,
+            width = stableWidth,
+            height = stableHeight,
             shape = environment.shape,
             layoutMode =
                 BoardLayoutMode.SingleColumn,
@@ -337,8 +372,8 @@ fun calculateStartBoardMetrics(
             0f
         } else {
             calculateStartLayoutBaseScale(
-                width = width,
-                height = height,
+                width = stableWidth,
+                height = stableHeight,
                 shape = environment.shape,
                 layoutMode =
                     BoardLayoutMode.DoubleColumn,
@@ -365,6 +400,12 @@ fun calculateStartBoardMetrics(
      * ============================================================
      * STRUCTURAL LAYOUT SELECTION
      * ============================================================
+     *
+     * The geometry itself is already stabilized to tenths of a dp.
+     *
+     * Double-column also must provide a meaningful improvement over
+     * single-column before it is selected. This prevents tiny fitting
+     * differences from causing unnecessary structure changes.
      */
 
     val layoutMode =
@@ -398,15 +439,6 @@ fun calculateStartBoardMetrics(
      * ============================================================
      * READABILITY BAND
      * ============================================================
-     *
-     * The geometric size band describes the amount of board area.
-     *
-     * The effective Start Board band can step downward when the
-     * selected geometry cannot support readable typography for the
-     * geometric band.
-     *
-     * We do not force text above the fitted scale. Fit remains the
-     * hard constraint.
      */
 
     val effectiveSizeBand =
@@ -421,12 +453,6 @@ fun calculateStartBoardMetrics(
      * ============================================================
      * FINAL TYPOGRAPHY
      * ============================================================
-     *
-     * The fitted scale remains the hard maximum.
-     *
-     * A board that cannot support the readability threshold of its
-     * geometric band is reported as the next smaller band instead
-     * of pretending that tiny text is still Medium or Large.
      */
 
     val baseScale =
@@ -516,14 +542,18 @@ fun calculateStartBoardMetrics(
                 START_DISPLAY_TEXT_RATIO *
                 START_CHALKTASTIC_LINE_HEIGHT_FACTOR
 
+    /*
+     * Visual fitting is based on visible content geometry.
+     *
+     * The minimum accessibility touch target is deliberately not
+     * included here. Visible control size and interactive hit area
+     * are separate concerns.
+     */
     val actionHeight =
-        maxOf(
-            START_MINIMUM_TOUCH_TARGET_DP,
-            baseScale *
-                    START_PRIMARY_ACTION_TEXT_RATIO *
-                    START_CHALKTASTIC_LINE_HEIGHT_FACTOR +
-                    actionVerticalPadding.value * 2f
-        )
+        baseScale *
+                START_PRIMARY_ACTION_TEXT_RATIO *
+                START_CHALKTASTIC_LINE_HEIGHT_FACTOR +
+                actionVerticalPadding.value * 2f
 
     val minimumRequiredHeight =
         contentVerticalPadding.value * 2f +
@@ -537,7 +567,7 @@ fun calculateStartBoardMetrics(
 
     val remainingVerticalSpace =
         (
-                height.value -
+                stableHeight.value -
                         minimumRequiredHeight
                 )
             .coerceAtLeast(
@@ -609,8 +639,10 @@ fun calculateStartBoardMetrics(
         START_MINIMUM_TOUCH_TARGET_DP.dp
 
     return BoardResponsiveMetrics(
-        width = width,
-        height = height,
+        width =
+            stableWidth,
+        height =
+            stableHeight,
         aspectRatio =
             environment.aspectRatio,
 
@@ -724,6 +756,9 @@ private fun calculateReadableStartSizeBand(
 /**
  * Calculates the largest typography base scale that can fit one
  * candidate Start Board structure.
+ *
+ * This models visible geometry only. Accessibility hit-area
+ * requirements remain separate from visible font/layout sizing.
  */
 private fun calculateStartLayoutBaseScale(
     width: Dp,
@@ -781,18 +816,12 @@ private fun calculateStartLayoutBaseScale(
                     START_EXIT_WIDTH_EM
 
         val questionActionWidth =
-            maxOf(
-                START_MINIMUM_TOUCH_TARGET_DP,
-                compactQuestionTextWidth +
-                        tinySpacing.value * 2f
-            )
+            compactQuestionTextWidth +
+                    tinySpacing.value * 2f
 
         val exitActionWidth =
-            maxOf(
-                START_MINIMUM_TOUCH_TARGET_DP,
-                compactExitTextWidth +
-                        tinySpacing.value * 2f
-            )
+            compactExitTextWidth +
+                    tinySpacing.value * 2f
 
         val titleFitsHorizontally =
             if (
@@ -867,13 +896,10 @@ private fun calculateStartLayoutBaseScale(
                     START_CHALKTASTIC_LINE_HEIGHT_FACTOR
 
         val actionHeight =
-            maxOf(
-                START_MINIMUM_TOUCH_TARGET_DP,
-                baseScale *
-                        START_PRIMARY_ACTION_TEXT_RATIO *
-                        START_CHALKTASTIC_LINE_HEIGHT_FACTOR +
-                        actionVerticalPadding.value * 2f
-            )
+            baseScale *
+                    START_PRIMARY_ACTION_TEXT_RATIO *
+                    START_CHALKTASTIC_LINE_HEIGHT_FACTOR +
+                    actionVerticalPadding.value * 2f
 
         val actionRowCount =
             when (layoutMode) {
@@ -968,6 +994,23 @@ private fun bandResponsiveDp(
 
 /*
  * ============================================================
+ * RESPONSIVE STABILITY
+ * ============================================================
+ */
+
+/*
+ * 10 means responsive geometry is resolved to tenths:
+ *
+ * 231.04dp -> 231.0dp
+ * 231.06dp -> 231.1dp
+ *
+ * This is intentionally tenths rather than hundredths.
+ */
+private const val START_GEOMETRY_PRECISION =
+    10f
+
+/*
+ * ============================================================
  * START BOARD REFERENCE RANGE
  * ============================================================
  */
@@ -997,7 +1040,7 @@ private const val START_PROBLEM_TEXT_RATIO =
     1.05f
 
 private const val START_PRIMARY_ACTION_TEXT_RATIO =
-    0.82f
+    0.90f
 
 private const val START_HEADING_TEXT_RATIO =
     0.58f
@@ -1006,7 +1049,7 @@ private const val START_BODY_TEXT_RATIO =
     0.46f
 
 private const val START_COMPACT_TEXT_RATIO =
-    0.45f
+    0.55f
 
 private const val START_MICRO_TEXT_RATIO =
     0.28f
@@ -1015,13 +1058,6 @@ private const val START_MICRO_TEXT_RATIO =
  * ============================================================
  * READABILITY THRESHOLDS
  * ============================================================
- *
- * These values define the lowest fitted base scale that still
- * qualifies as Medium or Large.
- *
- * They do not override the physical fit calculation.
- *
- * Small remains the final supported responsive band.
  */
 
 private const val START_MEDIUM_MINIMUM_BASE_SCALE =
@@ -1066,6 +1102,14 @@ private const val START_DOUBLE_COLUMN_ACTION_ROW_COUNT =
 private const val START_DOUBLE_COLUMN_COUNT =
     2f
 
+/*
+ * Double-column must provide at least a 4% better fitted base scale
+ * than single-column before structure changes.
+ *
+ * This is not stateful hysteresis, but together with tenth-dp
+ * geometry stabilization it prevents insignificant differences from
+ * controlling layout selection.
+ */
 private const val START_DOUBLE_COLUMN_SELECTION_ADVANTAGE =
     1.04f
 
@@ -1076,6 +1120,9 @@ private const val START_HEADER_HORIZONTAL_CLEARANCE_DP =
  * ============================================================
  * START BOARD MINIMUM GEOMETRY
  * ============================================================
+ *
+ * This remains the desired interaction target. It is deliberately
+ * excluded from visible typography fitting.
  */
 
 private const val START_MINIMUM_TOUCH_TARGET_DP =

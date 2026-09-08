@@ -798,7 +798,7 @@ private fun AdultOperationFilter(
                                 ChalkColors.ChalkWhite
                             },
                         fontSize =
-                            metrics.headingTextSize,
+                            metrics.displayTextSize,
                         paddingTop =
                             metrics.tinySpacing,
                         paddingBottom =
