@@ -16,11 +16,9 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 
 /**
- * Provides persistence for application preferences.
- *
- * DataStore remains hidden behind this repository. ViewModels, Compose UI,
- * gameplay classes, and audio playback classes consume domain models and
- * repository methods rather than reading preferences directly.
+ * Keeps DataStore behind a repository boundary so ViewModels and app-level
+ * coordination code can work with domain settings instead of persistence
+ * details.
  */
 class SettingsRepository(
     private val dataStore: DataStore<Preferences>
@@ -142,6 +140,10 @@ class SettingsRepository(
                     config.focusNumber
             }
 
+            /**
+             * Saving through the current model completes migration from the
+             * former digit-count setting, so the obsolete value is removed.
+             */
             preferences.remove(
                 Keys.WholeNumberDigits
             )
@@ -184,6 +186,10 @@ class SettingsRepository(
         }
     }
 
+    /**
+     * Treats incomplete or invalid persisted practice data as unavailable so
+     * RoundSettingsViewModel receives either a valid PracticeConfig or null.
+     */
     private fun readPracticeConfig(
         preferences: Preferences
     ): PracticeConfig? {
@@ -267,6 +273,10 @@ class SettingsRepository(
         )
     }
 
+    /**
+     * Converts the former digit-count preference into the current maximum
+     * operand model so saved configurations from older versions can still load.
+     */
     private fun maximumOperandFromDigitCount(
         digitCount: Int
     ): Int? {
@@ -294,6 +304,10 @@ class SettingsRepository(
         }
     }
 
+    /**
+     * Sorts operations before persistence so the same set always produces the
+     * same stored value regardless of Set iteration order.
+     */
     private fun serializeOperations(
         operations: Set<ArithmeticOperation>
     ): String {
@@ -308,6 +322,10 @@ class SettingsRepository(
             }
     }
 
+    /**
+     * Ignores unrecognized stored operation names so an obsolete or corrupted
+     * entry cannot prevent the remaining valid operations from being read.
+     */
     private fun parseOperations(
         storedOperations: String?
     ): Set<ArithmeticOperation> {
@@ -335,6 +353,11 @@ class SettingsRepository(
             .toSet()
     }
 
+    /**
+     * Falls back to default preferences when DataStore cannot read its backing
+     * file, while allowing non-I/O failures to surface instead of hiding
+     * programming or system errors.
+     */
     private fun safePreferencesFlow():
             Flow<Preferences> {
         return dataStore.data
@@ -414,7 +437,8 @@ class SettingsRepository(
             )
 
         /**
-         * Legacy key used only to migrate old saved configurations.
+         * Retained so configurations saved before maximum-operand storage was
+         * introduced can be migrated when they are next loaded and saved.
          */
         val WholeNumberDigits =
             intPreferencesKey(

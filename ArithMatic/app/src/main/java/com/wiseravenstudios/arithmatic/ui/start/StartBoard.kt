@@ -18,18 +18,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
+import com.wiseravenstudios.arithmatic.platform.audio.SoundEffect
 import com.wiseravenstudios.arithmatic.ui.common.BoardResponsiveMetrics
 import com.wiseravenstudios.arithmatic.ui.common.BoardTextRole
+import com.wiseravenstudios.arithmatic.ui.common.LocalSoundEffectPlayer
 import com.wiseravenstudios.arithmatic.ui.common.calculateStartBoardMetrics
 import com.wiseravenstudios.arithmatic.ui.components.ChalkTextAction
 import com.wiseravenstudios.arithmatic.ui.theme.ChalkColors
 import com.wiseravenstudios.arithmatic.ui.theme.Chalktastic
 
 /**
- * Main menu displayed on the classroom blackboard.
- *
- * Content sizing and structural layout are derived from the current
- * writable board dimensions.
+ * Uses the writable board dimensions as the responsive input so the main menu
+ * adapts to the actual space available instead of relying on device classes.
  */
 @Composable
 fun StartBoard(
@@ -41,6 +41,9 @@ fun StartBoard(
     onExit: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val soundEffectPlayer =
+        LocalSoundEffectPlayer.current
+
     BoxWithConstraints(
         modifier =
             modifier.fillMaxSize()
@@ -58,35 +61,57 @@ fun StartBoard(
             StartBoardMainContent(
                 metrics =
                     metrics,
-                onStartPractice =
-                    onStartPractice,
-                onOpenSettings =
-                    onOpenSettings,
-                onOpenStats =
-                    onOpenStats,
-                onOpenAdultArea =
-                    onOpenAdultArea
+                onStartPractice = {
+                    soundEffectPlayer.play(
+                        SoundEffect.ButtonPress
+                    )
+
+                    onStartPractice()
+                },
+                onOpenSettings = {
+                    soundEffectPlayer.play(
+                        SoundEffect.ButtonPress
+                    )
+
+                    onOpenSettings()
+                },
+                onOpenStats = {
+                    soundEffectPlayer.play(
+                        SoundEffect.ButtonPress
+                    )
+
+                    onOpenStats()
+                },
+                onOpenAdultArea = {
+                    soundEffectPlayer.play(
+                        SoundEffect.ButtonPress
+                    )
+
+                    onOpenAdultArea()
+                }
             )
 
             StartBoardUtilityActions(
                 metrics =
                     metrics,
-                onOpenAbout =
-                    onOpenAbout,
-                onExit =
-                    onExit
+                onOpenAbout = {
+                    soundEffectPlayer.play(
+                        SoundEffect.ButtonPress
+                    )
+
+                    onOpenAbout()
+                },
+                onExit = {
+                    onExit()
+                }
             )
         }
     }
 }
 
 /**
- * Displays the title and main navigation actions.
- *
- * In NarrowTall layouts, titleTopSpacing includes enough responsive
- * clearance to place the title visually beneath the utility actions.
- *
- * Wider shapes retain the compact shared-header appearance.
+ * Keeps the title and primary actions in the normal layout flow while the
+ * utility actions remain independently pinned to the board corners.
  */
 @Composable
 private fun StartBoardMainContent(
@@ -170,10 +195,8 @@ private fun StartBoardMainContent(
 }
 
 /**
- * Displays the About and Exit actions in the upper board corners.
- *
- * Their font size is derived from the same Start Board base scale as
- * the title and primary actions, preserving the intended hierarchy.
+ * Uses an overlay so About and Exit remain anchored to opposite board corners
+ * without consuming space from the responsive title and action layout.
  */
 @Composable
 private fun StartBoardUtilityActions(
@@ -251,9 +274,6 @@ private fun StartBoardUtilityActions(
     }
 }
 
-/**
- * Displays the main actions in one vertical column.
- */
 @Composable
 private fun SingleColumnStartActions(
     onStartPractice: () -> Unit,
@@ -323,11 +343,8 @@ private fun SingleColumnStartActions(
 }
 
 /**
- * Displays the main actions in two columns.
- *
- * The action area fills all remaining vertical space beneath the title.
- * Each column distributes its two actions evenly through that space
- * rather than clustering both rows near the top.
+ * Lets both action rows use the full remaining board height so wide layouts
+ * preserve the same visual distribution as the single-column layout.
  */
 @Composable
 private fun DoubleColumnStartActions(
@@ -427,9 +444,6 @@ private fun DoubleColumnStartActions(
     }
 }
 
-/**
- * Displays one primary Start-board navigation action.
- */
 @Composable
 private fun StartAction(
     text: String,

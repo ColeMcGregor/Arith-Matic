@@ -178,102 +178,36 @@ fun calculateRoundSettingsBoardMetrics(
             largeMaximum = 10f
         )
 
-    val minimumTouchTarget =
-        when (environment.sizeBand) {
-            BoardSizeBand.Small ->
-                SETTINGS_SMALL_MINIMUM_TOUCH_TARGET_DP.dp
+    /*
+     * Basic Round Settings chooses Tall, Middle, or Wide from the
+     * actual Basic content area.
+     *
+     * The shared layout mode is therefore only the broad board-level
+     * structural classification.
+     */
+    val layoutMode =
+        when (environment.shape) {
+            BoardShape.VerticalRectangle ->
+                BoardLayoutMode.SingleColumn
 
-            BoardSizeBand.Medium ->
-                SETTINGS_MEDIUM_MINIMUM_TOUCH_TARGET_DP.dp
+            BoardShape.Square ->
+                BoardLayoutMode.SingleColumn
 
-            BoardSizeBand.Large ->
-                SETTINGS_LARGE_MINIMUM_TOUCH_TARGET_DP.dp
+            BoardShape.HorizontalRectangle ->
+                BoardLayoutMode.DoubleColumn
         }
 
-    val singleColumnBaseScale =
+    val baseScale =
         calculateSettingsBaseScale(
             width =
                 width,
             height =
                 height,
-            layoutMode =
-                BoardLayoutMode.SingleColumn,
             contentHorizontalPadding =
                 contentHorizontalPadding,
             contentVerticalPadding =
-                contentVerticalPadding,
-            tinySpacing =
-                tinySpacing,
-            smallSpacing =
-                smallSpacing,
-            mediumSpacing =
-                mediumSpacing,
-            largeSpacing =
-                largeSpacing,
-            actionHorizontalPadding =
-                actionHorizontalPadding,
-            actionVerticalPadding =
-                actionVerticalPadding
+                contentVerticalPadding
         )
-
-    val doubleColumnBaseScale =
-        if (
-            environment.shape ==
-            BoardShape.VerticalRectangle
-        ) {
-            0f
-        } else {
-            calculateSettingsBaseScale(
-                width =
-                    width,
-                height =
-                    height,
-                layoutMode =
-                    BoardLayoutMode.DoubleColumn,
-                contentHorizontalPadding =
-                    contentHorizontalPadding,
-                contentVerticalPadding =
-                    contentVerticalPadding,
-                tinySpacing =
-                    tinySpacing,
-                smallSpacing =
-                    smallSpacing,
-                mediumSpacing =
-                    mediumSpacing,
-                largeSpacing =
-                    largeSpacing,
-                actionHorizontalPadding =
-                    actionHorizontalPadding,
-                actionVerticalPadding =
-                    actionVerticalPadding
-            )
-        }
-
-    val layoutMode =
-        if (
-            environment.shape ==
-            BoardShape.VerticalRectangle
-        ) {
-            BoardLayoutMode.SingleColumn
-        } else if (
-            doubleColumnBaseScale >
-            singleColumnBaseScale *
-            SETTINGS_DOUBLE_COLUMN_SELECTION_ADVANTAGE
-        ) {
-            BoardLayoutMode.DoubleColumn
-        } else {
-            BoardLayoutMode.SingleColumn
-        }
-
-    val baseScale =
-        if (
-            layoutMode ==
-            BoardLayoutMode.DoubleColumn
-        ) {
-            doubleColumnBaseScale
-        } else {
-            singleColumnBaseScale
-        }
 
     return BoardResponsiveMetrics(
         width =
@@ -369,12 +303,12 @@ fun calculateRoundSettingsBoardMetrics(
             contentVerticalPadding,
 
         minimumTouchTarget =
-            minimumTouchTarget,
+            SETTINGS_MINIMUM_TOUCH_TARGET_DP.dp,
 
         gameQuestionAreaHeight =
-            minimumTouchTarget,
+            SETTINGS_MINIMUM_TOUCH_TARGET_DP.dp,
         gameAnswerButtonHeight =
-            minimumTouchTarget,
+            SETTINGS_MINIMUM_TOUCH_TARGET_DP.dp,
         gameSectionSpacing =
             smallSpacing
     )
@@ -383,18 +317,11 @@ fun calculateRoundSettingsBoardMetrics(
 private fun calculateSettingsBaseScale(
     width: Dp,
     height: Dp,
-    layoutMode: BoardLayoutMode,
     contentHorizontalPadding: Dp,
-    contentVerticalPadding: Dp,
-    tinySpacing: Dp,
-    smallSpacing: Dp,
-    mediumSpacing: Dp,
-    largeSpacing: Dp,
-    actionHorizontalPadding: Dp,
-    actionVerticalPadding: Dp
+    contentVerticalPadding: Dp
 ): Float {
 
-    val contentWidth =
+    val usableWidth =
         (
                 width.value -
                         contentHorizontalPadding.value * 2f
@@ -403,7 +330,7 @@ private fun calculateSettingsBaseScale(
                 1f
             )
 
-    val contentHeight =
+    val usableHeight =
         (
                 height.value -
                         contentVerticalPadding.value * 2f
@@ -412,306 +339,14 @@ private fun calculateSettingsBaseScale(
                 1f
             )
 
-    return calculateLargestFittingBaseScale(
-        maximumCandidate =
-            maxOf(
-                width.value,
-                height.value
-            )
-    ) { baseScale ->
+    val limitingDimension =
+        minOf(
+            usableWidth,
+            usableHeight
+        )
 
-        val displayHeight =
-            baseScale *
-                    SETTINGS_DISPLAY_TEXT_RATIO *
-                    SETTINGS_CHALKTASTIC_LINE_HEIGHT_FACTOR
-
-        val primaryHeight =
-            baseScale *
-                    SETTINGS_PRIMARY_ACTION_TEXT_RATIO *
-                    SETTINGS_CHALKTASTIC_LINE_HEIGHT_FACTOR
-
-        val headingHeight =
-            baseScale *
-                    SETTINGS_HEADING_TEXT_RATIO *
-                    SETTINGS_CHALKTASTIC_LINE_HEIGHT_FACTOR
-
-        val bodyHeight =
-            baseScale *
-                    SETTINGS_BODY_TEXT_RATIO *
-                    SETTINGS_CHALKTASTIC_LINE_HEIGHT_FACTOR
-
-        val compactHeight =
-            baseScale *
-                    SETTINGS_COMPACT_TEXT_RATIO *
-                    SETTINGS_CHALKTASTIC_LINE_HEIGHT_FACTOR
-
-        val titleWidth =
-            baseScale *
-                    SETTINGS_DISPLAY_TEXT_RATIO *
-                    SETTINGS_TITLE_WIDTH_EM
-
-        val operationsLabelWidth =
-            baseScale *
-                    SETTINGS_HEADING_TEXT_RATIO *
-                    SETTINGS_OPERATIONS_WIDTH_EM
-
-        val questionsLabelWidth =
-            baseScale *
-                    SETTINGS_BODY_TEXT_RATIO *
-                    SETTINGS_QUESTIONS_WIDTH_EM
-
-        val biggestNumberLabelWidth =
-            baseScale *
-                    SETTINGS_BODY_TEXT_RATIO *
-                    SETTINGS_BIGGEST_NUMBER_WIDTH_EM
-
-        val focusNumberLabelWidth =
-            baseScale *
-                    SETTINGS_BODY_TEXT_RATIO *
-                    SETTINGS_FOCUS_NUMBER_WIDTH_EM
-
-        val booleanLabelWidth =
-            baseScale *
-                    SETTINGS_BODY_TEXT_RATIO *
-                    SETTINGS_NEGATIVES_WIDTH_EM
-
-        val maximumOperandWidth =
-            baseScale *
-                    SETTINGS_HEADING_TEXT_RATIO *
-                    SETTINGS_MAXIMUM_OPERAND_WIDTH_EM
-
-        val focusValueWidth =
-            baseScale *
-                    SETTINGS_BODY_TEXT_RATIO *
-                    SETTINGS_FOCUS_VALUE_WIDTH_EM
-
-        val tabHeight =
-            bodyHeight +
-                    actionVerticalPadding.value * 2f
-
-        val headingActionHeight =
-            headingHeight +
-                    actionVerticalPadding.value * 2f
-
-        val primaryActionHeight =
-            primaryHeight +
-                    actionVerticalPadding.value * 2f
-
-        val bodyActionHeight =
-            bodyHeight +
-                    actionVerticalPadding.value * 2f
-
-        val compactActionHeight =
-            compactHeight
-
-        val headingActionWidth =
-            baseScale *
-                    SETTINGS_HEADING_TEXT_RATIO *
-                    SETTINGS_CONTROL_SYMBOL_WIDTH_EM +
-                    actionHorizontalPadding.value * 2f
-
-        val primaryActionWidth =
-            baseScale *
-                    SETTINGS_PRIMARY_ACTION_TEXT_RATIO *
-                    SETTINGS_CONTROL_SYMBOL_WIDTH_EM +
-                    actionHorizontalPadding.value * 2f
-
-        val bodyActionWidth =
-            baseScale *
-                    SETTINGS_BODY_TEXT_RATIO *
-                    SETTINGS_BOOLEAN_VALUE_WIDTH_EM +
-                    actionHorizontalPadding.value * 2f
-
-        val operationRowWidth =
-            primaryActionWidth *
-                    SETTINGS_OPERATION_COUNT +
-                    tinySpacing.value *
-                    (
-                            SETTINGS_OPERATION_COUNT -
-                                    1
-                            )
-
-        val operationWidth =
-            maxOf(
-                operationsLabelWidth,
-                operationRowWidth
-            )
-
-        val questionValueWidth =
-            baseScale *
-                    SETTINGS_HEADING_TEXT_RATIO *
-                    SETTINGS_MAXIMUM_QUESTION_VALUE_WIDTH_EM
-
-        val questionControlWidth =
-            headingActionWidth * 2f +
-                    questionValueWidth +
-                    mediumSpacing.value * 2f
-
-        val questionWidth =
-            maxOf(
-                questionsLabelWidth,
-                questionControlWidth
-            )
-
-        val maximumControlWidth =
-            headingActionWidth * 2f +
-                    maximumOperandWidth +
-                    mediumSpacing.value * 2f
-
-        val quickStepTextWidth =
-            baseScale *
-                    SETTINGS_COMPACT_TEXT_RATIO *
-                    SETTINGS_LARGEST_QUICK_STEP_WIDTH_EM
-
-        val quickStepActionWidth =
-            quickStepTextWidth +
-                    tinySpacing.value * 2f
-
-        val quickStepRowWidth =
-            quickStepActionWidth *
-                    SETTINGS_QUICK_STEP_COUNT +
-                    smallSpacing.value *
-                    (
-                            SETTINGS_QUICK_STEP_COUNT -
-                                    1
-                            )
-
-        val biggestNumberWidth =
-            maxOf(
-                biggestNumberLabelWidth,
-                maximumControlWidth,
-                quickStepRowWidth
-            )
-
-        val booleanSettingWidth =
-            booleanLabelWidth +
-                    smallSpacing.value +
-                    bodyActionWidth
-
-        val focusActionWidth =
-            focusValueWidth +
-                    actionHorizontalPadding.value * 2f
-
-        val focusControlWidth =
-            headingActionWidth * 2f +
-                    focusActionWidth +
-                    mediumSpacing.value * 2f
-
-        val focusNumberWidth =
-            maxOf(
-                focusNumberLabelWidth,
-                focusControlWidth
-            )
-
-        val footerActionWidth =
-            baseScale *
-                    SETTINGS_BODY_TEXT_RATIO *
-                    SETTINGS_RESET_WIDTH_EM +
-                    actionHorizontalPadding.value * 2f
-
-        val footerWidth =
-            footerActionWidth *
-                    SETTINGS_FOOTER_ACTION_COUNT
-
-        val operationHeight =
-            headingHeight +
-                    primaryActionHeight
-
-        val questionHeight =
-            bodyHeight +
-                    headingActionHeight
-
-        val biggestNumberHeight =
-            bodyHeight +
-                    headingActionHeight +
-                    compactActionHeight +
-                    tinySpacing.value * 2f
-
-        val booleanSettingHeight =
-            bodyActionHeight
-
-        val focusNumberHeight =
-            bodyHeight +
-                    bodyActionHeight +
-                    tinySpacing.value
-
-        val advancedContentHeight =
-            booleanSettingHeight * 2f +
-                    focusNumberHeight +
-                    smallSpacing.value * 2f
-
-        val advancedContentWidth =
-            maxOf(
-                booleanSettingWidth,
-                focusNumberWidth
-            )
-
-        val footerHeight =
-            bodyActionHeight
-
-        val shellHeight =
-            displayHeight +
-                    tabHeight +
-                    footerHeight
-
-        val basicContentFits =
-            when (layoutMode) {
-
-                BoardLayoutMode.SingleColumn -> {
-
-                    val requiredContentHeight =
-                        operationHeight +
-                                questionHeight +
-                                biggestNumberHeight
-
-                    operationWidth <=
-                            contentWidth &&
-                            questionWidth <=
-                            contentWidth &&
-                            biggestNumberWidth <=
-                            contentWidth &&
-                            shellHeight +
-                            requiredContentHeight <=
-                            contentHeight
-                }
-
-                BoardLayoutMode.DoubleColumn -> {
-
-                    val requiredContentWidth =
-                        operationWidth +
-                                questionWidth +
-                                biggestNumberWidth +
-                                largeSpacing.value * 2f
-
-                    val requiredContentHeight =
-                        maxOf(
-                            operationHeight,
-                            questionHeight,
-                            biggestNumberHeight
-                        )
-
-                    requiredContentWidth <=
-                            contentWidth &&
-                            shellHeight +
-                            requiredContentHeight <=
-                            contentHeight
-                }
-            }
-
-        val advancedContentFits =
-            advancedContentWidth <=
-                    contentWidth &&
-                    shellHeight +
-                    advancedContentHeight <=
-                    contentHeight
-
-        titleWidth <=
-                contentWidth &&
-                footerWidth <=
-                contentWidth &&
-                basicContentFits &&
-                advancedContentFits
-    }
+    return limitingDimension *
+            SETTINGS_BASE_SCALE_RATIO
 }
 
 private fun bandResponsiveDp(
@@ -772,6 +407,9 @@ private const val SETTINGS_MINIMUM_REFERENCE_HEIGHT_DP =
 private const val SETTINGS_MAXIMUM_REFERENCE_HEIGHT_DP =
     1200f
 
+private const val SETTINGS_BASE_SCALE_RATIO =
+    0.14f
+
 private const val SETTINGS_DISPLAY_TEXT_RATIO =
     1.00f
 
@@ -779,79 +417,19 @@ private const val SETTINGS_PROBLEM_TEXT_RATIO =
     1.05f
 
 private const val SETTINGS_PRIMARY_ACTION_TEXT_RATIO =
-    1.05f
+    0.82f
 
 private const val SETTINGS_HEADING_TEXT_RATIO =
-    0.78f
+    0.66f
 
 private const val SETTINGS_BODY_TEXT_RATIO =
-    0.72f
+    0.52f
 
 private const val SETTINGS_COMPACT_TEXT_RATIO =
-    0.43f
+    0.40f
 
 private const val SETTINGS_MICRO_TEXT_RATIO =
     0.32f
 
-private const val SETTINGS_TITLE_WIDTH_EM =
-    9.184f
-
-private const val SETTINGS_OPERATIONS_WIDTH_EM =
-    6.950f
-
-private const val SETTINGS_QUESTIONS_WIDTH_EM =
-    6.133f
-
-private const val SETTINGS_BIGGEST_NUMBER_WIDTH_EM =
-    9.2f
-
-private const val SETTINGS_FOCUS_NUMBER_WIDTH_EM =
-    7.9f
-
-private const val SETTINGS_NEGATIVES_WIDTH_EM =
-    6.608f
-
-private const val SETTINGS_BOOLEAN_VALUE_WIDTH_EM =
-    2.329f
-
-private const val SETTINGS_FOCUS_VALUE_WIDTH_EM =
-    4.6f
-
-private const val SETTINGS_MAXIMUM_OPERAND_WIDTH_EM =
-    4.6f
-
-private const val SETTINGS_LARGEST_QUICK_STEP_WIDTH_EM =
-    5.6f
-
-private const val SETTINGS_RESET_WIDTH_EM =
-    3.458f
-
-private const val SETTINGS_CONTROL_SYMBOL_WIDTH_EM =
-    1.0f
-
-private const val SETTINGS_MAXIMUM_QUESTION_VALUE_WIDTH_EM =
-    1.731f
-
-private const val SETTINGS_CHALKTASTIC_LINE_HEIGHT_FACTOR =
-    1.29f
-
-private const val SETTINGS_OPERATION_COUNT =
-    4
-
-private const val SETTINGS_QUICK_STEP_COUNT =
-    4
-
-private const val SETTINGS_FOOTER_ACTION_COUNT =
-    3
-
-private const val SETTINGS_DOUBLE_COLUMN_SELECTION_ADVANTAGE =
-    1.06f
-
-private const val SETTINGS_SMALL_MINIMUM_TOUCH_TARGET_DP =
-    40f
-
-private const val SETTINGS_MEDIUM_MINIMUM_TOUCH_TARGET_DP =
-    44f
-
-private const val SETTINGS_LARGE_MINIMUM_TOUCH_TARGET_DP =
+private const val SETTINGS_MINIMUM_TOUCH_TARGET_DP =
     48f

@@ -40,10 +40,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.wiseravenstudios.arithmatic.domain.settings.AudioSettings
+import com.wiseravenstudios.arithmatic.platform.audio.SoundEffect
+import com.wiseravenstudios.arithmatic.ui.common.LocalSoundEffectPlayer
 import com.wiseravenstudios.arithmatic.ui.components.ChalkTextAction
 import com.wiseravenstudios.arithmatic.ui.theme.ChalkColors
 import com.wiseravenstudios.arithmatic.ui.theme.Chalktastic
 
+/**
+ * Uses an enum because the Settings board has a fixed set of mutually
+ * exclusive sections and only one can be selected at a time.
+ */
 private enum class SettingsTab {
     Sound,
     Accessibility
@@ -69,6 +75,9 @@ fun SettingsBoard(
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val soundEffectPlayer =
+        LocalSoundEffectPlayer.current
+
     var selectedTabName by rememberSaveable {
         mutableStateOf(
             SettingsTab.Sound.name
@@ -92,6 +101,91 @@ fun SettingsBoard(
             selectedTabName
         )
 
+    val onSelectedTabWithSound:
+                (SettingsTab) -> Unit = { tab ->
+        soundEffectPlayer.play(
+            SoundEffect.ButtonPress
+        )
+
+        selectedTabName =
+            tab.name
+    }
+
+    val onColorVisionModeSelectedWithSound:
+                (String) -> Unit = { mode ->
+        soundEffectPlayer.play(
+            SoundEffect.ButtonPress
+        )
+
+        selectedColorVisionMode =
+            mode
+    }
+
+    val onToggleHighContrastWithSound = {
+        soundEffectPlayer.play(
+            SoundEffect.ButtonPress
+        )
+
+        highContrastEnabled =
+            !highContrastEnabled
+    }
+
+    val onToggleMusicWithSound = {
+        soundEffectPlayer.play(
+            SoundEffect.ButtonPress
+        )
+
+        onToggleMusic()
+    }
+
+    val onIncreaseMusicWithSound = {
+        soundEffectPlayer.play(
+            SoundEffect.ButtonPress
+        )
+
+        onIncreaseMusic()
+    }
+
+    val onDecreaseMusicWithSound = {
+        soundEffectPlayer.play(
+            SoundEffect.ButtonPress
+        )
+
+        onDecreaseMusic()
+    }
+
+    val onToggleSoundEffectsWithSound = {
+        soundEffectPlayer.play(
+            SoundEffect.ButtonPress
+        )
+
+        onToggleSoundEffects()
+    }
+
+    val onIncreaseSoundEffectsWithSound = {
+        soundEffectPlayer.play(
+            SoundEffect.ButtonPress
+        )
+
+        onIncreaseSoundEffects()
+    }
+
+    val onDecreaseSoundEffectsWithSound = {
+        soundEffectPlayer.play(
+            SoundEffect.ButtonPress
+        )
+
+        onDecreaseSoundEffects()
+    }
+
+    val onBackWithSound = {
+        soundEffectPlayer.play(
+            SoundEffect.Back
+        )
+
+        onBack()
+    }
+
     BoxWithConstraints(
         modifier = modifier.fillMaxSize()
     ) {
@@ -110,31 +204,26 @@ fun SettingsBoard(
                 highContrastEnabled =
                     highContrastEnabled,
                 metrics = metrics,
-                onSelectedTab = { tab ->
-                    selectedTabName =
-                        tab.name
-                },
-                onColorVisionModeSelected = { mode ->
-                    selectedColorVisionMode =
-                        mode
-                },
-                onToggleHighContrast = {
-                    highContrastEnabled =
-                        !highContrastEnabled
-                },
+                onSelectedTab =
+                    onSelectedTabWithSound,
+                onColorVisionModeSelected =
+                    onColorVisionModeSelectedWithSound,
+                onToggleHighContrast =
+                    onToggleHighContrastWithSound,
                 onToggleMusic =
-                    onToggleMusic,
+                    onToggleMusicWithSound,
                 onIncreaseMusic =
-                    onIncreaseMusic,
+                    onIncreaseMusicWithSound,
                 onDecreaseMusic =
-                    onDecreaseMusic,
+                    onDecreaseMusicWithSound,
                 onToggleSoundEffects =
-                    onToggleSoundEffects,
+                    onToggleSoundEffectsWithSound,
                 onIncreaseSoundEffects =
-                    onIncreaseSoundEffects,
+                    onIncreaseSoundEffectsWithSound,
                 onDecreaseSoundEffects =
-                    onDecreaseSoundEffects,
-                onBack = onBack
+                    onDecreaseSoundEffectsWithSound,
+                onBack =
+                    onBackWithSound
             )
         } else {
             VerticalSettingsLayout(
@@ -145,31 +234,26 @@ fun SettingsBoard(
                 highContrastEnabled =
                     highContrastEnabled,
                 metrics = metrics,
-                onSelectedTab = { tab ->
-                    selectedTabName =
-                        tab.name
-                },
-                onColorVisionModeSelected = { mode ->
-                    selectedColorVisionMode =
-                        mode
-                },
-                onToggleHighContrast = {
-                    highContrastEnabled =
-                        !highContrastEnabled
-                },
+                onSelectedTab =
+                    onSelectedTabWithSound,
+                onColorVisionModeSelected =
+                    onColorVisionModeSelectedWithSound,
+                onToggleHighContrast =
+                    onToggleHighContrastWithSound,
                 onToggleMusic =
-                    onToggleMusic,
+                    onToggleMusicWithSound,
                 onIncreaseMusic =
-                    onIncreaseMusic,
+                    onIncreaseMusicWithSound,
                 onDecreaseMusic =
-                    onDecreaseMusic,
+                    onDecreaseMusicWithSound,
                 onToggleSoundEffects =
-                    onToggleSoundEffects,
+                    onToggleSoundEffectsWithSound,
                 onIncreaseSoundEffects =
-                    onIncreaseSoundEffects,
+                    onIncreaseSoundEffectsWithSound,
                 onDecreaseSoundEffects =
-                    onDecreaseSoundEffects,
-                onBack = onBack
+                    onDecreaseSoundEffectsWithSound,
+                onBack =
+                    onBackWithSound
             )
         }
     }

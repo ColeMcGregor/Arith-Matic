@@ -246,9 +246,12 @@ private fun SingleColumnGameContent(
                 metrics,
             answerButtonHeight =
                 metrics.gameAnswerButtonHeight,
+            expandVertically =
+                true,
             onAnswerSelected =
                 onAnswerSelected,
             modifier = Modifier
+                .weight(1f)
                 .fillMaxWidth()
                 .widthIn(
                     max =
@@ -452,6 +455,7 @@ private fun AnswerChoiceGrid(
     uiState: GameUiState,
     metrics: BoardResponsiveMetrics,
     answerButtonHeight: Dp,
+    expandVertically: Boolean = false,
     onAnswerSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -621,88 +625,114 @@ private fun AnswerChoiceGrid(
                 }.sp
             }
 
-        Column(
-            modifier =
-                Modifier.fillMaxWidth(),
-            verticalArrangement =
-                Arrangement.spacedBy(
-                    metrics.gameSectionSpacing
-                )
-        ) {
-            if (useSingleColumn) {
-                formattedChoices.forEachIndexed {
-                        choiceIndex,
-                        answerText ->
-
-                    AnswerChoiceButton(
-                        answerText =
-                            answerText,
-                        answerFontSize =
-                            sharedAnswerFontSize,
-                        choiceIndex =
-                            choiceIndex,
-                        uiState =
-                            uiState,
-                        metrics =
-                            metrics,
-                        onAnswerSelected =
-                            onAnswerSelected,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(
-                                answerButtonHeight
-                            )
+        val verticalRowSpacing =
+            if (expandVertically) {
+                (
+                        maxHeight * 0.08f
+                        )
+                    .coerceIn(
+                        metrics.gameSectionSpacing,
+                        metrics.extraLargeSpacing
                     )
-                }
             } else {
-                repeat(2) { rowIndex ->
-                    Row(
-                        modifier =
-                            Modifier.fillMaxWidth(),
-                        horizontalArrangement =
-                            Arrangement.spacedBy(
-                                metrics.tinySpacing
-                            )
-                    ) {
-                        repeat(2) { columnIndex ->
-                            val choiceIndex =
-                                rowIndex * 2 +
-                                        columnIndex
+                metrics.gameSectionSpacing
+            }
 
-                            val answerText =
-                                formattedChoices
-                                    .getOrNull(
-                                        choiceIndex
+        Box(
+            modifier =
+                if (expandVertically) {
+                    Modifier.fillMaxSize()
+                } else {
+                    Modifier.fillMaxWidth()
+                },
+            contentAlignment =
+                Alignment.Center
+        ) {
+            Column(
+                modifier =
+                    Modifier.fillMaxWidth(),
+                verticalArrangement =
+                    Arrangement.spacedBy(
+                        verticalRowSpacing
+                    ),
+                horizontalAlignment =
+                    Alignment.CenterHorizontally
+            ) {
+                if (useSingleColumn) {
+                    formattedChoices.forEachIndexed {
+                            choiceIndex,
+                            answerText ->
+
+                        AnswerChoiceButton(
+                            answerText =
+                                answerText,
+                            answerFontSize =
+                                sharedAnswerFontSize,
+                            choiceIndex =
+                                choiceIndex,
+                            uiState =
+                                uiState,
+                            metrics =
+                                metrics,
+                            onAnswerSelected =
+                                onAnswerSelected,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(
+                                    answerButtonHeight
+                                )
+                        )
+                    }
+                } else {
+                    repeat(2) { rowIndex ->
+                        Row(
+                            modifier =
+                                Modifier.fillMaxWidth(),
+                            horizontalArrangement =
+                                Arrangement.spacedBy(
+                                    metrics.tinySpacing
+                                )
+                        ) {
+                            repeat(2) { columnIndex ->
+                                val choiceIndex =
+                                    rowIndex * 2 +
+                                            columnIndex
+
+                                val answerText =
+                                    formattedChoices
+                                        .getOrNull(
+                                            choiceIndex
+                                        )
+
+                                if (answerText != null) {
+                                    AnswerChoiceButton(
+                                        answerText =
+                                            answerText,
+                                        answerFontSize =
+                                            sharedAnswerFontSize,
+                                        choiceIndex =
+                                            choiceIndex,
+                                        uiState =
+                                            uiState,
+                                        metrics =
+                                            metrics,
+                                        onAnswerSelected =
+                                            onAnswerSelected,
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .height(
+                                                answerButtonHeight
+                                            )
                                     )
-
-                            if (answerText != null) {
-                                AnswerChoiceButton(
-                                    answerText =
-                                        answerText,
-                                    answerFontSize =
-                                        sharedAnswerFontSize,
-                                    choiceIndex =
-                                        choiceIndex,
-                                    uiState =
-                                        uiState,
-                                    metrics =
-                                        metrics,
-                                    onAnswerSelected =
-                                        onAnswerSelected,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(
-                                            answerButtonHeight
-                                        )
-                                )
-                            } else {
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(
-                                            answerButtonHeight
-                                        )
-                                )
+                                } else {
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .height(
+                                                answerButtonHeight
+                                            )
+                                    )
+                                }
                             }
                         }
                     }

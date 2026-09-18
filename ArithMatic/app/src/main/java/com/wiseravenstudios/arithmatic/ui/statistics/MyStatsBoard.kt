@@ -30,6 +30,8 @@ import com.wiseravenstudios.arithmatic.domain.model.ArithmeticOperation
 import com.wiseravenstudios.arithmatic.domain.statistics.model.OperationPerformanceSummary
 import com.wiseravenstudios.arithmatic.domain.statistics.model.PerformanceSummary
 import com.wiseravenstudios.arithmatic.domain.statistics.model.StatsPeriod
+import com.wiseravenstudios.arithmatic.platform.audio.SoundEffect
+import com.wiseravenstudios.arithmatic.ui.common.LocalSoundEffectPlayer
 import com.wiseravenstudios.arithmatic.ui.components.ChalkTextAction
 import com.wiseravenstudios.arithmatic.ui.theme.ChalkColors
 import com.wiseravenstudios.arithmatic.ui.theme.Chalktastic
@@ -42,6 +44,28 @@ fun MyStatsBoard(
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val soundEffectPlayer =
+        LocalSoundEffectPlayer.current
+
+    val onPeriodSelectedWithSound:
+                (StatsPeriod) -> Unit = { period ->
+        soundEffectPlayer.play(
+            SoundEffect.ButtonPress
+        )
+
+        onPeriodSelected(
+            period
+        )
+    }
+
+    val onBackWithSound = {
+        soundEffectPlayer.play(
+            SoundEffect.Back
+        )
+
+        onBack()
+    }
+
     BoxWithConstraints(
         modifier =
             modifier.fillMaxSize()
@@ -60,9 +84,9 @@ fun MyStatsBoard(
                     uiState =
                         uiState,
                     onPeriodSelected =
-                        onPeriodSelected,
+                        onPeriodSelectedWithSound,
                     onBack =
-                        onBack,
+                        onBackWithSound,
                     metrics =
                         metrics
                 )
@@ -73,9 +97,9 @@ fun MyStatsBoard(
                     uiState =
                         uiState,
                     onPeriodSelected =
-                        onPeriodSelected,
+                        onPeriodSelectedWithSound,
                     onBack =
-                        onBack,
+                        onBackWithSound,
                     metrics =
                         metrics
                 )

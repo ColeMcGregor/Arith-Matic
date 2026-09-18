@@ -5,13 +5,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -22,12 +24,14 @@ import com.wiseravenstudios.arithmatic.data.local.database.ArithMaticDatabase
 import com.wiseravenstudios.arithmatic.data.preferences.getArithMaticDataStore
 import com.wiseravenstudios.arithmatic.data.repository.CompletedRoundRepository
 import com.wiseravenstudios.arithmatic.data.repository.SettingsRepository
+import com.wiseravenstudios.arithmatic.platform.audio.AndroidSoundEffectPlayer
 import com.wiseravenstudios.arithmatic.ui.about.AboutBoard
 import com.wiseravenstudios.arithmatic.ui.adults.AdultAreaViewModel
 import com.wiseravenstudios.arithmatic.ui.adults.AdultAreaViewModelFactory
 import com.wiseravenstudios.arithmatic.ui.adults.AdultBoard
 import com.wiseravenstudios.arithmatic.ui.adults.rememberAdultReportExporter
 import com.wiseravenstudios.arithmatic.ui.common.ClassroomScene
+import com.wiseravenstudios.arithmatic.ui.common.LocalSoundEffectPlayer
 import com.wiseravenstudios.arithmatic.ui.components.ChalkTextAction
 import com.wiseravenstudios.arithmatic.ui.game.GameBoard
 import com.wiseravenstudios.arithmatic.ui.game.GameViewModel
@@ -39,6 +43,7 @@ import com.wiseravenstudios.arithmatic.ui.roundsettings.RoundSettingsUiState
 import com.wiseravenstudios.arithmatic.ui.roundsettings.RoundSettingsViewModel
 import com.wiseravenstudios.arithmatic.ui.roundsettings.RoundSettingsViewModelFactory
 import com.wiseravenstudios.arithmatic.ui.settings.SettingsBoard
+import com.wiseravenstudios.arithmatic.ui.settings.SettingsUiState
 import com.wiseravenstudios.arithmatic.ui.settings.SettingsViewModel
 import com.wiseravenstudios.arithmatic.ui.settings.SettingsViewModelFactory
 import com.wiseravenstudios.arithmatic.ui.splash.SplashScreen
@@ -88,6 +93,26 @@ fun ArithMaticApp(
                     preferencesDataStore
             )
         }
+
+    /**
+     * One player is shared across all destinations because SoundPool owns
+     * Android audio resources that should not be recreated for each board.
+     */
+    val soundEffectPlayer =
+        remember(applicationContext) {
+            AndroidSoundEffectPlayer(
+                context =
+                    applicationContext
+            )
+        }
+
+    DisposableEffect(
+        soundEffectPlayer
+    ) {
+        onDispose {
+            soundEffectPlayer.close()
+        }
+    }
 
     val gameViewModelFactory =
         remember(completedRoundRepository) {
@@ -203,6 +228,34 @@ fun ArithMaticApp(
         .uiState
         .collectAsState()
 
+    /**
+     * Keeps the app-scoped player synchronized with the sound-effect
+     * preferences already exposed through SettingsViewModel.
+     */
+    LaunchedEffect(
+        settingsUiState
+    ) {
+        val audioSettings =
+            (
+                    settingsUiState as?
+                            SettingsUiState.Success
+                    )
+                ?.audioSettings
+                ?: return@LaunchedEffect
+
+        soundEffectPlayer.setVolume(
+            volume =
+                audioSettings
+                    .effectiveSoundEffectsVolume
+        )
+
+        soundEffectPlayer.setEnabled(
+            enabled =
+                audioSettings
+                    .soundEffectsEnabled
+        )
+    }
+
     LaunchedEffect(Unit) {
         delay(
             3_000L
@@ -253,174 +306,130 @@ fun ArithMaticApp(
         return
     }
 
-    ClassroomScene {
-        when (currentDestination) {
-            AppDestination.Start -> {
-                StartBoard(
-                    onStartPractice = {
-                        currentDestination =
-                            AppDestination
-                                .RoundSettings
-                    },
-                    onOpenSettings = {
-                        currentDestination =
-                            AppDestination
-                                .AppSettings
-                    },
-                    onOpenStats = {
-                        currentDestination =
-                            AppDestination
-                                .MyStats
-                    },
-                    onOpenAbout = {
-                        currentDestination =
-                            AppDestination
-                                .About
-                    },
-                    onOpenAdultArea = {
-                        currentDestination =
-                            AppDestination
-                                .AdultArea
-                    },
-                    onExit =
-                        onExitApp
-                )
-            }
-
-            AppDestination.RoundSettings -> {
-                when (
-                    val state =
-                        roundSettingsUiState
-                ) {
-                    RoundSettingsUiState.Loading -> {
-                        RoundSettingsStatusBoard(
-                            message =
-                                "Loading round settings...",
-                            messageColor =
-                                ChalkColors
-                                    .ChalkWhite,
-                            onBack = {
-                                currentDestination =
-                                    AppDestination
-                                        .Start
-                            }
-                        )
-                    }
-
-                    is RoundSettingsUiState.Error -> {
-                        RoundSettingsStatusBoard(
-                            message =
-                                state.message,
-                            messageColor =
-                                ChalkColors
-                                    .PastelPink,
-                            onBack = {
-                                currentDestination =
-                                    AppDestination
-                                        .Start
-                            }
-                        )
-                    }
-
-                    is RoundSettingsUiState.Ready -> {
-                        RoundSettingsBoard(
-                            initialConfig =
-                                state.initialConfig,
-                            onBack = {
-                                currentDestination =
-                                    AppDestination
-                                        .Start
-                            },
-                            onStartRound = {
-                                    config ->
-
-                                roundSettingsViewModel
-                                    .saveConfig(
-                                        config =
-                                            config,
-                                        onSaved = {
-                                            gameViewModel
-                                                .clearRound()
-
-                                            resultsViewModel
-                                                .clearResults()
-
-                                            gameViewModel
-                                                .startRound(
-                                                    config
-                                                )
-
-                                            currentDestination =
-                                                AppDestination
-                                                    .Practice
-                                        }
-                                    )
-                            }
-                        )
-                    }
-                }
-            }
-
-            AppDestination.Practice -> {
-                GameBoard(
-                    uiState =
-                        gameUiState,
-                    onExit = {
-                        gameViewModel
-                            .abandonRound()
-
-                        gameViewModel
-                            .clearRound()
-
-                        resultsViewModel
-                            .clearResults()
-
-                        currentDestination =
-                            AppDestination
-                                .RoundSettings
-                    },
-                    onAnswerSelected = {
-                            choiceIndex ->
-
-                        gameViewModel
-                            .selectAnswer(
-                                choiceIndex
-                            )
-                    }
-                )
-            }
-
-            AppDestination.Results -> {
-                val results =
-                    resultsUiState.results
-
-                val config =
-                    resultsUiState.config
-
-                if (
-                    results != null &&
-                    config != null
-                ) {
-                    ResultsBoard(
-                        results =
-                            results,
-                        onPracticeAgain = {
-                            gameViewModel
-                                .clearRound()
-
-                            gameViewModel
-                                .startRound(
-                                    config
-                                )
-
-                            resultsViewModel
-                                .clearResults()
-
+    /**
+     * Provides the shared player to reusable Compose controls without passing
+     * the same dependency through every board and navigation callback.
+     */
+    CompositionLocalProvider(
+        LocalSoundEffectPlayer provides
+                soundEffectPlayer
+    ) {
+        ClassroomScene {
+            when (currentDestination) {
+                AppDestination.Start -> {
+                    StartBoard(
+                        onStartPractice = {
                             currentDestination =
                                 AppDestination
-                                    .Practice
+                                    .RoundSettings
                         },
-                        onChangeSettings = {
+                        onOpenSettings = {
+                            currentDestination =
+                                AppDestination
+                                    .AppSettings
+                        },
+                        onOpenStats = {
+                            currentDestination =
+                                AppDestination
+                                    .MyStats
+                        },
+                        onOpenAbout = {
+                            currentDestination =
+                                AppDestination
+                                    .About
+                        },
+                        onOpenAdultArea = {
+                            currentDestination =
+                                AppDestination
+                                    .AdultArea
+                        },
+                        onExit =
+                            onExitApp
+                    )
+                }
+
+                AppDestination.RoundSettings -> {
+                    when (
+                        val state =
+                            roundSettingsUiState
+                    ) {
+                        RoundSettingsUiState.Loading -> {
+                            RoundSettingsStatusBoard(
+                                message =
+                                    "Loading round settings...",
+                                messageColor =
+                                    ChalkColors
+                                        .ChalkWhite,
+                                onBack = {
+                                    currentDestination =
+                                        AppDestination
+                                            .Start
+                                }
+                            )
+                        }
+
+                        is RoundSettingsUiState.Error -> {
+                            RoundSettingsStatusBoard(
+                                message =
+                                    state.message,
+                                messageColor =
+                                    ChalkColors
+                                        .PastelPink,
+                                onBack = {
+                                    currentDestination =
+                                        AppDestination
+                                            .Start
+                                }
+                            )
+                        }
+
+                        is RoundSettingsUiState.Ready -> {
+                            RoundSettingsBoard(
+                                initialConfig =
+                                    state.initialConfig,
+                                onBack = {
+                                    currentDestination =
+                                        AppDestination
+                                            .Start
+                                },
+                                onStartRound = {
+                                        config ->
+
+                                    roundSettingsViewModel
+                                        .saveConfig(
+                                            config =
+                                                config,
+                                            onSaved = {
+                                                gameViewModel
+                                                    .clearRound()
+
+                                                resultsViewModel
+                                                    .clearResults()
+
+                                                gameViewModel
+                                                    .startRound(
+                                                        config
+                                                    )
+
+                                                currentDestination =
+                                                    AppDestination
+                                                        .Practice
+                                            }
+                                        )
+                                }
+                            )
+                        }
+                    }
+                }
+
+                AppDestination.Practice -> {
+                    GameBoard(
+                        uiState =
+                            gameUiState,
+                        onExit = {
+                            gameViewModel
+                                .abandonRound()
+
                             gameViewModel
                                 .clearRound()
 
@@ -431,27 +440,160 @@ fun ArithMaticApp(
                                 AppDestination
                                     .RoundSettings
                         },
-                        onReturnHome = {
+                        onAnswerSelected = {
+                                choiceIndex ->
+
                             gameViewModel
-                                .clearRound()
+                                .selectAnswer(
+                                    choiceIndex
+                                )
+                        }
+                    )
+                }
 
-                            resultsViewModel
-                                .clearResults()
+                AppDestination.Results -> {
+                    val results =
+                        resultsUiState.results
 
+                    val config =
+                        resultsUiState.config
+
+                    if (
+                        results != null &&
+                        config != null
+                    ) {
+                        ResultsBoard(
+                            results =
+                                results,
+                            onPracticeAgain = {
+                                gameViewModel
+                                    .clearRound()
+
+                                gameViewModel
+                                    .startRound(
+                                        config
+                                    )
+
+                                resultsViewModel
+                                    .clearResults()
+
+                                currentDestination =
+                                    AppDestination
+                                        .Practice
+                            },
+                            onChangeSettings = {
+                                gameViewModel
+                                    .clearRound()
+
+                                resultsViewModel
+                                    .clearResults()
+
+                                currentDestination =
+                                    AppDestination
+                                        .RoundSettings
+                            },
+                            onReturnHome = {
+                                gameViewModel
+                                    .clearRound()
+
+                                resultsViewModel
+                                    .clearResults()
+
+                                currentDestination =
+                                    AppDestination
+                                        .Start
+                            }
+                        )
+                    } else {
+                        MissingResultsBoard(
+                            onReturnHome = {
+                                gameViewModel
+                                    .clearRound()
+
+                                resultsViewModel
+                                    .clearResults()
+
+                                currentDestination =
+                                    AppDestination
+                                        .Start
+                            }
+                        )
+                    }
+                }
+
+                AppDestination.AppSettings -> {
+                    SettingsBoard(
+                        uiState =
+                            settingsUiState,
+                        onToggleMusic = {
+                            settingsViewModel
+                                .toggleMusic()
+                        },
+                        onIncreaseMusic = {
+                            settingsViewModel
+                                .increaseMusicLevel()
+                        },
+                        onDecreaseMusic = {
+                            settingsViewModel
+                                .decreaseMusicLevel()
+                        },
+                        onToggleSoundEffects = {
+                            settingsViewModel
+                                .toggleSoundEffects()
+                        },
+                        onIncreaseSoundEffects = {
+                            settingsViewModel
+                                .increaseSoundEffectsLevel()
+                        },
+                        onDecreaseSoundEffects = {
+                            settingsViewModel
+                                .decreaseSoundEffectsLevel()
+                        },
+                        onBack = {
                             currentDestination =
                                 AppDestination
                                     .Start
                         }
                     )
-                } else {
-                    MissingResultsBoard(
-                        onReturnHome = {
-                            gameViewModel
-                                .clearRound()
+                }
 
-                            resultsViewModel
-                                .clearResults()
+                AppDestination.MyStats -> {
+                    MyStatsBoard(
+                        uiState =
+                            myStatsUiState,
+                        onPeriodSelected = {
+                                period ->
 
+                            myStatsViewModel
+                                .selectPeriod(
+                                    period
+                                )
+                        },
+                        onBack = {
+                            currentDestination =
+                                AppDestination
+                                    .Start
+                        }
+                    )
+                }
+
+                AppDestination.AdultArea -> {
+                    AdultBoard(
+                        viewModel =
+                            adultAreaViewModel,
+                        onExportReport =
+                            exportAdultReport,
+                        onBack = {
+                            currentDestination =
+                                AppDestination
+                                    .Start
+                        }
+                    )
+                }
+
+                AppDestination.About -> {
+                    AboutBoard(
+                        onBack = {
                             currentDestination =
                                 AppDestination
                                     .Start
@@ -459,90 +601,14 @@ fun ArithMaticApp(
                     )
                 }
             }
-
-            AppDestination.AppSettings -> {
-                SettingsBoard(
-                    uiState =
-                        settingsUiState,
-                    onToggleMusic = {
-                        settingsViewModel
-                            .toggleMusic()
-                    },
-                    onIncreaseMusic = {
-                        settingsViewModel
-                            .increaseMusicLevel()
-                    },
-                    onDecreaseMusic = {
-                        settingsViewModel
-                            .decreaseMusicLevel()
-                    },
-                    onToggleSoundEffects = {
-                        settingsViewModel
-                            .toggleSoundEffects()
-                    },
-                    onIncreaseSoundEffects = {
-                        settingsViewModel
-                            .increaseSoundEffectsLevel()
-                    },
-                    onDecreaseSoundEffects = {
-                        settingsViewModel
-                            .decreaseSoundEffectsLevel()
-                    },
-                    onBack = {
-                        currentDestination =
-                            AppDestination
-                                .Start
-                    }
-                )
-            }
-
-            AppDestination.MyStats -> {
-                MyStatsBoard(
-                    uiState =
-                        myStatsUiState,
-                    onPeriodSelected = {
-                            period ->
-
-                        myStatsViewModel
-                            .selectPeriod(
-                                period
-                            )
-                    },
-                    onBack = {
-                        currentDestination =
-                            AppDestination
-                                .Start
-                    }
-                )
-            }
-
-            AppDestination.AdultArea -> {
-                AdultBoard(
-                    viewModel =
-                        adultAreaViewModel,
-                    onExportReport =
-                        exportAdultReport,
-                    onBack = {
-                        currentDestination =
-                            AppDestination
-                                .Start
-                    }
-                )
-            }
-
-            AppDestination.About -> {
-                AboutBoard(
-                    onBack = {
-                        currentDestination =
-                            AppDestination
-                                .Start
-                    }
-                )
-            }
         }
     }
 }
 
+/**
+ * Uses an enum because ArithMaticApp navigates among a fixed set of board
+ * destinations and each navigation state must represent exactly one of them.
+ */
 enum class AppDestination {
     Start,
     RoundSettings,
