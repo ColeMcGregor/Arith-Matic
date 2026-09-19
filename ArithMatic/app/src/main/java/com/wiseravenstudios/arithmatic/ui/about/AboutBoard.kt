@@ -21,6 +21,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.wiseravenstudios.arithmatic.platform.audio.SoundEffect
+import com.wiseravenstudios.arithmatic.ui.common.LocalSoundEffectPlayer
 import com.wiseravenstudios.arithmatic.ui.components.ChalkTextAction
 import com.wiseravenstudios.arithmatic.ui.theme.ChalkColors
 import com.wiseravenstudios.arithmatic.ui.theme.Chalktastic
@@ -34,10 +36,14 @@ private const val HORIZONTAL_LAYOUT_ASPECT_RATIO =
 @Composable
 fun AboutBoard(
     onBack: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onOpenAttributions: () -> Unit = {}
 ) {
     val uriHandler =
         LocalUriHandler.current
+
+    val soundEffectPlayer =
+        LocalSoundEffectPlayer.current
 
     BoxWithConstraints(
         modifier =
@@ -96,32 +102,51 @@ fun AboutBoard(
 
         val titleSize =
             (limitingDimension * 0.085f)
-                .coerceAtLeast(20f)
+                .coerceAtLeast(
+                    20f
+                )
                 .sp
 
         val titleLineHeight =
             (limitingDimension * 0.090f)
-                .coerceAtLeast(21f)
+                .coerceAtLeast(
+                    21f
+                )
                 .sp
 
         val taglineSize =
             (limitingDimension * 0.055f)
-                .coerceAtLeast(14f)
+                .coerceAtLeast(
+                    14f
+                )
                 .sp
 
         val taglineLineHeight =
             (limitingDimension * 0.072f)
-                .coerceAtLeast(20f)
+                .coerceAtLeast(
+                    20f
+                )
                 .sp
 
         val linkSize =
             (limitingDimension * 0.060f)
-                .coerceAtLeast(15f)
+                .coerceAtLeast(
+                    15f
+                )
                 .sp
 
         val versionSize =
             (limitingDimension * 0.048f)
-                .coerceAtLeast(13f)
+                .coerceAtLeast(
+                    13f
+                )
+                .sp
+
+        val backSize =
+            (limitingDimension * 0.075f)
+                .coerceAtLeast(
+                    18f
+                )
                 .sp
 
         if (
@@ -139,9 +164,7 @@ fun AboutBoard(
                                 verticalPadding
                         ),
                 horizontalArrangement =
-                    Arrangement.spacedBy(
-                        largeSpacing
-                    ),
+                    Arrangement.SpaceEvenly,
                 verticalAlignment =
                     Alignment.CenterVertically
             ) {
@@ -201,7 +224,7 @@ fun AboutBoard(
                             .weight(1f)
                             .fillMaxHeight(),
                     verticalArrangement =
-                        Arrangement.Center,
+                        Arrangement.SpaceEvenly,
                     horizontalAlignment =
                         Alignment.CenterHorizontally
                 ) {
@@ -210,6 +233,10 @@ fun AboutBoard(
                             "Wise Raven Studios\nArith-Matic Page ↗",
                         modifier =
                             Modifier.clickable {
+                                soundEffectPlayer.play(
+                                    SoundEffect.ButtonPress
+                                )
+
                                 uriHandler.openUri(
                                     ARITH_MATIC_WEBSITE
                                 )
@@ -228,13 +255,6 @@ fun AboutBoard(
                             TextDecoration.Underline
                     )
 
-                    Spacer(
-                        modifier =
-                            Modifier.height(
-                                smallSpacing
-                            )
-                    )
-
                     Text(
                         text =
                             "Version 1.0",
@@ -248,11 +268,29 @@ fun AboutBoard(
                             TextAlign.Center
                     )
 
-                    Spacer(
+                    Text(
+                        text =
+                            "Credits / Attribution",
                         modifier =
-                            Modifier.height(
-                                smallSpacing
-                            )
+                            Modifier.clickable {
+                                soundEffectPlayer.play(
+                                    SoundEffect.ButtonPress
+                                )
+
+                                onOpenAttributions()
+                            },
+                        color =
+                            ChalkColors.PastelGreen,
+                        fontFamily =
+                            Chalktastic,
+                        fontSize =
+                            linkSize,
+                        fontWeight =
+                            FontWeight.Bold,
+                        textAlign =
+                            TextAlign.Center,
+                        textDecoration =
+                            TextDecoration.Underline
                     )
 
                     ChalkTextAction(
@@ -261,9 +299,14 @@ fun AboutBoard(
                         color =
                             ChalkColors.PastelYellow,
                         fontSize =
-                            linkSize,
-                        onClick =
-                            onBack
+                            backSize,
+                        onClick = {
+                            soundEffectPlayer.play(
+                                SoundEffect.Back
+                            )
+
+                            onBack()
+                        }
                     )
                 }
             }
@@ -298,82 +341,96 @@ fun AboutBoard(
                         titleLineHeight
                 )
 
-                Spacer(
+                Column(
                     modifier =
-                        Modifier.height(
-                            largeSpacing
-                        )
-                )
+                        Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                    verticalArrangement =
+                        Arrangement.SpaceEvenly,
+                    horizontalAlignment =
+                        Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text =
+                            "Practice arithmetic.\nBuild confidence.",
+                        color =
+                            ChalkColors.ChalkWhite,
+                        fontFamily =
+                            Chalktastic,
+                        fontSize =
+                            taglineSize,
+                        textAlign =
+                            TextAlign.Center,
+                        lineHeight =
+                            taglineLineHeight
+                    )
 
-                Text(
-                    text =
-                        "Practice arithmetic.\nBuild confidence.",
-                    color =
-                        ChalkColors.ChalkWhite,
-                    fontFamily =
-                        Chalktastic,
-                    fontSize =
-                        taglineSize,
-                    textAlign =
-                        TextAlign.Center,
-                    lineHeight =
-                        taglineLineHeight
-                )
+                    Text(
+                        text =
+                            "Wise Raven Studios\nArith-Matic Page ↗",
+                        modifier =
+                            Modifier.clickable {
+                                soundEffectPlayer.play(
+                                    SoundEffect.ButtonPress
+                                )
 
-                Spacer(
-                    modifier =
-                        Modifier.height(
-                            largeSpacing
-                        )
-                )
+                                uriHandler.openUri(
+                                    ARITH_MATIC_WEBSITE
+                                )
+                            },
+                        color =
+                            ChalkColors.PastelBlue,
+                        fontFamily =
+                            Chalktastic,
+                        fontSize =
+                            linkSize,
+                        fontWeight =
+                            FontWeight.Bold,
+                        textAlign =
+                            TextAlign.Center,
+                        textDecoration =
+                            TextDecoration.Underline
+                    )
 
-                Text(
-                    text =
-                        "Wise Raven Studios\nArith-Matic Page ↗",
-                    modifier =
-                        Modifier.clickable {
-                            uriHandler.openUri(
-                                ARITH_MATIC_WEBSITE
-                            )
-                        },
-                    color =
-                        ChalkColors.PastelBlue,
-                    fontFamily =
-                        Chalktastic,
-                    fontSize =
-                        linkSize,
-                    fontWeight =
-                        FontWeight.Bold,
-                    textAlign =
-                        TextAlign.Center,
-                    textDecoration =
-                        TextDecoration.Underline
-                )
+                    Text(
+                        text =
+                            "Version 1.0",
+                        color =
+                            ChalkColors.PastelPurple,
+                        fontFamily =
+                            Chalktastic,
+                        fontSize =
+                            versionSize,
+                        textAlign =
+                            TextAlign.Center
+                    )
 
-                Spacer(
-                    modifier =
-                        Modifier.height(
-                            smallSpacing
-                        )
-                )
+                    Text(
+                        text =
+                            "Credits / Attribution",
+                        modifier =
+                            Modifier.clickable {
+                                soundEffectPlayer.play(
+                                    SoundEffect.ButtonPress
+                                )
 
-                Text(
-                    text =
-                        "Version 1.0",
-                    color =
-                        ChalkColors.PastelPurple,
-                    fontFamily =
-                        Chalktastic,
-                    fontSize =
-                        versionSize,
-                    textAlign =
-                        TextAlign.Center
-                )
-
-                Spacer(
-                    modifier =
-                        Modifier.weight(1f)
-                )
+                                onOpenAttributions()
+                            },
+                        color =
+                            ChalkColors.PastelGreen,
+                        fontFamily =
+                            Chalktastic,
+                        fontSize =
+                            linkSize,
+                        fontWeight =
+                            FontWeight.Bold,
+                        textAlign =
+                            TextAlign.Center,
+                        textDecoration =
+                            TextDecoration.Underline
+                    )
+                }
 
                 ChalkTextAction(
                     text =
@@ -381,9 +438,14 @@ fun AboutBoard(
                     color =
                         ChalkColors.PastelYellow,
                     fontSize =
-                        linkSize,
-                    onClick =
-                        onBack
+                        backSize,
+                    onClick = {
+                        soundEffectPlayer.play(
+                            SoundEffect.Back
+                        )
+
+                        onBack()
+                    }
                 )
             }
         }

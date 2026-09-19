@@ -4,6 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.wiseravenstudios.arithmatic.data.repository.CompletedRoundRepository
 
+/**
+ * Supplies GameViewModel with the completed-round repository owned by the
+ * application composition root.
+ */
 class GameViewModelFactory(
     private val completedRoundRepository: CompletedRoundRepository
 ) : ViewModelProvider.Factory {

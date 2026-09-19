@@ -16,7 +16,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.wiseravenstudios.arithmatic.domain.results.BasicRoundResults
+import com.wiseravenstudios.arithmatic.platform.audio.SoundEffect
 import com.wiseravenstudios.arithmatic.ui.common.BoardResponsiveMetrics
+import com.wiseravenstudios.arithmatic.ui.common.LocalSoundEffectPlayer
 import com.wiseravenstudios.arithmatic.ui.common.BoardShape
 import com.wiseravenstudios.arithmatic.ui.common.BoardTextRole
 import com.wiseravenstudios.arithmatic.ui.common.calculateResultsBoardMetrics
@@ -34,6 +36,33 @@ fun ResultsBoard(
     onReturnHome: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val soundEffectPlayer =
+        LocalSoundEffectPlayer.current
+
+    val onPracticeAgainWithSound = {
+        soundEffectPlayer.play(
+            SoundEffect.ButtonPress
+        )
+
+        onPracticeAgain()
+    }
+
+    val onChangeSettingsWithSound = {
+        soundEffectPlayer.play(
+            SoundEffect.ButtonPress
+        )
+
+        onChangeSettings()
+    }
+
+    val onReturnHomeWithSound = {
+        soundEffectPlayer.play(
+            SoundEffect.Back
+        )
+
+        onReturnHome()
+    }
+
     BoxWithConstraints(
         modifier =
             modifier.fillMaxSize()
@@ -54,11 +83,11 @@ fun ResultsBoard(
                     metrics =
                         metrics,
                     onPracticeAgain =
-                        onPracticeAgain,
+                        onPracticeAgainWithSound,
                     onChangeSettings =
-                        onChangeSettings,
+                        onChangeSettingsWithSound,
                     onReturnHome =
-                        onReturnHome
+                        onReturnHomeWithSound
                 )
 
             BoardShape.Square ->
@@ -68,11 +97,11 @@ fun ResultsBoard(
                     metrics =
                         metrics,
                     onPracticeAgain =
-                        onPracticeAgain,
+                        onPracticeAgainWithSound,
                     onChangeSettings =
-                        onChangeSettings,
+                        onChangeSettingsWithSound,
                     onReturnHome =
-                        onReturnHome
+                        onReturnHomeWithSound
                 )
 
             BoardShape.HorizontalRectangle ->
@@ -82,11 +111,11 @@ fun ResultsBoard(
                     metrics =
                         metrics,
                     onPracticeAgain =
-                        onPracticeAgain,
+                        onPracticeAgainWithSound,
                     onChangeSettings =
-                        onChangeSettings,
+                        onChangeSettingsWithSound,
                     onReturnHome =
-                        onReturnHome
+                        onReturnHomeWithSound
                 )
         }
     }

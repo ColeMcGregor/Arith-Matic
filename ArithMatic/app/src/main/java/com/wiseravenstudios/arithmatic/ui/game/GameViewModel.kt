@@ -17,13 +17,26 @@ import com.wiseravenstudios.arithmatic.domain.time.ActiveTimer
 import com.wiseravenstudios.arithmatic.domain.time.AppClock
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-private const val FEEDBACK_DELAY_MILLIS = 1_750L
+private const val FEEDBACK_DELAY_MILLIS = 1_000L
+
+/**
+ * Uses a sealed event type so one-time gameplay feedback can be handled
+ * exhaustively without becoming persistent UI state.
+ */
+sealed interface GameEvent {
+    data object CorrectAnswer : GameEvent
+    data object IncorrectAnswer : GameEvent
+    data object RoundComplete : GameEvent
+}
 
 class GameViewModel(
     private val completedRoundRepository: CompletedRoundRepository,
@@ -51,6 +64,15 @@ class GameViewModel(
 
     val uiState: StateFlow<GameUiState> =
         _uiState.asStateFlow()
+
+    private val _events =
+        MutableSharedFlow<GameEvent>(
+            extraBufferCapacity =
+                1
+        )
+
+    val events: SharedFlow<GameEvent> =
+        _events.asSharedFlow()
 
     fun startRound(
         config: PracticeConfig
@@ -133,6 +155,14 @@ class GameViewModel(
                 isAnswerLocked = true
             )
         }
+
+        _events.tryEmit(
+            if (attempt.isCorrect) {
+                GameEvent.CorrectAnswer
+            } else {
+                GameEvent.IncorrectAnswer
+            }
+        )
 
         feedbackJob?.cancel()
 
@@ -239,6 +269,10 @@ class GameViewModel(
                     completedRoundSnapshot
             )
         }
+
+        _events.tryEmit(
+            GameEvent.RoundComplete
+        )
 
         _uiState.update { state ->
             state.copy(

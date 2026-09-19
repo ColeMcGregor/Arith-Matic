@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,8 +32,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.wiseravenstudios.arithmatic.platform.audio.SoundEffect
 import com.wiseravenstudios.arithmatic.ui.common.BoardResponsiveMetrics
 import com.wiseravenstudios.arithmatic.ui.common.BoardTextRole
+import com.wiseravenstudios.arithmatic.ui.common.LocalSoundEffectPlayer
 import com.wiseravenstudios.arithmatic.ui.common.calculateGameBoardMetrics
 import com.wiseravenstudios.arithmatic.ui.common.findLargestFittingInt
 import com.wiseravenstudios.arithmatic.ui.components.ChalkButton
@@ -41,16 +44,48 @@ import com.wiseravenstudios.arithmatic.ui.components.ChalkTextAction
 import com.wiseravenstudios.arithmatic.ui.theme.ChalkColors
 import com.wiseravenstudios.arithmatic.ui.theme.Chalktastic
 import java.math.BigDecimal
+import kotlinx.coroutines.flow.Flow
 
 private const val SingleColumnAnswerLengthThreshold = 10
 
 @Composable
 fun GameBoard(
     uiState: GameUiState,
+    gameEvents: Flow<GameEvent>,
     onExit: () -> Unit,
     onAnswerSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val soundEffectPlayer =
+        LocalSoundEffectPlayer.current
+
+    LaunchedEffect(
+        gameEvents,
+        soundEffectPlayer
+    ) {
+        gameEvents.collect { event ->
+            when (event) {
+                GameEvent.CorrectAnswer -> {
+                    soundEffectPlayer.play(
+                        SoundEffect.CorrectAnswer
+                    )
+                }
+
+                GameEvent.IncorrectAnswer -> {
+                    soundEffectPlayer.play(
+                        SoundEffect.IncorrectAnswer
+                    )
+                }
+
+                GameEvent.RoundComplete -> {
+                    soundEffectPlayer.play(
+                        SoundEffect.RoundComplete
+                    )
+                }
+            }
+        }
+    }
+
     BoxWithConstraints(
         modifier =
             modifier.fillMaxSize()
@@ -81,8 +116,13 @@ fun GameBoard(
                     uiState,
                 metrics =
                     metrics,
-                onExit =
-                    onExit
+                onExit = {
+                    soundEffectPlayer.play(
+                        SoundEffect.Back
+                    )
+
+                    onExit()
+                }
             )
 
             if (question == null) {

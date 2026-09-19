@@ -31,7 +31,9 @@ import com.wiseravenstudios.arithmatic.domain.adults.report.AdultReport
 import com.wiseravenstudios.arithmatic.domain.adults.report.AdultReportBuilder
 import com.wiseravenstudios.arithmatic.domain.adults.report.AdultReportOptions
 import com.wiseravenstudios.arithmatic.domain.adults.statistics.AdultStatsCalculator
+import com.wiseravenstudios.arithmatic.platform.audio.SoundEffect
 import com.wiseravenstudios.arithmatic.ui.common.BoardResponsiveMetrics
+import com.wiseravenstudios.arithmatic.ui.common.LocalSoundEffectPlayer
 import com.wiseravenstudios.arithmatic.ui.common.calculateAdultBoardMetrics
 import com.wiseravenstudios.arithmatic.ui.components.ChalkTextAction
 import com.wiseravenstudios.arithmatic.ui.theme.ChalkColors
@@ -94,6 +96,15 @@ fun AdultBoard(
         )
     }
 
+    val soundEffectPlayer =
+        LocalSoundEffectPlayer.current
+
+    val onButtonPress = {
+        soundEffectPlayer.play(
+            SoundEffect.ButtonPress
+        )
+    }
+
     BoxWithConstraints(
         modifier =
             modifier.fillMaxSize()
@@ -109,11 +120,19 @@ fun AdultBoard(
                 currentTab = currentTab,
                 metrics = metrics,
                 onTabSelected = { selectedTab ->
+                    onButtonPress()
+
                     viewModel.setCurrentTab(
                         selectedTab
                     )
                 },
-                onBack = onBack,
+                onBack = {
+                    soundEffectPlayer.play(
+                        SoundEffect.Back
+                    )
+
+                    onBack()
+                },
                 content = {
                     AdultTabContent(
                         currentTab = currentTab,
@@ -121,6 +140,8 @@ fun AdultBoard(
                         viewModel = viewModel,
                         metrics = metrics,
                         reportOptions = reportOptions,
+                        onButtonPress =
+                            onButtonPress,
                         onReportOptionsChanged = {
                                 newOptions ->
 
@@ -137,11 +158,19 @@ fun AdultBoard(
                 currentTab = currentTab,
                 metrics = metrics,
                 onTabSelected = { selectedTab ->
+                    onButtonPress()
+
                     viewModel.setCurrentTab(
                         selectedTab
                     )
                 },
-                onBack = onBack,
+                onBack = {
+                    soundEffectPlayer.play(
+                        SoundEffect.Back
+                    )
+
+                    onBack()
+                },
                 content = {
                     AdultTabContent(
                         currentTab = currentTab,
@@ -149,6 +178,8 @@ fun AdultBoard(
                         viewModel = viewModel,
                         metrics = metrics,
                         reportOptions = reportOptions,
+                        onButtonPress =
+                            onButtonPress,
                         onReportOptionsChanged = {
                                 newOptions ->
 
@@ -345,6 +376,7 @@ private fun AdultTabContent(
     viewModel: AdultAreaViewModel,
     metrics: BoardResponsiveMetrics,
     reportOptions: AdultReportOptions,
+    onButtonPress: () -> Unit,
     onReportOptionsChanged: (AdultReportOptions) -> Unit,
     onExportReport: (AdultReport) -> Unit
 ) {
@@ -359,7 +391,9 @@ private fun AdultTabContent(
         AdultTab.Support -> {
             SupportTab(
                 metrics =
-                    metrics
+                    metrics,
+                onButtonPress =
+                    onButtonPress
             )
         }
 
@@ -370,7 +404,9 @@ private fun AdultTabContent(
                 viewModel =
                     viewModel,
                 metrics =
-                    metrics
+                    metrics,
+                onButtonPress =
+                    onButtonPress
             )
         }
 
@@ -384,6 +420,8 @@ private fun AdultTabContent(
                     metrics,
                 options =
                     reportOptions,
+                onButtonPress =
+                    onButtonPress,
                 onOptionsChanged =
                     onReportOptionsChanged,
                 onExportReport =
@@ -397,7 +435,8 @@ private fun AdultTabContent(
 private fun StatisticsTab(
     uiState: AdultAreaUiState,
     viewModel: AdultAreaViewModel,
-    metrics: BoardResponsiveMetrics
+    metrics: BoardResponsiveMetrics,
+    onButtonPress: () -> Unit
 ) {
     when (uiState) {
         AdultAreaUiState.Loading -> {
@@ -445,11 +484,14 @@ private fun StatisticsTab(
                 onSelectionChanged = {
                         selection ->
 
+                    onButtonPress()
+
                     viewModel.setSelection(
                         selection
                     )
                 },
                 onClearFilters = {
+                    onButtonPress()
                     viewModel.clearSelection()
                 }
             )
@@ -463,6 +505,7 @@ private fun ReportTab(
     viewModel: AdultAreaViewModel,
     metrics: BoardResponsiveMetrics,
     options: AdultReportOptions,
+    onButtonPress: () -> Unit,
     onOptionsChanged: (AdultReportOptions) -> Unit,
     onExportReport: (AdultReport) -> Unit
 ) {
@@ -514,16 +557,26 @@ private fun ReportTab(
                 onSelectionChanged = {
                         selection ->
 
+                    onButtonPress()
+
                     viewModel.setSelection(
                         selection
                     )
                 },
                 onClearFilters = {
+                    onButtonPress()
                     viewModel.clearSelection()
                 },
-                onOptionsChanged =
-                    onOptionsChanged,
+                onOptionsChanged = { newOptions ->
+                    onButtonPress()
+
+                    onOptionsChanged(
+                        newOptions
+                    )
+                },
                 onExport = {
+                    onButtonPress()
+
                     val report =
                         AdultReportBuilder.build(
                             filteredHistory =
@@ -911,24 +964,30 @@ private fun DoubleColumnPrivacyTab(
 
 @Composable
 private fun SupportTab(
-    metrics: BoardResponsiveMetrics
+    metrics: BoardResponsiveMetrics,
+    onButtonPress: () -> Unit
 ) {
     if (metrics.isDoubleColumn) {
         DoubleColumnSupportTab(
             metrics =
-                metrics
+                metrics,
+            onButtonPress =
+                onButtonPress
         )
     } else {
         SingleColumnSupportTab(
             metrics =
-                metrics
+                metrics,
+            onButtonPress =
+                onButtonPress
         )
     }
 }
 
 @Composable
 private fun SingleColumnSupportTab(
-    metrics: BoardResponsiveMetrics
+    metrics: BoardResponsiveMetrics,
+    onButtonPress: () -> Unit
 ) {
     val uriHandler =
         LocalUriHandler.current
@@ -1015,6 +1074,8 @@ private fun SingleColumnSupportTab(
             paddingBottom =
                 metrics.actionVerticalPadding,
             onClick = {
+                onButtonPress()
+
                 uriHandler.openUri(
                     WISE_RAVEN_PATREON
                 )
@@ -1033,6 +1094,8 @@ private fun SingleColumnSupportTab(
             paddingBottom =
                 metrics.actionVerticalPadding,
             onClick = {
+                onButtonPress()
+
                 uriHandler.openUri(
                     ARITH_MATIC_WEBSITE
                 )
@@ -1043,7 +1106,8 @@ private fun SingleColumnSupportTab(
 
 @Composable
 private fun DoubleColumnSupportTab(
-    metrics: BoardResponsiveMetrics
+    metrics: BoardResponsiveMetrics,
+    onButtonPress: () -> Unit
 ) {
     val uriHandler =
         LocalUriHandler.current
@@ -1152,6 +1216,8 @@ private fun DoubleColumnSupportTab(
                 paddingBottom =
                     metrics.actionVerticalPadding,
                 onClick = {
+                    onButtonPress()
+
                     uriHandler.openUri(
                         ARITH_MATIC_WEBSITE
                     )
@@ -1170,6 +1236,8 @@ private fun DoubleColumnSupportTab(
                 paddingBottom =
                     metrics.actionVerticalPadding,
                 onClick = {
+                    onButtonPress()
+
                     uriHandler.openUri(
                         WISE_RAVEN_PATREON
                     )

@@ -307,8 +307,8 @@ fun ArithMaticApp(
     }
 
     /**
-     * Provides the shared player to reusable Compose controls without passing
-     * the same dependency through every board and navigation callback.
+     * Makes the shared sound-effect player available to boards that own
+     * interaction feedback without threading it through navigation callbacks.
      */
     CompositionLocalProvider(
         LocalSoundEffectPlayer provides
@@ -426,6 +426,8 @@ fun ArithMaticApp(
                     GameBoard(
                         uiState =
                             gameUiState,
+                        gameEvents =
+                            gameViewModel.events,
                         onExit = {
                             gameViewModel
                                 .abandonRound()
