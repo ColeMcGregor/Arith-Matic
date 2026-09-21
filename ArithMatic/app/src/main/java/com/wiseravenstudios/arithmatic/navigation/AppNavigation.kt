@@ -24,12 +24,14 @@ import com.wiseravenstudios.arithmatic.data.local.database.ArithMaticDatabase
 import com.wiseravenstudios.arithmatic.data.preferences.getArithMaticDataStore
 import com.wiseravenstudios.arithmatic.data.repository.CompletedRoundRepository
 import com.wiseravenstudios.arithmatic.data.repository.SettingsRepository
+import com.wiseravenstudios.arithmatic.platform.audio.AndroidBackgroundMusicPlayer
 import com.wiseravenstudios.arithmatic.platform.audio.AndroidSoundEffectPlayer
 import com.wiseravenstudios.arithmatic.ui.about.AboutBoard
 import com.wiseravenstudios.arithmatic.ui.adults.AdultAreaViewModel
 import com.wiseravenstudios.arithmatic.ui.adults.AdultAreaViewModelFactory
 import com.wiseravenstudios.arithmatic.ui.adults.AdultBoard
 import com.wiseravenstudios.arithmatic.ui.adults.rememberAdultReportExporter
+import com.wiseravenstudios.arithmatic.ui.common.BackgroundMusicPlaybackEffect
 import com.wiseravenstudios.arithmatic.ui.common.ClassroomScene
 import com.wiseravenstudios.arithmatic.ui.common.LocalSoundEffectPlayer
 import com.wiseravenstudios.arithmatic.ui.components.ChalkTextAction
@@ -106,11 +108,31 @@ fun ArithMaticApp(
             )
         }
 
+    /**
+     * The music player is shared across destinations so board navigation does
+     * not restart the looping track.
+     */
+    val backgroundMusicPlayer =
+        remember(applicationContext) {
+            AndroidBackgroundMusicPlayer(
+                context =
+                    applicationContext
+            )
+        }
+
     DisposableEffect(
         soundEffectPlayer
     ) {
         onDispose {
             soundEffectPlayer.close()
+        }
+    }
+
+    DisposableEffect(
+        backgroundMusicPlayer
+    ) {
+        onDispose {
+            backgroundMusicPlayer.close()
         }
     }
 
@@ -228,30 +250,48 @@ fun ArithMaticApp(
         .uiState
         .collectAsState()
 
+    val audioSettings =
+        (
+                settingsUiState as?
+                        SettingsUiState.Success
+                )
+            ?.audioSettings
+
+    BackgroundMusicPlaybackEffect(
+        player =
+            backgroundMusicPlayer,
+        enabled =
+            audioSettings
+                ?.musicEnabled
+                ?: false,
+        volume =
+            audioSettings
+                ?.effectiveMusicVolume
+                ?: 0f,
+        playbackAllowed =
+            !showSplash
+    )
+
     /**
      * Keeps the app-scoped player synchronized with the sound-effect
      * preferences already exposed through SettingsViewModel.
      */
     LaunchedEffect(
-        settingsUiState
+        audioSettings
     ) {
-        val audioSettings =
-            (
-                    settingsUiState as?
-                            SettingsUiState.Success
-                    )
-                ?.audioSettings
+        val currentAudioSettings =
+            audioSettings
                 ?: return@LaunchedEffect
 
         soundEffectPlayer.setVolume(
             volume =
-                audioSettings
+                currentAudioSettings
                     .effectiveSoundEffectsVolume
         )
 
         soundEffectPlayer.setEnabled(
             enabled =
-                audioSettings
+                currentAudioSettings
                     .soundEffectsEnabled
         )
     }
